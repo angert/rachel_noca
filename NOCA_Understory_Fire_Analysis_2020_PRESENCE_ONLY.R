@@ -6,8 +6,6 @@
 
 ###### 2020 updates for manuscript flagged as such
 
-# Now I'm testing what it looks like to push multiple commits.
-
 #### Always do this first #####
 setwd("/Users/rachelwilson/Dropbox/Cascades resurveys/NCCO/2015/Data_entry")
 library(reshape2)
