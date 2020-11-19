@@ -111,9 +111,7 @@ for(S in 1:length(species.list)) { #RUN TIME: ~ 30 sec
   und.presence.SPEC<-und.presence.SPEC[complete.cases(und.presence.SPEC),]
   
   # 2020 update: 3way fire interaction if 5+ plots burned
-  mod.ffiK <- NULL
-  dredge.output <- NULL
-  
+
   ### Did the species occur in burned plots 5+ times?
   num.burns <- table(und.presence.SPEC$Pres.Abs, und.presence.SPEC$Fires, und.presence.SPEC$Data.Type) # 2-part table split by survey year
   if(num.burns[2,2,2] >= 5 | num.burns[2,2,1] >= 5) {
