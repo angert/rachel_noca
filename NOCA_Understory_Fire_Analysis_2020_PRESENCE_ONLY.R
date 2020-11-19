@@ -110,19 +110,20 @@ for(S in 1:length(species.list)) { #RUN TIME: ~ 30 sec
   und.presence.SPEC$Elevation.m2<-und.presence.SPEC$Elevation.m^2
   und.presence.SPEC<-und.presence.SPEC[complete.cases(und.presence.SPEC),]
   
-  #2020 update: 3way fire interaction if 10+ plots burned
+  # 2020 update: 3way fire interaction if 5+ plots burned
   mod.ffiK <- NULL
   dredge.output <- NULL
   
-  #did the species occur in burned plots 10+ times?
-  if(table(und.presence.SPEC$Pres.Abs, und.presence.SPEC$Fires)[2,2] >= 10) {
+  ### Did the species occur in burned plots 5+ times?
+  num.burns <- table(und.presence.SPEC$Pres.Abs, und.presence.SPEC$Fires, und.presence.SPEC$Data.Type) # 2-part table split by survey year
+  if(num.burns[2,2,2] >= 5 | num.burns[2,2,1] >= 5) {
     mod.globfi <- glm(Pres.Abs ~ Data.Type * (Elevation.m + Elevation.m2) * Fires, data = und.presence.SPEC, family = "binomial", na.action = na.fail) #global fire model
     dredge.globfi <- dredge(mod.globfi, rank = AIC, subset = dc(Elevation.m, Elevation.m2))
     (model.avg(dredge.globfi, subset = delta <= 2))
   }
   
   #if not, exclude fire from model averaging
-  if(table(und.presence.SPEC$Pres.Abs, und.presence.SPEC$Fires)[2,2] <= 10) {
+  if(num.burns[2,2,2] < 5 | num.burns[2,2,1] < 5) {
     mod.globnofi <- glm(Pres.Abs ~ Data.Type * (Elevation.m + Elevation.m2), data = und.presence.SPEC, family = "binomial", na.action = na.fail) #global w/o fire
     dredge.globnofi <- dredge(mod.globnofi, rank = AIC, subset = dc(Elevation.m, Elevation.m2))
     print(model.avg(dredge.globnofi, subset = delta <= 2))
