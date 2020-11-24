@@ -28,6 +28,19 @@ load("Species.List.Rda")
 
 fires <- read.csv("All_Plots_Wildfire_Join.csv", header=TRUE, na.strings="")
 
+### STEP 2: Adding fires as a covariate. See old script (NOCA_Understory_Fire_Analysis_2020_PRESENCE_ONLY.R) to add fire as a 3-level variable ("Unburned", "Burned before 1983", "Burned after 1983")
+
+#Create new variable, fire.cat, identifying plots burned > 1983
+fires$fire.cat <- ifelse(fires$CAL_YEAR >= 1983, "Burned", "Unburned")
+fires[is.na(fires$fire.cat) == TRUE, ]$fire.cat <- paste(rep("Unburned", times=length(fires[is.na(fires$fire.cat)==TRUE,6])))
+
+#Adding prescribed burns. See column Prescribed.burn.year
+fires$fire.cat[c(39,48,49,59,60)] <- paste(rep("Burned", times=5))
+names(fires)[2] <- paste("Plot.2015")
+fires.covariate <- fires[, c(2, 35)]
+names.fires <- merge(fires.covariate, plot.names, by="Plot.2015", all.y=TRUE) #check for errors
+
+
 
 
 
