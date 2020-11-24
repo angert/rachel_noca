@@ -41,6 +41,15 @@ fires.covariate <- fires[, c(2, 35)]
 names.fires <- merge(fires.covariate, plot.names, by="Plot.2015", all.y=TRUE) #check for errors
 
 
+#haven't fixed past this point yet
+names.fires[c(373:378),2]<-paste(c("Unburned","Unburned","After 1983","Unburned","Unburned","Unburned"))
+list.fires<-melt(names.fires, id.vars=c("Elevation.m", "CAL_YEAR"), measure.vars=c("Plot.2015", "Plot.1980"))
+names(list.fires)<-c("Elevation.m", "Fires","Plot.Year", "Plot")
+list.fires.nodup<-list.fires[!duplicated(list.fires$Plot),] #getting rid of duplicates
+und.cover.fires<-merge(und.cover, list.fires.nodup, by="Plot")
+
+#2020 update: change fire to 2-level variable (after 1983 only)
+und.cover.fires$Fires <- ifelse(und.cover.fires$Fires == "After 1983", "Burned", "Unburned")
 
 
 
