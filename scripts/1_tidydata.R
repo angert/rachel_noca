@@ -32,16 +32,26 @@ fires <- read.csv("All_Plots_Wildfire_Join.csv", header=TRUE, na.strings="")
 
 #Create new variable, fire.cat, identifying plots burned > 1983
 fires$fire.cat <- ifelse(fires$CAL_YEAR >= 1983, "Burned", "Unburned")
-fires[is.na(fires$fire.cat) == TRUE, ]$fire.cat <- paste(rep("Unburned", times=length(fires[is.na(fires$fire.cat)==TRUE,6])))
+fires[is.na(fires$fire.cat) == TRUE, ]$fire.cat <- paste(rep("Unburned", times=length(fires[is.na(fires$fire.cat)==TRUE,6]))) # Any NAs are from plots that are not burned
 
 #Adding prescribed burns. See column Prescribed.burn.year
 fires$fire.cat[c(39,48,49,59,60)] <- paste(rep("Burned", times=5))
 names(fires)[2] <- paste("Plot.2015")
-fires.covariate <- fires[, c(2, 35)]
-names.fires <- merge(fires.covariate, plot.names, by="Plot.2015", all.y=TRUE) #check for errors
+#Fixing naming errors
+fires[fires$Plot.2015 == "Thor225-m", 2] <- paste("Thor225")
+
+#Adding missing data
+fires[nrow(fires) + 1, ] <- c(2014, "Thor221", NA, NA, NA, "Unburned", rep(NA, times = length(fires) - 6))
+
+#Preparing to merge with list of 2015 plot names
+fires.covariate <- fires[,c(2,6)]
+names.fires <- merge(fires.covariate, plot.names, by="Plot.2015", all.y=TRUE)
 
 
-#haven't fixed past this point yet
+
+
+#haven't fixed past this point
+#Adding plots that missing from All_Plots_Wildfire_Join.csv but are present in Understory_all.csv
 names.fires[c(373:378),2]<-paste(c("Unburned","Unburned","After 1983","Unburned","Unburned","Unburned"))
 list.fires<-melt(names.fires, id.vars=c("Elevation.m", "CAL_YEAR"), measure.vars=c("Plot.2015", "Plot.1980"))
 names(list.fires)<-c("Elevation.m", "Fires","Plot.Year", "Plot")
