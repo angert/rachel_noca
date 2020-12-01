@@ -1,5 +1,5 @@
 #### Created: Nov. 24, 2020
-#### Updated: Nov. 24, 2020
+#### Updated: Dec. 1, 2020
 
 ### This script will be used to create the datasets used in the PRESENCE analyses (including FIRE).
 
@@ -28,7 +28,9 @@ load("Species.List.Rda")
 
 fires <- read.csv("All_Plots_Wildfire_Join.csv", header=TRUE, na.strings="")
 
-### STEP 2: Adding fires as a covariate. See old script (NOCA_Understory_Fire_Analysis_2020_PRESENCE_ONLY.R) to add fire as a 3-level variable ("Unburned", "Burned before 1983", "Burned after 1983")
+### STEP 2: Removing any plots not suitable for analysis
+
+### STEP 3: Adding fires as a covariate. See old script (NOCA_Understory_Fire_Analysis_2020_PRESENCE_ONLY.R) to add fire as a 3-level variable ("Unburned", "Burned before 1983", "Burned after 1983")
 
 #Create new variable, fire.cat, identifying plots burned > 1983
 fires$fire.cat <- ifelse(fires$CAL_YEAR >= 1983, "Burned", "Unburned")
@@ -37,6 +39,7 @@ fires[is.na(fires$fire.cat) == TRUE, ]$fire.cat <- paste(rep("Unburned", times=l
 #Adding prescribed burns. See column Prescribed.burn.year
 fires$fire.cat[c(39,48,49,59,60)] <- paste(rep("Burned", times=5))
 names(fires)[2] <- paste("Plot.2015")
+
 #Fixing naming errors
 fires[fires$Plot.2015 == "Thor225-m", 2] <- paste("Thor225")
 
@@ -51,6 +54,7 @@ names.fires <- merge(fires.covariate, plot.names, by="Plot.2015", all.y=TRUE)
 
 
 #haven't fixed past this point
+
 #Adding plots that missing from All_Plots_Wildfire_Join.csv but are present in Understory_all.csv
 names.fires[c(373:378),2]<-paste(c("Unburned","Unburned","After 1983","Unburned","Unburned","Unburned"))
 list.fires<-melt(names.fires, id.vars=c("Elevation.m", "CAL_YEAR"), measure.vars=c("Plot.2015", "Plot.1980"))
