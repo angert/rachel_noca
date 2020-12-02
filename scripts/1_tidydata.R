@@ -29,6 +29,11 @@ load("Species.List.Rda")
 fires <- read.csv("All_Plots_Wildfire_Join.csv", header=TRUE, na.strings="")
 
 ### STEP 2: Removing any plots not suitable for analysis
+#List of plots to be removed and reasons why:
+# --> HB5144 (5144): Latitude/longitude was not recorded.
+# --> Dia4 (1004): Data collected at plot not found - hard copy may have been lost.
+# --> Supp2026, Supp5127, and ROSS4001REF: Supplemental plots taken for future reference. Ignore corresponding 1980 plot name; this was the closest plot.
+# --> Thor223 (4044), Bak494 (8017): History of logging.
 
 ### STEP 3: Adding fires as a covariate. See old script (NOCA_Understory_Fire_Analysis_2020_PRESENCE_ONLY.R) to add fire as a 3-level variable ("Unburned", "Burned before 1983", "Burned after 1983")
 
