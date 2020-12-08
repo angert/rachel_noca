@@ -98,6 +98,9 @@ names.fires <- merge(fires.covariate, plot.names, by="Plot.2015", all.y=TRUE)
 list.fires <- melt(names.fires, id.vars=c("fire.cat"), measure.vars=c("Plot.2015", "Plot.1980"))
 names(list.fires)<-c("Fires","Data.Type", "Plot")
 list.fires$Data.Type <- ifelse(list.fires$Data.Type == "Plot.1980", "Legacy", "Resurvey")
+list.fires.w.data.type <- melt(names.fires, id.vars=c("fire.cat"), measure.vars=c("Plot.2015", "Plot.1980"))
+list.fires <- list.fires.w.data.type[-2] # This column is redundant with und.cover
+names(list.fires) <- c("Fires", "Plot")
 
 cover.fires <- merge(und.cover, list.fires, by="Plot")
 cover.fires$Fires<-as.factor(cover.fires$Fires)
