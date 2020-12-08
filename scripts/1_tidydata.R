@@ -110,6 +110,29 @@ write.csv(cover.fires, file="1_cover_with_fires.csv", row.names=FALSE)
 
 #### STEP 5: Create binary presence (und.presence) file from understory cover data, to be used in subsequent steps ####
 
+# Important note! The presabs code DOES INCLUDE presences where the cover was recorded as "NA". This is fine as these species were definitely present, we just forgot to record their cover. 
+
+# Creating a new data frame from cover.fires of 1s/0s presence/absence in each plot
+pres.abs <- table(cover.fires$Plot, cover.fires$Species.Code)
+und.presence.small <- melt(pres.abs, id.vars=c("Plot", "Species.Code"))
+names(und.presence.small) <- c("Plot", "Species.Code", "Pres.Abs")
+und.presence <- merge(und.presence.small, list.fires, by = "Plot")
+und.presence$Data.Type <- as.factor(und.presence$Data.Type)
+
+#Correcting for a small number of species that ended up double-counted in Understory_All
+und.presence$Pres.Abs <- ifelse(und.presence$Pres.Abs >= 1, 1, 0)
+
+# Removes one species named "NA" with abundance of 0 in every plot
+und.presence <- und.presence[complete.cases(und.presence),]
+
+
+write.csv(und.presence, "1_presence_with_fires.csv", row.names = FALSE)
+
+
+
+
+
+
 
 
 
