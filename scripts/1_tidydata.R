@@ -41,20 +41,19 @@ fires <- read.csv("All_Plots_Wildfire_Join.csv", header=TRUE, na.strings="")
 # --> und.cover
 
 # List of plots to be removed and reasons why (NB - not present in every dataset):
-# --> HB5144 (5144): Latitude/longitude was not recorded
+# --> HB5144 (5144), Copp6046 (6046): Latitude/longitude was not recorded
 # --> Dia4 (1004): Data collected at plot not found - hard copy may have been lost.
 # --> Supp2026, Supp5127, and ROSS4001REF: Supplemental plots taken for future reference. Ignore corresponding 1980 plot name; this was the closest plot.
 # --> Thor223 (4044), Bak494 (8017): History of logging.
 
-nrow(fires) #Should be 373 before, 368 after --> which 3 are missing?
-nrow(plot.names) #Should be 378 before, 371 after
-nrow(und.cover) #Should be 6803 before, 6696 after
+nrow(fires) #Should be 373 before
+nrow(plot.names) #Should be 378 before
+nrow(und.cover) #Should be 6803 before
 
 fires <- fires[!fires$Name == "Supp2026" & !fires$Name == "Supp5127" & !fires$Name == "ROSS4001REF" & !fires$Name == "Thor223" & !fires$Name == "Bak494", ]
-plot.names <- plot.names[!plot.names$Plot.2015 == "HB5144" & !plot.names$Plot.2015 == "Dia4" & !plot.names$Plot.2015 == "Supp2026" & !plot.names$Plot.2015 == "Supp5127" & !plot.names$Plot.2015 == "ROSS4001REF" & !plot.names$Plot.2015 == "Thor223" & !plot.names$Plot.2015 == "Bak494", ]
-und.cover <- und.cover[!und.cover$Plot == "HB5144" & !und.cover$Plot == "5144" & !und.cover$Plot == "1004" & !und.cover$Plot == "Supp2026" & !und.cover$Plot == "Supp5127" & !und.cover$Plot == "ROSS4001REF" & !und.cover$Plot == "Thor223" & !und.cover$Plot == "4044" & !und.cover$Plot == "Bak494" & !und.cover$Plot == "8017", ]
+plot.names <- plot.names[!plot.names$Plot.2015 == "HB5144" & !plot.names$Plot.2015 == "Dia4" & !plot.names$Plot.2015 == "Supp2026" & !plot.names$Plot.2015 == "Supp5127" & !plot.names$Plot.2015 == "ROSS4001REF" & !plot.names$Plot.2015 == "Thor223" & !plot.names$Plot.2015 == "Bak494" & !plot.names$Plot.2015 == "Copp6046", ]
+und.cover <- und.cover[!und.cover$Plot == "HB5144" & !und.cover$Plot == "5144" & !und.cover$Plot == "1004" & !und.cover$Plot == "Supp2026" & !und.cover$Plot == "Supp5127" & !und.cover$Plot == "ROSS4001REF" & !und.cover$Plot == "Thor223" & !und.cover$Plot == "4044" & !und.cover$Plot == "Bak494" & !und.cover$Plot == "8017"  & !und.cover$Plot == "Copp6046" & !und.cover$Plot == "6046", ]
 
-und.presence<-und.presence[!und.presence$Plot=="Thor223" & !und.presence$Plot=="8017" & !und.presence$Plot=="4044" & !und.presence$Plot=="Bak494",] 
 
 # List of plots to be renamed:
 # --> Change "Thor225-m" to "Thor225" in fires dataset
@@ -63,13 +62,20 @@ fires[fires$Name == "Thor225-m", 2] <- paste("Thor225")
 
 # List of plots to be added:
 # --> Thor221 added to fires dataset
-fires[nrow(fires) + 1, ] <- c(2014, "Thor221", NA, NA, NA, "Unburned", rep(NA, times = length(fires) - 6))
+# --< Copp6040 added to fires dataset
 
-nrow(fires) #Should be 373 before, 368 after --> which 3 are missing?
-nrow(plot.names) #Should be 378 before, 371 after
-nrow(und.cover) #Should be 6803 before, 6696 after
+fires[nrow(fires) + 1, ] <- c(2014, "Thor221", rep(NA, times = length(fires) - 2))
+fires[nrow(fires) + 1, ] <- c(2015, "Copp6040", rep(NA, times = length(fires) - 2))
 
-### STEP 3: Adding fires as a covariate. See old script (NOCA_Understory_Fire_Analysis_2020_PRESENCE_ONLY.R) to add fire as a 3-level variable ("Unburned", "Burned before 1983", "Burned after 1983")
+# Fixing row names
+rownames(fires) <- 1:nrow(fires)
+rownames(plot.names) <- 1:nrow(plot.names)
+rownames(und.cover) <- 1:nrow(und.cover)
+
+# Checking lengths
+nrow(fires) #Should be 370 after
+nrow(plot.names) #Should be 370 after
+nrow(und.cover) #Should be 6690 after
 
 #Create new variable, fire.cat, identifying plots burned > 1983
 fires$fire.cat <- ifelse(fires$CAL_YEAR >= 1983, "Burned", "Unburned")
