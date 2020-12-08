@@ -77,33 +77,37 @@ nrow(fires) #Should be 370 after
 nrow(plot.names) #Should be 370 after
 nrow(und.cover) #Should be 6690 after
 
+
+#### STEP 3: Adding fires as a covariate ####
+
 #Create new variable, fire.cat, identifying plots burned > 1983
 fires$fire.cat <- ifelse(fires$CAL_YEAR >= 1983, "Burned", "Unburned")
 fires[is.na(fires$fire.cat) == TRUE, ]$fire.cat <- paste(rep("Unburned", times=length(fires[is.na(fires$fire.cat)==TRUE,6]))) # Any NAs are from plots that are not burned
 
 #Adding prescribed burns. See column Prescribed.burn.year
-fires$fire.cat[c(39,48,49,59,60)] <- paste(rep("Burned", times=5))
+fires[is.na(fires$Prescribed.burn.year) == FALSE, ][ncol(fires)] <- paste(rep("Burned", times = nrow(fires[is.na(fires$Prescribed.burn.year) == FALSE, ])))
 names(fires)[2] <- paste("Plot.2015")
 
-#Preparing to merge with list of 2015 plot names
-fires.covariate <- fires[,c(2,6)]
+table(fires$fire.cat ) #Should be 38 Burned and 332 Unburned
+
+# Parse down fire data (fires) and merge with list of 2015 plot names
+fires.covariate <- data.frame(fires$Plot.2015, fires$fire.cat)
+names(fires.covariate) <- paste(c("Plot.2015", "fire.cat"))
 names.fires <- merge(fires.covariate, plot.names, by="Plot.2015", all.y=TRUE)
 
+# Reshape fire data (names.fires) to prepare for merge with und.cover data
+list.fires <- melt(names.fires, id.vars=c("fire.cat"), measure.vars=c("Plot.2015", "Plot.1980"))
+names(list.fires)<-c("Fires","Plot.Year", "Plot")
+cover.fires <- merge(und.cover, list.fires, by="Plot")
 
 
 
-#haven't fixed past this point
 
-#Adding plots that missing from All_Plots_Wildfire_Join.csv but are present in Understory_all.csv
-names.fires[c(373:378),2]<-paste(c("Unburned","Unburned","After 1983","Unburned","Unburned","Unburned"))
-list.fires<-melt(names.fires, id.vars=c("Elevation.m", "CAL_YEAR"), measure.vars=c("Plot.2015", "Plot.1980"))
-names(list.fires)<-c("Elevation.m", "Fires","Plot.Year", "Plot")
-list.fires.nodup<-list.fires[!duplicated(list.fires$Plot),] #getting rid of duplicates
-und.cover.fires<-merge(und.cover, list.fires.nodup, by="Plot")
 
-#2020 update: change fire to 2-level variable (after 1983 only)
-und.cover.fires$Fires <- ifelse(und.cover.fires$Fires == "After 1983", "Burned", "Unburned")
 
+
+
+#### STEP 5: Create binary presence (und.presence) file from understory cover data, to be used in subsequent steps ####
 
 
 
