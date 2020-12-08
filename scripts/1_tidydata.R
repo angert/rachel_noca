@@ -25,7 +25,9 @@ lat.long <- read.csv("Lat.Long.csv", header=TRUE, na.strings="")
 plot.names <- lat.long[, c(2, 3, 6)]
 names(plot.names) <- c("Plot.2015", "Plot.1980", "Elevation.m")
 
-load("Species.List.Rda")
+load("Species.List.Rda") # For creating list of species of interest
+species.list <- shifts$Species.Code[!shifts$Species.Code == "MOSS"] # Get rid of moss
+species.list <- factor(species.list)
 
 fires <- read.csv("All_Plots_Wildfire_Join.csv", header=TRUE, na.strings="")
 
