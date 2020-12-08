@@ -16,7 +16,6 @@ library(MuMIn)
 setwd("data")
 
 
-
 #### STEP 1: Import data ####
 
 und.cover <- read.csv("Understory_All.csv", header=TRUE, na.strings="") # L = Legacy and R = Resurvey
@@ -29,8 +28,6 @@ names(plot.names) <- c("Plot.2015", "Plot.1980", "Elevation.m")
 load("Species.List.Rda")
 
 fires <- read.csv("All_Plots_Wildfire_Join.csv", header=TRUE, na.strings="")
-
-
 
 
 #### STEP 2: Plot-related corrections (removals, edits, and additions) ####
@@ -101,10 +98,9 @@ names(list.fires)<-c("Fires","Plot.Year", "Plot")
 cover.fires <- merge(und.cover, list.fires, by="Plot")
 
 
+#### STEP 4: Write cover.fires, to be used in subsequent scripts ####
 
-
-
-
+write.csv(cover.fires, file="1_cover_with_fires.csv", row.names=FALSE)
 
 
 #### STEP 5: Create binary presence (und.presence) file from understory cover data, to be used in subsequent steps ####
