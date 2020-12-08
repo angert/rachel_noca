@@ -1,21 +1,21 @@
-#### Created: Nov. 24, 2020
-#### Updated: Dec. 1, 2020
+# Created: Nov. 24, 2020
+# Updated: Dec. 8, 2020
 
-### This script will be used to create the datasets used in the PRESENCE analyses (including FIRE).
+# This script will be used to create the datasets used in the PRESENCE analyses (including FIRE).
 
-######## IMPORTANT NOTE: unless otherwise indicated, always use Understory_All.csv for these analyses as it is the ONLY file with up-to-date corrections.
+# IMPORTANT NOTE: unless otherwise indicated, always use Understory_All.csv for these analyses as it is the ONLY file with up-to-date corrections.
 
-#Packages needed - modify these if you don't need em
+# Packages needed:
 
 library(reshape2)
 library(rms)
 library(plyr)
-library(survival)
+library(survival) #Possibly don't need this one
 library(MuMIn)
 
 setwd("data")
 
-### STEP 1: Import data. In Understory_All.csv, L = Legacy and R = Resurvey
+#### STEP 1: Import data. In Understory_All.csv, L = Legacy and R = Resurvey ####
 
 und.cover <- read.csv("Understory_All.csv", header=TRUE, na.strings="")
 und.cover$Elevation.m <- as.numeric(as.character(und.cover$Elevation.m)) #gives warning - no worries
@@ -28,12 +28,41 @@ load("Species.List.Rda")
 
 fires <- read.csv("All_Plots_Wildfire_Join.csv", header=TRUE, na.strings="")
 
-### STEP 2: Removing any plots not suitable for analysis
-#List of plots to be removed and reasons why:
-# --> HB5144 (5144): Latitude/longitude was not recorded.
+#### STEP 2: Plot-related corrections (removals, edits, and additions) ####
+
+# List of datasets to be modified: 
+# --> fires
+# --> plot.names
+# --> und.cover
+
+# List of plots to be removed and reasons why (NB - not present in every dataset):
+# --> HB5144 (5144): Latitude/longitude was not recorded
 # --> Dia4 (1004): Data collected at plot not found - hard copy may have been lost.
 # --> Supp2026, Supp5127, and ROSS4001REF: Supplemental plots taken for future reference. Ignore corresponding 1980 plot name; this was the closest plot.
 # --> Thor223 (4044), Bak494 (8017): History of logging.
+
+nrow(fires) #Should be 373 before, 368 after --> which 3 are missing?
+nrow(plot.names) #Should be 378 before, 371 after
+nrow(und.cover) #Should be 6803 before, 6696 after
+
+fires <- fires[!fires$Name == "Supp2026" & !fires$Name == "Supp5127" & !fires$Name == "ROSS4001REF" & !fires$Name == "Thor223" & !fires$Name == "Bak494", ]
+plot.names <- plot.names[!plot.names$Plot.2015 == "HB5144" & !plot.names$Plot.2015 == "Dia4" & !plot.names$Plot.2015 == "Supp2026" & !plot.names$Plot.2015 == "Supp5127" & !plot.names$Plot.2015 == "ROSS4001REF" & !plot.names$Plot.2015 == "Thor223" & !plot.names$Plot.2015 == "Bak494", ]
+und.cover <- und.cover[!und.cover$Plot == "HB5144" & !und.cover$Plot == "5144" & !und.cover$Plot == "1004" & !und.cover$Plot == "Supp2026" & !und.cover$Plot == "Supp5127" & !und.cover$Plot == "ROSS4001REF" & !und.cover$Plot == "Thor223" & !und.cover$Plot == "4044" & !und.cover$Plot == "Bak494" & !und.cover$Plot == "8017", ]
+
+und.presence<-und.presence[!und.presence$Plot=="Thor223" & !und.presence$Plot=="8017" & !und.presence$Plot=="4044" & !und.presence$Plot=="Bak494",] 
+
+# List of plots to be renamed:
+# --> Change "Thor225-m" to "Thor225" in fires dataset
+
+fires[fires$Name == "Thor225-m", 2] <- paste("Thor225")
+
+# List of plots to be added:
+# --> Thor221 added to fires dataset
+fires[nrow(fires) + 1, ] <- c(2014, "Thor221", NA, NA, NA, "Unburned", rep(NA, times = length(fires) - 6))
+
+nrow(fires) #Should be 373 before, 368 after --> which 3 are missing?
+nrow(plot.names) #Should be 378 before, 371 after
+nrow(und.cover) #Should be 6803 before, 6696 after
 
 ### STEP 3: Adding fires as a covariate. See old script (NOCA_Understory_Fire_Analysis_2020_PRESENCE_ONLY.R) to add fire as a 3-level variable ("Unburned", "Burned before 1983", "Burned after 1983")
 
@@ -44,12 +73,6 @@ fires[is.na(fires$fire.cat) == TRUE, ]$fire.cat <- paste(rep("Unburned", times=l
 #Adding prescribed burns. See column Prescribed.burn.year
 fires$fire.cat[c(39,48,49,59,60)] <- paste(rep("Burned", times=5))
 names(fires)[2] <- paste("Plot.2015")
-
-#Fixing naming errors
-fires[fires$Plot.2015 == "Thor225-m", 2] <- paste("Thor225")
-
-#Adding missing data
-fires[nrow(fires) + 1, ] <- c(2014, "Thor221", NA, NA, NA, "Unburned", rep(NA, times = length(fires) - 6))
 
 #Preparing to merge with list of 2015 plot names
 fires.covariate <- fires[,c(2,6)]
