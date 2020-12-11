@@ -48,25 +48,25 @@ fires <- fires[!fires$Name == "Supp2026" &
                  !fires$Name == "Thor223" &
                  !fires$Name == "Bak494", ]
 plot.names <- plot.names[!plot.names$Plot.2015 == "HB5144" &
-                           !plot.names$Plot.2015 == "Dia4" &
-                           !plot.names$Plot.2015 == "Supp2026" &
-                           !plot.names$Plot.2015 == "Supp5127" &
-                           !plot.names$Plot.2015 == "ROSS4001REF" &
-                           !plot.names$Plot.2015 == "Thor223" &
-                           !plot.names$Plot.2015 == "Bak494" &
-                           !plot.names$Plot.2015 == "Copp6046", ]
+                 !plot.names$Plot.2015 == "Dia4" &
+                 !plot.names$Plot.2015 == "Supp2026" &
+                 !plot.names$Plot.2015 == "Supp5127" &
+                 !plot.names$Plot.2015 == "ROSS4001REF" &
+                 !plot.names$Plot.2015 == "Thor223" &
+                 !plot.names$Plot.2015 == "Bak494" &
+                 !plot.names$Plot.2015 == "Copp6046", ]
 und.cover <- und.cover[!und.cover$Plot == "HB5144" &
-                         !und.cover$Plot == "5144" &
-                         !und.cover$Plot == "1004" &
-                         !und.cover$Plot == "Supp2026" &
-                         !und.cover$Plot == "Supp5127" & 
-                         !und.cover$Plot == "ROSS4001REF" &
-                         !und.cover$Plot == "Thor223" & 
-                         !und.cover$Plot == "4044" & 
-                         !und.cover$Plot == "Bak494" & 
-                         !und.cover$Plot == "8017"  & 
-                         !und.cover$Plot == "Copp6046" & 
-                         !und.cover$Plot == "6046", ]
+                 !und.cover$Plot == "5144" &
+                 !und.cover$Plot == "1004" &
+                 !und.cover$Plot == "Supp2026" &
+                 !und.cover$Plot == "Supp5127" & 
+                 !und.cover$Plot == "ROSS4001REF" &
+                 !und.cover$Plot == "Thor223" & 
+                 !und.cover$Plot == "4044" & 
+                 !und.cover$Plot == "Bak494" & 
+                 !und.cover$Plot == "8017"  & 
+                 !und.cover$Plot == "Copp6046" & 
+                 !und.cover$Plot == "6046", ]
 
 # List of plots to be renamed:
 # --> Change "Thor225-m" to "Thor225" in fires dataset
