@@ -31,7 +31,7 @@ for(S in 1:length(species.list)) {
   # Create subset for species of interest S
   und.presence.SPEC = subset(und.presence, Species.Code == levels(species.list)[S])
   und.presence.SPEC$Fires <- relevel(und.presence.SPEC$Fires, ref="Unburned")
-  und.presence.SPEC$Elevation.m2 <- und.presence.SPEC$Elevation.m^2 #TODO better than I()?
+  und.presence.SPEC$Elevation.m2 <- und.presence.SPEC$Elevation.m^2 #TODO better than poly()?
   und.presence.SPEC <- und.presence.SPEC[complete.cases(und.presence.SPEC), ] #Just in case
   
   # Did the species occur in burned plots 5+ times?
@@ -41,14 +41,24 @@ for(S in 1:length(species.list)) {
   if(num.burns[2,2,1] >= 5 | num.burns[2,2,2] >= 5) {
     mod.globfi <- glm(Pres.Abs ~ Data.Type * (Elevation.m + Elevation.m2) * Fires, data = und.presence.SPEC, family = "binomial", na.action = na.fail) #Global fire model
     options(warn = 1)
-    dredge.globfi <- dredge(mod.globfi, rank = AIC, subset = dc(Elevation.m, Elevation.m2))
+    dredge.globfi <- dredge(mod.globfi, rank = AIC, subset = 
+                              dc(Elevation.m, Elevation.m2) &&
+                              dc(Data.Type:Elevation.m, Data.Type:Elevation.m2) &&
+                              dc(Elevation.m:Fires, Elevation.m2:Fires) &&
+                              dc(Data.Type:Elevation.m:Fires, Data.Type:Elevation.m2:Fires), 
+                            trace = 1)
     avg.globfi <- model.avg(dredge.globfi, subset = delta <= 2)
   }
   
   # If no, exclude fire from global model:
   if(num.burns[2,2,2] < 5 | num.burns[2,2,1] < 5) {
     mod.globnofi <- glm(Pres.Abs ~ Data.Type * (Elevation.m + Elevation.m2), data = und.presence.SPEC, family = "binomial", na.action = na.fail) #global w/o fire
-    dredge.globnofi <- dredge(mod.globnofi, rank = AIC, subset = dc(Elevation.m, Elevation.m2))
+    dredge.globnofi <- dredge(mod.globnofi, rank = AIC, subset = 
+                                dc(Elevation.m, Elevation.m2) &&
+                                dc(Data.Type:Elevation.m, Data.Type:Elevation.m2) &&
+                                dc(Elevation.m:Fires, Elevation.m2:Fires) &&
+                                dc(Data.Type:Elevation.m:Fires, Data.Type:Elevation.m2:Fires), 
+                              trace = 1)
     avg.globnofi <- model.avg(dredge.globnofi, subset = delta <= 2)
   }
 
