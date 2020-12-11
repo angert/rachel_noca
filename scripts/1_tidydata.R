@@ -98,7 +98,7 @@ cover.fires$Fires<-as.factor(cover.fires$Fires)
 
 #### STEP 4: Write cover.fires, to be used in subsequent scripts ####
 
-write.csv(cover.fires, file="1_cover_with_fires.csv", row.names=FALSE)
+#write.csv(cover.fires, file="1_cover_with_fires.csv", row.names=FALSE)
 
 
 #### STEP 5: Create binary presence (und.presence) file from understory cover data, to be used in subsequent steps ####
@@ -119,7 +119,7 @@ und.presence$Pres.Abs <- ifelse(und.presence$Pres.Abs >= 1, 1, 0)
 und.presence <- und.presence[complete.cases(und.presence),]
 
 
-write.csv(und.presence, "1_presence_with_fires.csv", row.names = FALSE)
+#write.csv(und.presence, "1_presence_with_fires.csv", row.names = FALSE)
 
 
 
