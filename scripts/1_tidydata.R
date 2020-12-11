@@ -13,23 +13,17 @@ library(plyr)
 library(survival) #Possibly don't need this one
 library(MuMIn)
 
-setwd("data")
-
 
 #### STEP 1: Import data ####
 
-und.cover <- read.csv("Understory_All.csv", header=TRUE, na.strings="") # L = Legacy and R = Resurvey
+und.cover <- read.csv("data/Understory_All.csv", header=TRUE, na.strings="") # L = Legacy and R = Resurvey
 und.cover$Elevation.m <- as.numeric(as.character(und.cover$Elevation.m)) #gives warning - no worries
 
-lat.long <- read.csv("Lat.Long.csv", header=TRUE, na.strings="")
+lat.long <- read.csv("data/Lat.Long.csv", header=TRUE, na.strings="")
 plot.names <- lat.long[, c(2, 3, 6)]
 names(plot.names) <- c("Plot.2015", "Plot.1980", "Elevation.m")
 
-load("Species.List.Rda") # For creating list of species of interest
-species.list <- shifts$Species.Code[!shifts$Species.Code == "MOSS"] # Get rid of moss
-species.list <- factor(species.list)
-
-fires <- read.csv("All_Plots_Wildfire_Join.csv", header=TRUE, na.strings="")
+fires <- read.csv("data/All_Plots_Wildfire_Join.csv", header=TRUE, na.strings="")
 
 
 #### STEP 2: Plot-related corrections (removals, edits, and additions) ####
