@@ -42,10 +42,31 @@ nrow(fires) #Should be 373 before
 nrow(plot.names) #Should be 378 before
 nrow(und.cover) #Should be 6803 before
 
-fires <- fires[!fires$Name == "Supp2026" & !fires$Name == "Supp5127" & !fires$Name == "ROSS4001REF" & !fires$Name == "Thor223" & !fires$Name == "Bak494", ]
-plot.names <- plot.names[!plot.names$Plot.2015 == "HB5144" & !plot.names$Plot.2015 == "Dia4" & !plot.names$Plot.2015 == "Supp2026" & !plot.names$Plot.2015 == "Supp5127" & !plot.names$Plot.2015 == "ROSS4001REF" & !plot.names$Plot.2015 == "Thor223" & !plot.names$Plot.2015 == "Bak494" & !plot.names$Plot.2015 == "Copp6046", ]
-und.cover <- und.cover[!und.cover$Plot == "HB5144" & !und.cover$Plot == "5144" & !und.cover$Plot == "1004" & !und.cover$Plot == "Supp2026" & !und.cover$Plot == "Supp5127" & !und.cover$Plot == "ROSS4001REF" & !und.cover$Plot == "Thor223" & !und.cover$Plot == "4044" & !und.cover$Plot == "Bak494" & !und.cover$Plot == "8017"  & !und.cover$Plot == "Copp6046" & !und.cover$Plot == "6046", ]
-
+fires <- fires[!fires$Name == "Supp2026" &
+                 !fires$Name == "Supp5127" &
+                 !fires$Name == "ROSS4001REF" &
+                 !fires$Name == "Thor223" &
+                 !fires$Name == "Bak494", ]
+plot.names <- plot.names[!plot.names$Plot.2015 == "HB5144" &
+                           !plot.names$Plot.2015 == "Dia4" &
+                           !plot.names$Plot.2015 == "Supp2026" &
+                           !plot.names$Plot.2015 == "Supp5127" &
+                           !plot.names$Plot.2015 == "ROSS4001REF" &
+                           !plot.names$Plot.2015 == "Thor223" &
+                           !plot.names$Plot.2015 == "Bak494" &
+                           !plot.names$Plot.2015 == "Copp6046", ]
+und.cover <- und.cover[!und.cover$Plot == "HB5144" &
+                         !und.cover$Plot == "5144" &
+                         !und.cover$Plot == "1004" &
+                         !und.cover$Plot == "Supp2026" &
+                         !und.cover$Plot == "Supp5127" & 
+                         !und.cover$Plot == "ROSS4001REF" &
+                         !und.cover$Plot == "Thor223" & 
+                         !und.cover$Plot == "4044" & 
+                         !und.cover$Plot == "Bak494" & 
+                         !und.cover$Plot == "8017"  & 
+                         !und.cover$Plot == "Copp6046" & 
+                         !und.cover$Plot == "6046", ]
 
 # List of plots to be renamed:
 # --> Change "Thor225-m" to "Thor225" in fires dataset
@@ -72,12 +93,16 @@ nrow(und.cover) #Should be 6690 after
 
 #### STEP 3: Adding fires as a covariate ####
 
-#Create new variable, fire.cat, identifying plots burned > 1983
+# Create new variable, fire.cat, identifying plots burned > 1983
 fires$fire.cat <- ifelse(fires$CAL_YEAR >= 1983, "Burned", "Unburned")
-fires[is.na(fires$fire.cat) == TRUE, ]$fire.cat <- paste(rep("Unburned", times=length(fires[is.na(fires$fire.cat)==TRUE,6]))) # Any NAs are from plots that are not burned
+fires[is.na(fires$fire.cat) == TRUE, ]$fire.cat <- 
+  paste(rep("Unburned", 
+            times=length(fires[is.na(fires$fire.cat) == TRUE, 6]))) # Any NAs are unburned
 
-#Adding prescribed burns. See column Prescribed.burn.year
-fires[is.na(fires$Prescribed.burn.year) == FALSE, ][ncol(fires)] <- paste(rep("Burned", times = nrow(fires[is.na(fires$Prescribed.burn.year) == FALSE, ])))
+# Adding prescribed burns. See column Prescribed.burn.year
+fires[is.na(fires$Prescribed.burn.year) == FALSE, ][ncol(fires)] <- 
+  paste(rep("Burned",
+            times = nrow(fires[is.na(fires$Prescribed.burn.year) == FALSE, ])))
 names(fires)[2] <- paste("Plot.2015")
 
 table(fires$fire.cat ) #Should be 38 Burned and 332 Unburned
@@ -88,9 +113,12 @@ names(fires.covariate) <- paste(c("Plot.2015", "fire.cat"))
 names.fires <- merge(fires.covariate, plot.names, by="Plot.2015", all.y=TRUE)
 
 # Reshape fire data (names.fires) to prepare for merge with und.cover data
-list.fires <- melt(names.fires, id.vars=c("fire.cat", "Elevation.m"), measure.vars=c("Plot.2015", "Plot.1980"))
+list.fires <- 
+  melt(names.fires, id.vars=c("fire.cat", "Elevation.m"), 
+       measure.vars=c("Plot.2015", "Plot.1980"))
 names(list.fires) <- c("Fires", "Elevation.m", "Data.Type", "Plot")
-list.fires$Data.Type <- ifelse(list.fires$Data.Type == "Plot.1980", "Legacy", "Resurvey")
+list.fires$Data.Type <- 
+  ifelse(list.fires$Data.Type == "Plot.1980", "Legacy", "Resurvey")
 
 cover.fires <- merge(und.cover, list.fires[-c(2, 3)], by="Plot")
 cover.fires$Fires<-as.factor(cover.fires$Fires)
