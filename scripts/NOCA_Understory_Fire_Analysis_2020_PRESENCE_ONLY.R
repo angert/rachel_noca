@@ -260,6 +260,7 @@ length(coeff.avg$Intercept[coeff.avg$Intercept<0])
 
 
 ########### Makin' graphs. Can be adjusted to view burned plots ############
+#Dec 2020: aren't these graphs plotting the wrong predictions?
 
 par(mfrow=c(1,1), oma=c(2, 3, 0, 0), mar=c(3,4,1,1)) 
 
