@@ -70,7 +70,7 @@ und.cover<-und.cover[!und.cover$Plot=="Thor223" & !und.cover$Plot=="8017" & !und
 
 
 
-## Are fires correlated with elevation?
+## Are fires correlated with elevation? #Dec 11 - not added to new presence file
 names.fires$Elevation.m<-as.numeric(as.character(names.fires$Elevation.m))
 names.fires$CAL_YEAR <- as.factor(names.fires$CAL_YEAR)
 names.fires$CAL_YEAR<-relevel(names.fires$CAL_YEAR, ref="Unburned")
