@@ -12,3 +12,5 @@
 
 #### STEP 1: Import data ####
 
+und.presence <- read.csv("data/1_presence_with_fires.csv", header = TRUE, na.strings = "")
+
