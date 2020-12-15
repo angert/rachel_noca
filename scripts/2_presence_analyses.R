@@ -8,7 +8,7 @@
 # Packages needed:
 
 ##TODO add packages here
-
+library(MuMIn)
 
 #### STEP 1: Import data ####
 
@@ -38,8 +38,16 @@ for(S in 1:length(species.list)) {
   num.burns <- 
     table(und.presence.SPEC$Pres.Abs, und.presence.SPEC$Fires, und.presence.SPEC$Data.Type)
   
+  #Emptying out previous objects
+  mod.globfi <- NULL
+  dredge.globfi <- NULL
+  avg.glbofi <- NULL
+  mod.globnofi <- NULL
+  dredge.globnofi <- NULL
+  avg.globnofi <- NULL
+  
   # If yes, include fire as a predictor in global model:
-  if(num.burns[2,2,1] >= 5 | num.burns[2,2,2] >= 5) {
+  if(num.burns["1", "Burned", "Legacy"] >= 5 | num.burns["1", "Burned", "Resurvey"] >= 5) {
     mod.globfi <- glm(Pres.Abs ~ Data.Type * (Elevation.m + Elevation.m2) * Fires, 
                       data = und.presence.SPEC, family = "binomial", na.action = na.fail)
     options(warn = 1)
@@ -53,14 +61,12 @@ for(S in 1:length(species.list)) {
   }
   
   # If no, exclude fire from global model:
-  if(num.burns[2,2,2] < 5 | num.burns[2,2,1] < 5) {
+  if(num.burns["1", "Burned", "Legacy"] < 5 | num.burns["1", "Burned", "Resurvey"] < 5) {
     mod.globnofi <- glm(Pres.Abs ~ Data.Type * (Elevation.m + Elevation.m2), 
                         data = und.presence.SPEC, family = "binomial", na.action = na.fail) 
     dredge.globnofi <- dredge(mod.globnofi, rank = AIC, subset = 
                                 dc(Elevation.m, Elevation.m2) &&
-                                dc(Data.Type:Elevation.m, Data.Type:Elevation.m2) &&
-                                dc(Elevation.m:Fires, Elevation.m2:Fires) &&
-                                dc(Data.Type:Elevation.m:Fires, Data.Type:Elevation.m2:Fires), 
+                                dc(Data.Type:Elevation.m, Data.Type:Elevation.m2), 
                               trace = 1)
     avg.globnofi <- model.avg(dredge.globnofi, subset = delta <= 2)
   }
