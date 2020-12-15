@@ -13,6 +13,7 @@ library(MuMIn)
 #### STEP 1: Import data ####
 
 und.presence <- read.csv("data/1_presence_with_fires.csv", header = TRUE, na.strings = "")
+und.presence$Fires <- as.factor(und.presence$Fires)
 load("data/Species.List.Rda") #TODO this file was made in an undocumented step
 species.list <- shifts$Species.Code[!shifts$Species.Code=="MOSS"] #removing "MOSS"
 species.list <- factor(species.list)
@@ -25,6 +26,7 @@ species.list <- factor(species.list)
 
 
 coeff.SPEC<-list()
+options(warn = 1) # Tell me if a model throws an error.
 
 for(S in 1:length(species.list)) {
   
@@ -50,7 +52,6 @@ for(S in 1:length(species.list)) {
   if(num.burns["1", "Burned", "Legacy"] >= 5 | num.burns["1", "Burned", "Resurvey"] >= 5) {
     mod.globfi <- glm(Pres.Abs ~ Data.Type * (Elevation.m + Elevation.m2) * Fires, 
                       data = und.presence.SPEC, family = "binomial", na.action = na.fail)
-    options(warn = 1)
     dredge.globfi <- dredge(mod.globfi, rank = AIC, subset = 
                               dc(Elevation.m, Elevation.m2) &&
                               dc(Data.Type:Elevation.m, Data.Type:Elevation.m2) &&
@@ -61,7 +62,7 @@ for(S in 1:length(species.list)) {
   }
   
   # If no, exclude fire from global model:
-  if(num.burns["1", "Burned", "Legacy"] < 5 | num.burns["1", "Burned", "Resurvey"] < 5) {
+  if(num.burns["1", "Burned", "Legacy"] < 5 & num.burns["1", "Burned", "Resurvey"] < 5) {
     mod.globnofi <- glm(Pres.Abs ~ Data.Type * (Elevation.m + Elevation.m2), 
                         data = und.presence.SPEC, family = "binomial", na.action = na.fail) 
     dredge.globnofi <- dredge(mod.globnofi, rank = AIC, subset = 
@@ -70,7 +71,7 @@ for(S in 1:length(species.list)) {
                               trace = 1)
     avg.globnofi <- model.avg(dredge.globnofi, subset = delta <= 2)
   }
-  
+}  
 
   
   
