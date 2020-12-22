@@ -47,6 +47,7 @@ for(S in 1:length(species.list)) {
   mod.globnofi <- NULL
   dredge.globnofi <- NULL
   avg.globnofi <- NULL
+  top.mods <- NULL
   
   # If yes, include fire as a predictor in global model:
   if(num.burns["1", "Burned", "Legacy"] >= 5 | num.burns["1", "Burned", "Resurvey"] >= 5) {
@@ -59,6 +60,7 @@ for(S in 1:length(species.list)) {
                               dc(Data.Type:Elevation.m:Fires, Data.Type:Elevation.m2:Fires), 
                             trace = 1)
     avg.globfi <- model.avg(dredge.globfi, subset = delta <= 2)
+    top.mods.coeff <- as.data.frame(coef(subset(dredge.globnofi, delta <= 2)))
   }
   
   # If no, exclude fire from global model:
@@ -70,6 +72,32 @@ for(S in 1:length(species.list)) {
                                 dc(Data.Type:Elevation.m, Data.Type:Elevation.m2), 
                               trace = 1)
     avg.globnofi <- model.avg(dredge.globnofi, subset = delta <= 2)
+    top.mods.coeff <- as.data.frame(coef(subset(dredge.globnofi, delta <= 2)))
+  }
+  
+  # Null model (for Psuedo-R-squared calculation later)
+  
+  mod.NULL <- glm(Pres.Abs ~ 1, 
+              data = und.presence.SPEC, family = "binomial", na.action = na.fail)
+  
+  # Storing output
+  
+  Mods.list.nofi <- list()
+  
+  for(i in 1:length(top.mods)) {
+    Mods.list.nofi[[i]] <- data.frame(
+                      Species = levels(species.list)[S],  
+                      L.Occ = sum(num.burns["1", , "Legacy"]), 
+                      R.Occ = sum(num.burns["1", , "Resurvey"]), 
+                      Type = "Unavg", 
+                      deltaAIC = avg.globnofi$msTable$delta[i], 
+                      Weight = avg.globnofi$msTable$weight[i],
+                      Rsquared = 1 - avg.globnofi$msTable$logLik[i]/logLik(mod.NULL)[1],
+                      Intercept = top.mods.coeff$`(Intercept)`[i],
+                      Data.Type = top.mods.coeff$Data.TypeResurvey[i], #TODO change to Data.Type
+                      Elevation.m = top.mods.coeff$Data.TypeResurvey[i],
+                      Elevation.m2 = top.mods.coeff$Elevation.m2[i],
+                      DataType.Elevation.m = top.mods.coeff$Data.TypeResurvey:Elevation.m[i],
   }
 }  
 
