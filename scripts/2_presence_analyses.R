@@ -9,6 +9,7 @@
 
 ##TODO add packages here
 library(MuMIn)
+library(plyr)
 
 #### STEP 1: Import data ####
 
@@ -38,10 +39,6 @@ for(S in 1:length(species.list)) {
   und.presence.SPEC$Elevation.m2 <- und.presence.SPEC$Elevation.m^2 #TODO better than poly()?
   und.presence.SPEC <- und.presence.SPEC[complete.cases(und.presence.SPEC), ] #Just in case
   
-  # Did the species occur in burned plots 5+ times?
-  num.burns <- 
-    table(und.presence.SPEC$Pres.Abs, und.presence.SPEC$Fires, und.presence.SPEC$Data.Type)
-  
   #Emptying out previous objects
   mod.globfi <- NULL
   mod.globnofi <- NULL
@@ -49,6 +46,10 @@ for(S in 1:length(species.list)) {
   dredge.globnofi <- NULL
   avg.mods <- NULL
   top.mods.coeff <- NULL
+  
+  # Did the species occur in burned plots 5+ times?
+  num.burns <- 
+    table(und.presence.SPEC$Pres.Abs, und.presence.SPEC$Fires, und.presence.SPEC$Data.Type)
   
   # If yes, include fire as a predictor in global model:
   if(num.burns["1", "Burned", "Legacy"] >= 5 | num.burns["1", "Burned", "Resurvey"] >= 5) {
@@ -96,25 +97,25 @@ for(S in 1:length(species.list)) {
                  "Data.TypeResurvey:Elevation.m2:FiresBurned")
   
   for(C in 1:length(coeff.all)) {
-    
-  if(!coeff.all[C] %in% colnames(top.mods.coeff)) {
-    test[, coeff.all[C]] <- rep(NA, times = nrow(test))
+    if(!coeff.all[C] %in% colnames(top.mods.coeff)) {
+    top.mods.coeff[, coeff.all[C]] <- rep(NA, times = nrow(top.mods.coeff))
     }
   }    
   
   # Storing output
   
-  Mods.list.nofi <- list()
+  Mods.list.fi <- list()
   
   for(i in 1:nrow(top.mods.coeff)) {
-    Mods.list.nofi[[i]] <- data.frame(
+    Mods.list.fi[[i]] <- data.frame(
                       Species = levels(species.list)[S],  
                       L.Occ = sum(num.burns["1", , "Legacy"]), 
                       R.Occ = sum(num.burns["1", , "Resurvey"]), 
+                      Fire.Included = ifelse(is.null(mod.globnofi) == TRUE, "Yes", "No"),
                       Type = "Unavg", 
-                      deltaAIC = avg.globfi$msTable$delta[i], 
-                      Weight = avg.globfi$msTable$weight[i],
-                      Rsquared = 1 - avg.globfi$msTable$logLik[i]/logLik(mod.NULL)[1],
+                      deltaAIC = avg.mods$msTable$delta[i], 
+                      Weight = avg.mods$msTable$weight[i],
+                      Rsquared = 1 - avg.mods$msTable$logLik[i]/logLik(mod.NULL)[1],
                       Intercept = top.mods.coeff$`(Intercept)`[i],
                       Data.Type = top.mods.coeff$Data.TypeResurvey[i],
                       Elevation.m = top.mods.coeff$Elevation.m[i],
@@ -133,9 +134,14 @@ for(S in 1:length(species.list)) {
 
   }
   
+  Mods <- ldply(Mods.list.fi, data.frame)
   
-  Mods<-ldply(Mods.list, data.frame)
-  coeff<-ldply(coeff.SPEC, data.frame)
+  
+  
+  #TODO Create DF of model avg output, then bind everything together to create coeff.SPEC
+  
+  coeff.SPEC[[S]]<-rbind(Mods, Avg)
+  coeff <- ldply(coeff.SPEC, data.frame)
   
 }  
 
