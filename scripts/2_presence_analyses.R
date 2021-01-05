@@ -176,7 +176,10 @@ coeff <- ldply(coeff.SPEC, data.frame)
 
 # Store output as CSV
 
-write.csv(coeff, file="2_presence_analyses_coefficients.csv", row.names=FALSE)
+write.csv(coeff, file="data/2_presence_analyses_coefficients.csv", row.names=FALSE)
 
   
   
+
+
+
