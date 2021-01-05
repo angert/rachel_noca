@@ -132,6 +132,11 @@ for(S in 1:length(species.list)) {
                       row.names = NULL)
 
   }
+  
+  
+  Mods<-ldply(Mods.list, data.frame)
+  coeff<-ldply(coeff.SPEC, data.frame)
+  
 }  
 
   
