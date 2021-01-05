@@ -83,24 +83,24 @@ for(S in 1:length(species.list)) {
   
   # Adding NAs to missing coefficients in top.mods.coeff. Intercept should always be present
   
-  coeff.all <- c("Data.TypeResurvey", "Elevation.m", "FiresBurned", "Data.TypeResurvey:Elevation.m", "Elevation.m:FiresBurned", "Data.TypeResurvey:FiresBurned", "Elevation.m2", "Data.TypeResurvey:Elevation.m2", "Elevation.m2:FiresBurned", "Data.TypeResurvey:Elevation.m:FiresBurned", "Data.TypeResurvey:Elevation.m2:FiresBurned")
-  if(is.na(top.mods.coeff["Data.TypeResurvey"]))
-    mod.top[[i]] $coeff ["Data.TypeResurvey"]<-0
+  coeff.all <- c("Data.TypeResurvey", 
+                 "Elevation.m", 
+                 "FiresBurned", 
+                 "Data.TypeResurvey:Elevation.m", 
+                 "Elevation.m:FiresBurned", 
+                 "Data.TypeResurvey:FiresBurned", 
+                 "Elevation.m2", 
+                 "Data.TypeResurvey:Elevation.m2", 
+                 "Elevation.m2:FiresBurned", 
+                 "Data.TypeResurvey:Elevation.m:FiresBurned", 
+                 "Data.TypeResurvey:Elevation.m2:FiresBurned")
   
-  
-  is.na(top.mods.coeff$Data.TypeResurvey)
-  Elevation.m = top.mods.coeff$Elevation.m[i],
-  Fires = top.mods.coeff$FiresBurned[i],
-  Data.Type.Elevation.m = top.mods.coeff$`Data.TypeResurvey:Elevation.m`[i],
-  Elevation.m.Fires = top.mods.coeff$`Elevation.m:FiresBurned`[i],
-  Data.Type.Fires = top.mods.coeff$`Data.TypeResurvey:FiresBurned`[i],
-  Elevation.m2 = top.mods.coeff$Elevation.m2[i],
-  Data.Type.Elevation.m2 = top.mods.coeff$`Data.TypeResurvey:Elevation.m2`[i],
-  Elevation.m2.Fires = top.mods.coeff$`Elevation.m2:FiresBurned`[i],
-  Data.Type.Elevation.m.Fires = 
-    top.mods.coeff$`Data.TypeResurvey:Elevation.m:FiresBurned`[i],
-  Data.Type.Elevation.m2.Fires = 
-    top.mods.coeff$`Data.TypeResurvey:Elevation.m2:FiresBurned`[i],
+  for(C in 1:length(coeff.all)) {
+    
+  if(!coeff.all[C] %in% colnames(top.mods.coeff)) {
+    test[, coeff.all[C]] <- rep(NA, times = nrow(test))
+    }
+  }    
   
   # Storing output
   
