@@ -28,7 +28,7 @@ species.list <- factor(species.list)
 
 
 coeff.SPEC<-list()
-options(warn = 1) # Tell me if a model throws an error.
+#options(warn = 1) # Tell me if a model throws an error.
 
 for(S in 1:length(species.list)) {
   
@@ -63,6 +63,7 @@ for(S in 1:length(species.list)) {
                             trace = 1)
     avg.mods <- model.avg(dredge.globfi, subset = delta <= 2)
     top.mods.coeff <- as.data.frame(coef(subset(dredge.globfi, delta <= 2)))
+    avg.mods.coeff <- as.data.frame(t(avg.mods$coefficients["full",]))
   }
   
   # If no, exclude fire from global model:
@@ -75,6 +76,7 @@ for(S in 1:length(species.list)) {
                               trace = 1)
     avg.mods <- model.avg(dredge.globnofi, subset = delta <= 2)
     top.mods.coeff <- as.data.frame(coef(subset(dredge.globnofi, delta <= 2)))
+    avg.mods.coeff <- as.data.frame(t(avg.mods$coefficients["full",]))
   }
   
   # Null model (for Psuedo-R-squared calculation later)
@@ -82,7 +84,7 @@ for(S in 1:length(species.list)) {
   mod.NULL <- glm(Pres.Abs ~ 1, 
               data = und.presence.SPEC, family = "binomial", na.action = na.fail)
   
-  # Adding NAs to missing coefficients in top.mods.coeff. Intercept should always be present
+  # Adding NAs to missing coefficients in top.mods.coeff and 
   
   coeff.all <- c("Data.TypeResurvey", 
                  "Elevation.m", 
@@ -100,14 +102,17 @@ for(S in 1:length(species.list)) {
     if(!coeff.all[C] %in% colnames(top.mods.coeff)) {
     top.mods.coeff[, coeff.all[C]] <- rep(NA, times = nrow(top.mods.coeff))
     }
+    if(!coeff.all[C] %in% colnames(avg.mods.coeff)) {
+      avg.mods.coeff[, coeff.all[C]] <- rep(NA, times = 1)
+    }
   }    
   
   # Storing output
   
-  Mods.list.fi <- list()
+  Mods.list <- list()
   
   for(i in 1:nrow(top.mods.coeff)) {
-    Mods.list.fi[[i]] <- data.frame(
+    Mods.list[[i]] <- data.frame(
                       Species = levels(species.list)[S],  
                       L.Occ = sum(num.burns["1", , "Legacy"]), 
                       R.Occ = sum(num.burns["1", , "Resurvey"]), 
@@ -131,21 +136,47 @@ for(S in 1:length(species.list)) {
                       Data.Type.Elevation.m2.Fires = 
                         top.mods.coeff$`Data.TypeResurvey:Elevation.m2:FiresBurned`[i],
                       row.names = NULL)
-
   }
   
-  Mods <- ldply(Mods.list.fi, data.frame)
+  Mods <- ldply(Mods.list, data.frame)
   
-  
-  
-  #TODO Create DF of model avg output, then bind everything together to create coeff.SPEC
-  
-  coeff.SPEC[[S]]<-rbind(Mods, Avg)
-  coeff <- ldply(coeff.SPEC, data.frame)
+  Avg <- data.frame(
+    Species = levels(species.list)[S],  
+    L.Occ = sum(num.burns["1", , "Legacy"]), 
+    R.Occ = sum(num.burns["1", , "Resurvey"]), 
+    Fire.Included = ifelse(is.null(mod.globnofi) == TRUE, "Yes", "No"),
+    Type = "Avg", 
+    deltaAIC = NA, 
+    Weight = NA,
+    Rsquared = NA,
+    Intercept = avg.mods.coeff$`(Intercept)`,
+    Data.Type = avg.mods.coeff$Data.TypeResurvey,
+    Elevation.m = avg.mods.coeff$Elevation.m,
+    Fires = avg.mods.coeff$FiresBurned,
+    Data.Type.Elevation.m = avg.mods.coeff$`Data.TypeResurvey:Elevation.m`,
+    Elevation.m.Fires = avg.mods.coeff$`Elevation.m:FiresBurned`,
+    Data.Type.Fires = avg.mods.coeff$`Data.TypeResurvey:FiresBurned`,
+    Elevation.m2 = avg.mods.coeff$Elevation.m2,
+    Data.Type.Elevation.m2 = avg.mods.coeff$`Data.TypeResurvey:Elevation.m2`,
+    Elevation.m2.Fires = avg.mods.coeff$`Elevation.m2:FiresBurned`,
+    Data.Type.Elevation.m.Fires = 
+      avg.mods.coeff$`Data.TypeResurvey:Elevation.m:FiresBurned`,
+    Data.Type.Elevation.m2.Fires = 
+      avg.mods.coeff$`Data.TypeResurvey:Elevation.m2:FiresBurned`,
+    row.names = NULL)
+    
+
+  coeff.SPEC[[S]] <- rbind(Mods, Avg)
   
 }  
 
-  
-  
+#Collapse list into dataframe
+
+coeff <- ldply(coeff.SPEC, data.frame)
+
+# Store output as CSV
+
+write.csv(coeff, file="2_presence_analyses_coefficients.csv", row.names=FALSE)
+
   
   
