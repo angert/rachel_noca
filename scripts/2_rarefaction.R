@@ -3,6 +3,7 @@
 
 # This script will be used to created a RAREFIED dataset based on a dataset whittled to shared species (those appearing in both surveys).
 
+
 #### STEP 1: Import data ####
 
 und.cover <- read.csv("data/1_cover_with_fires.csv", header = TRUE, na.strings = "")
@@ -11,6 +12,7 @@ und.cover$Data.Type <- as.factor(und.cover$Data.Type)
 load("data/Species.List.Rda") #TODO this file was made in an undocumented step
 species.list <- shifts$Species.Code[!shifts$Species.Code=="MOSS"] #removing "MOSS"
 species.list <- factor(species.list)
+
 
 #### STEP 2: Data tidying (remove unknowns, hybrids, etc.) ####
 
@@ -95,6 +97,10 @@ mean(table(removal4B.cover$Plot[removal4B.cover$Data.Type == "Resurvey"])) # 7.6
 # In other words, the resurvey found ~2 more species per plot.
 
 
+#### PLACEHOLDER STEP: Incorporate raw % values from resurvey to use as weights in rarefaction ####
+
+
+#### STEP 5: Rarefaction ####
 
 
 
