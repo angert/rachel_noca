@@ -129,7 +129,7 @@ cover.fires$Fires<-as.factor(cover.fires$Fires)
 #write.csv(data/cover.fires, file="1_cover_with_fires.csv", row.names=FALSE)
 
 
-#### STEP 5: Create binary presence (und.presence) file from understory cover data, to be used in subsequent steps ####
+#### STEP 5: Create binary presence (und.presence) file from understory cover data, unrarefied ####
 
 # Important note! The presabs code DOES INCLUDE presences where the cover was recorded as "NA". This is fine as these species were definitely present, we just forgot to record their cover. 
 
@@ -147,7 +147,7 @@ und.presence$Pres.Abs <- ifelse(und.presence$Pres.Abs >= 1, 1, 0)
 und.presence <- und.presence[complete.cases(und.presence),]
 
 
-#write.csv(data/und.presence, "1_presence_with_fires.csv", row.names = FALSE)
+#write.csv(data/und.presence, "1_presence_fires_unrarefied.csv", row.names = FALSE)
 
 
 
