@@ -12,7 +12,7 @@ library(plyr)
 
 #### STEP 1: Import data ####
 
-und.presence <- read.csv("data/1_presence_with_fires.csv", header = TRUE, na.strings = "")
+und.presence <- read.csv("data/1_presence_fires_unrarefied", header = TRUE, na.strings = "")
 und.presence$Fires <- as.factor(und.presence$Fires)
 und.presence$Data.Type <- as.factor(und.presence$Data.Type)
 load("data/Species.List.Rda") #TODO this file was made in an undocumented step
