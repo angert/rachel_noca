@@ -1,5 +1,5 @@
 # Created: Dec. 11, 2020
-# Updated: Dec. 11, 2020
+# Updated: Jan. 11, 2020
 
 # This script will be used to undertake the PRESENCE analyses
 
@@ -7,7 +7,6 @@
 
 # Packages needed:
 
-##TODO add packages here
 library(MuMIn)
 library(plyr)
 
