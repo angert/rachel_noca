@@ -20,7 +20,7 @@ species.list <- shifts$Species.Code[!shifts$Species.Code=="MOSS"] #removing "MOS
 species.list <- factor(species.list)
 
 
-#### STEP 2: Loop to create presence analyses. Run time ~ 2 sec ####
+#### STEP 2: Loop to analyze presence data Run time ~ 2 sec ####
 
 # Can be run as a loop outputting all species, or S can be modified to isolated specific species. Check number here:
 (numbered.species <- data.frame(Species=species.list, No.=rep(1:42)))
