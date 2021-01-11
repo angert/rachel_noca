@@ -14,12 +14,12 @@ species.list <- factor(species.list)
 
 #### STEP 2: Additional data tidying ####
 
-# How many species are in each dataset, pre-tidying?
+## How many species are in each dataset, PRE-tidying?
 
 length(table(und.cover$Species.Code[und.cover$Data.Type == "Legacy"])) #219 species
 length(table(und.cover$Species.Code[und.cover$Data.Type == "Resurvey"])) #536 species
 
-## 2(a): Remove invasives and family-level IDs
+## 2(a): Remove invasives, family-level IDs, trees, and lichen
 
 removal2A.cover <- und.cover[!und.cover$Species.Code == "XBOR" &    # X___ = family-level ID
                                !und.cover$Species.Code == "XBRA" &
@@ -37,3 +37,19 @@ removal2A.cover <- und.cover[!und.cover$Species.Code == "XBOR" &    # X___ = fam
                                !und.cover$Species.Code == "TRDU" &
                                !und.cover$Species.Code == "ACGR" &
                                !und.cover$Species.Code == "ACMA", ]
+
+## 2(b) Remove uncertains and hybrids (primarily from resurvey)
+  
+removal2B.cover <- removal2A.cover[which(nchar(removal2A.cover$Species.Code) == 4), ]
+
+## 2(c) Remove any remaining unknowns (primarily from resurvey)
+
+removal2C.cover <- subset(removal2B.cover, !grepl("unk", removal2B.cover$Species.Code))
+
+## How many species are in each dataset, POST-tidying?
+
+length(table(removal2C.cover$Species.Code[removal2C.cover$Data.Type == "Legacy"])) #209 species
+length(table(removal2C.cover$Species.Code[removal2C.cover$Data.Type == "Resurvey"])) #353 species
+
+
+
