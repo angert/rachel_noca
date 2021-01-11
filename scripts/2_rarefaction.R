@@ -52,4 +52,16 @@ length(table(removal2C.cover$Species.Code[removal2C.cover$Data.Type == "Legacy"]
 length(table(removal2C.cover$Species.Code[removal2C.cover$Data.Type == "Resurvey"])) #353 species
 
 
+#### STEP 3 (Optional): Exploratory questions ####
+
+# Do the number of genus-level IDs (__XX) differ between surveys? (YES)
+
+genus.only <- subset(removal2C.cover, grepl("XX", removal2C.cover$Species.Code))
+length(table(genus.only$Species.Code[genus.only$Data.Type == "Legacy"])) # 77 species
+length(table(genus.only$Species.Code[genus.only$Data.Type == "Resurvey"])) # 32 species
+
+
+
+
+
 
