@@ -1,7 +1,7 @@
 # Created: Jan. 11, 2020
 # Updated: Jan. 11, 2020
 
-# This script will be used to created a RAREFIED dataset based on a dataset whittled to common species (those appearing in both surveys).
+# This script will be used to created a RAREFIED dataset based on a dataset whittled to shared species (those appearing in both surveys).
 
 #### STEP 1: Import data ####
 
@@ -12,7 +12,7 @@ load("data/Species.List.Rda") #TODO this file was made in an undocumented step
 species.list <- shifts$Species.Code[!shifts$Species.Code=="MOSS"] #removing "MOSS"
 species.list <- factor(species.list)
 
-#### STEP 2: Additional data tidying ####
+#### STEP 2: Data tidying (remove unknowns, hybrids, etc.) ####
 
 ## How many species are in each dataset, PRE-tidying?
 
@@ -59,6 +59,44 @@ length(table(removal2C.cover$Species.Code[removal2C.cover$Data.Type == "Resurvey
 genus.only <- subset(removal2C.cover, grepl("XX", removal2C.cover$Species.Code))
 length(table(genus.only$Species.Code[genus.only$Data.Type == "Legacy"])) # 77 species
 length(table(genus.only$Species.Code[genus.only$Data.Type == "Resurvey"])) # 32 species
+
+# How many species were found per plot, on average?
+
+mean(table(removal2C.cover$Plot[removal2C.cover$Data.Type == "Legacy"])) # 6.859459 species/plot
+mean(table(removal2C.cover$Plot[removal2C.cover$Data.Type == "Resurvey"])) # 10.22973 species/plot
+
+
+#### STEP 4: Additional data tidying (reduce to shared species only) ####
+
+# 4(a) Separate into legacy and resurvey datasets to make comparison easier
+
+legacy.removal2C.cover <- removal2C.cover[removal2C.cover$Data.Type == "Legacy", ]
+legacy.removal2C.cover$Species.Code <- factor(legacy.removal2C.cover$Species.Code)
+resurvey.removal2C.cover <- removal2C.cover[removal2C.cover$Data.Type == "Resurvey",]
+resurvey.removal2C.cover$Species.Code <- factor(resurvey.removal2C.cover$Species.Code)
+
+# 4(b) Which species are common to both surveys?
+
+(common.sp <- as.vector(levels(legacy.removal2C.cover$Species.Code)
+                        [levels(legacy.removal2C.cover$Species.Code) %in% 
+                            levels(resurvey.removal2C.cover$Species.Code)])) #130 species
+
+common.sp.for.merge <- data.frame("Species.Code" = common.sp, 
+                                  "Num" = rep(1:length(common.sp)))
+
+removal4B.cover <- merge(common.sp.for.merge, removal2C.cover, 
+                        by="Species.Code", all.x=FALSE)
+
+# 4(c) How many species were found per plot, on average, after reducing to common species?
+
+mean(table(removal4B.cover$Plot[removal4B.cover$Data.Type == "Legacy"])) # 5.688347 species/plot
+mean(table(removal4B.cover$Plot[removal4B.cover$Data.Type == "Resurvey"])) # 7.612466 species/plot
+
+# In other words, the resurvey found ~2 more species per plot.
+
+
+
+
 
 
 
