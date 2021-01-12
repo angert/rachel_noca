@@ -100,12 +100,10 @@ nrow(und.cover) #Should be 6690 after
 ### STEP 3: Species-related corrections (remove unknowns, hybrids, etc.) ####
 
 ## How many species are in legacy vs resurvey data, PRE-tidying?
-
 length(table(und.cover$Species.Code[und.cover$Data.Type == "Legacy"])) #219 species
 length(table(und.cover$Species.Code[und.cover$Data.Type == "Resurvey"])) #536 species
 
 ## 3(a): Remove invasives, family-level IDs, trees, and lichen
-
 removal3A.cover <- und.cover[!und.cover$Species.Code == "XBOR" &    # X___ = family-level ID
                                !und.cover$Species.Code == "XBRA" &
                                !und.cover$Species.Code == "XLAM" &
@@ -124,15 +122,12 @@ removal3A.cover <- und.cover[!und.cover$Species.Code == "XBOR" &    # X___ = fam
                                !und.cover$Species.Code == "ACMA", ]
 
 ## 3(b) Remove uncertains and hybrids (primarily from resurvey; e.g. VAOVxAL)
-
 removal3B.cover <- removal3A.cover[which(nchar(removal3A.cover$Species.Code) == 4), ]
 
 ## 3(c) Remove any remaining unknowns (primarily from resurvey)
-
 removal3C.cover <- subset(removal3B.cover, !grepl("unk", removal3B.cover$Species.Code))
 
 ## How many species are in legacy vs resurvey data, POST-tidying?
-
 length(table(removal3C.cover$Species.Code[removal3C.cover$Data.Type == "Legacy"])) #209 species
 length(table(removal3C.cover$Species.Code[removal3C.cover$Data.Type == "Resurvey"])) #353 species
 
@@ -142,14 +137,12 @@ length(table(removal3C.cover$Species.Code[removal3C.cover$Data.Type == "Resurvey
 #### STEP 4: Additional data tidying (reduce to shared species only) ####
 
 # 4(a) Separate into legacy and resurvey datasets to make comparison easier
-
 legacy.removal4A.cover <- removal3C.cover[removal3C.cover$Data.Type == "Legacy", ]
 legacy.removal4A.cover$Species.Code <- factor(legacy.removal4A.cover$Species.Code)
 resurvey.removal4A.cover <- removal3C.cover[removal3C.cover$Data.Type == "Resurvey",]
 resurvey.removal4A.cover$Species.Code <- factor(resurvey.removal4A.cover$Species.Code)
 
 # 4(b) Which species are common to both surveys?
-
 (common.sp <- as.vector(levels(legacy.removal4A.cover$Species.Code)
                         [levels(legacy.removal4A.cover$Species.Code) %in% 
                             levels(resurvey.removal4A.cover$Species.Code)])) #130 species
@@ -161,7 +154,6 @@ removal4B.cover <- merge(common.sp.for.merge, removal3C.cover,
                          by="Species.Code", all.x=FALSE)
 
 # Checking lengths
-
 nrow(removal4B.cover) #Should be 4908 after
 
 
