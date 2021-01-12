@@ -1,7 +1,7 @@
 # Created: Nov. 24, 2020
 # Updated: Dec. 11, 2020
 
-# This script will be used to create the datasets used in the COVER and PRESENCE analyses
+# This script will be used to create the datasets used in the COVER and PRESENCE analyses. Species not shared appearing in both surveys, hybrids, family-level IDs, invasives, and unknowns are removed in this script.
 
 # IMPORTANT NOTE: unless otherwise indicated, always use Understory_All.csv for these analyses as it is the ONLY file with up-to-date corrections.
 
@@ -11,6 +11,8 @@ library(reshape2)
 library(rms)
 library(plyr)
 library(MuMIn)
+
+
 
 
 #### STEP 1: Import data ####
@@ -23,6 +25,8 @@ plot.names <- lat.long[, c(2, 3, 6)]
 names(plot.names) <- c("Plot.2015", "Plot.1980", "Elevation.m")
 
 fires <- read.csv("data/All_Plots_Wildfire_Join.csv", header=TRUE, na.strings="")
+
+
 
 
 #### STEP 2: Plot-related corrections (removals, edits, and additions) ####
@@ -91,7 +95,79 @@ nrow(plot.names) #Should be 370 after
 nrow(und.cover) #Should be 6690 after
 
 
-#### STEP 3: Adding fires as a covariate ####
+
+
+### STEP 3: Species-related corrections (remove unknowns, hybrids, etc.) ####
+
+## How many species are in legacy vs resurvey data, PRE-tidying?
+
+length(table(und.cover$Species.Code[und.cover$Data.Type == "Legacy"])) #219 species
+length(table(und.cover$Species.Code[und.cover$Data.Type == "Resurvey"])) #536 species
+
+## 3(a): Remove invasives, family-level IDs, trees, and lichen
+
+removal3A.cover <- und.cover[!und.cover$Species.Code == "XBOR" &    # X___ = family-level ID
+                               !und.cover$Species.Code == "XBRA" &
+                               !und.cover$Species.Code == "XLAM" &
+                               !und.cover$Species.Code == "XLIC" &  # Lichen
+                               !und.cover$Species.Code == "XORC" &
+                               !und.cover$Species.Code == "XPOA" &
+                               !und.cover$Species.Code == "XRAN" &
+                               !und.cover$Species.Code == "NA" &
+                               !und.cover$Species.Code == "BRTE" &  # Cheatgrass (invasive)
+                               !und.cover$Species.Code == "ABGR" &  #Abies grandis (tree)
+                               !und.cover$Species.Code == "LAMU" &
+                               !und.cover$Species.Code == "HYPE" &
+                               !und.cover$Species.Code == "POBU" &
+                               !und.cover$Species.Code == "TRDU" &
+                               !und.cover$Species.Code == "ACGR" &
+                               !und.cover$Species.Code == "ACMA", ]
+
+## 3(b) Remove uncertains and hybrids (primarily from resurvey; e.g. VAOVxAL)
+
+removal3B.cover <- removal3A.cover[which(nchar(removal3A.cover$Species.Code) == 4), ]
+
+## 3(c) Remove any remaining unknowns (primarily from resurvey)
+
+removal3C.cover <- subset(removal3B.cover, !grepl("unk", removal3B.cover$Species.Code))
+
+## How many species are in legacy vs resurvey data, POST-tidying?
+
+length(table(removal3C.cover$Species.Code[removal3C.cover$Data.Type == "Legacy"])) #209 species
+length(table(removal3C.cover$Species.Code[removal3C.cover$Data.Type == "Resurvey"])) #353 species
+
+
+
+
+#### STEP 4: Additional data tidying (reduce to shared species only) ####
+
+# 4(a) Separate into legacy and resurvey datasets to make comparison easier
+
+legacy.removal4A.cover <- removal3C.cover[removal3C.cover$Data.Type == "Legacy", ]
+legacy.removal4A.cover$Species.Code <- factor(legacy.removal4A.cover$Species.Code)
+resurvey.removal4A.cover <- removal3C.cover[removal3C.cover$Data.Type == "Resurvey",]
+resurvey.removal4A.cover$Species.Code <- factor(resurvey.removal4A.cover$Species.Code)
+
+# 4(b) Which species are common to both surveys?
+
+(common.sp <- as.vector(levels(legacy.removal4A.cover$Species.Code)
+                        [levels(legacy.removal4A.cover$Species.Code) %in% 
+                            levels(resurvey.removal4A.cover$Species.Code)])) #130 species
+
+common.sp.for.merge <- data.frame("Species.Code" = common.sp, 
+                                  "Num" = rep(1:length(common.sp)))
+
+removal4B.cover <- merge(common.sp.for.merge, removal3C.cover, 
+                         by="Species.Code", all.x=FALSE)
+
+# Checking lengths
+
+nrow(removal4B.cover) #Should be 4908 after
+
+
+
+
+#### STEP 5: Adding fires as a covariate ####
 
 # Create new variable, fire.cat, identifying plots burned > 1983
 fires$fire.cat <- ifelse(fires$CAL_YEAR >= 1983, "Burned", "Unburned")
@@ -120,20 +196,23 @@ names(list.fires) <- c("Fires", "Elevation.m", "Data.Type", "Plot")
 list.fires$Data.Type <- 
   ifelse(list.fires$Data.Type == "Plot.1980", "Legacy", "Resurvey")
 
-cover.fires <- merge(und.cover, list.fires[-c(2, 3)], by="Plot")
-cover.fires$Fires<-as.factor(cover.fires$Fires)
+cover.fires <- merge(removal4B.cover, list.fires[-c(2, 3)], by="Plot")
+cover.fires$Fires <- as.factor(cover.fires$Fires)
 
 
-#### STEP 4: Write cover.fires, to be used in subsequent scripts ####
+#### STEP 6: Write cover.fires, to be used in subsequent scripts ####
 
-#write.csv(cover.fires, file="data/1_cover_with_fires.csv", row.names=FALSE)
+write.csv(cover.fires, file="data/1_cover_with_fires.csv", row.names=FALSE)
 
 
-#### STEP 5: Create binary presence (und.presence) file from understory cover data, unrarefied ####
+
+
+#### STEP 7: Create binary presence (und.presence) file from understory cover data, unrarefied ####
 
 # Important note! The presabs code DOES INCLUDE presences where the cover was recorded as "NA". This is fine as these species were definitely present, we just forgot to record their cover. 
 
 # Creating a new data frame from cover.fires of 1s/0s presence/absence in each plot
+
 pres.abs <- table(cover.fires$Plot, cover.fires$Species.Code)
 und.presence.small <- melt(pres.abs, id.vars=c("Plot", "Species.Code"))
 names(und.presence.small) <- c("Plot", "Species.Code", "Pres.Abs")
@@ -143,11 +222,7 @@ und.presence$Data.Type <- as.factor(und.presence$Data.Type)
 #Correcting for a small number of species that ended up double-counted in Understory_All
 und.presence$Pres.Abs <- ifelse(und.presence$Pres.Abs >= 1, 1, 0)
 
-# Removes one species named "NA" with abundance of 0 in every plot
-und.presence <- und.presence[complete.cases(und.presence),]
-
-
-#write.csv(data/und.presence, "1_presence_fires_unrarefied.csv", row.names = FALSE)
+write.csv(und.presence, "data/1_presence_fires_unrarefied.csv", row.names = FALSE)
 
 
 
