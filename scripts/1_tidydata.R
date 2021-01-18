@@ -136,6 +136,7 @@ length(table(genus.only$Species.Code[genus.only$Data.Type == "Resurvey"])) # 32 
 
 
 
+
 #### STEP 4: Additional data tidying (reduce to shared species only) ####
 
 # NOTE: Plots Hozo140 (resurvey) and 2045 (legacy) contained only uncommon species. These plots are automatically removed in this step.
@@ -159,6 +160,8 @@ removal4B.cover <- merge(common.sp.for.merge, removal3C.cover,
 
 # Checking lengths
 nrow(removal4B.cover) #Should be 4908 after
+
+
 
 
 #### STEP 5: Adding fires as a covariate ####
@@ -192,6 +195,8 @@ list.fires$Data.Type <-
 
 cover.fires <- merge(removal4B.cover, list.fires[-c(2, 3)], by="Plot")
 cover.fires$Fires <- as.factor(cover.fires$Fires)
+
+
 
 
 #### STEP 6: Adding raw % cover as a covariate, to be used in rarefaction ####
@@ -238,6 +243,8 @@ cover.fires.raw[cover.fires.raw$Year == "2014" &
                 [cover.fires.raw$Species.Code == "ACGL", "Percent.Cover"], na.rm = TRUE)
 
 
+
+
 #### STEP 7: Write cover.fires, to be used in subsequent scripts ####
 
 write.csv(cover.fires.raw, file="data/1_cover_with_fires.csv", row.names=FALSE)
@@ -267,8 +274,13 @@ write.csv(und.presence, "data/1_presence_fires_unrarefied.csv", row.names = FALS
 
 
 
+#### STEP 9: Store adjusted plot.names file, used in subsequent scripts ####
 
+# Remove Hozo140 (resurvey) and 2045 (legacy) - see Step 4
+plot.names.fin <- plot.names[!plot.names$Plot.1980 == "2045" & 
+                           !plot.names$Plot.2015 == "Hozo140", ]
 
+save(plot.names.fin, file = "data/plot.names.Rda")
 
 
 
