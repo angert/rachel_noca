@@ -13,8 +13,6 @@ library(plyr)
 library(MuMIn)
 
 
-
-
 #### STEP 1: Import data ####
 
 und.cover <- read.csv("data/Understory_All.csv", header=TRUE, na.strings="") # L = Legacy and R = Resurvey
@@ -136,6 +134,8 @@ length(table(removal3C.cover$Species.Code[removal3C.cover$Data.Type == "Resurvey
 
 #### STEP 4: Additional data tidying (reduce to shared species only) ####
 
+# NOTE: Plots Hozo140 (resurvey) and 2045 (legacy) contained only uncommon species. These plots are automatically removed in this step.
+
 # 4(a) Separate into legacy and resurvey datasets to make comparison easier
 legacy.removal4A.cover <- removal3C.cover[removal3C.cover$Data.Type == "Legacy", ]
 legacy.removal4A.cover$Species.Code <- factor(legacy.removal4A.cover$Species.Code)
@@ -155,8 +155,6 @@ removal4B.cover <- merge(common.sp.for.merge, removal3C.cover,
 
 # Checking lengths
 nrow(removal4B.cover) #Should be 4908 after
-
-
 
 
 #### STEP 5: Adding fires as a covariate ####
@@ -194,59 +192,51 @@ cover.fires$Fires <- as.factor(cover.fires$Fires)
 
 #### STEP 6: Adding raw % cover as a covariate, to be used in rarefaction ####
 
-resurvey.2015 <- read.csv("data/Understory_2015.csv", na.strings = c("", " "))
-resurvey.2014<-read.csv("/Users/rachelwilson/Dropbox/Cascades resurveys/NCCO/2015/Data_entry/Understory_2014_Aug8.csv", na.strings = c("", " "))
-resurvey.2015$Percent.Cover <-as.numeric(as.character(resurvey.2015 $Percent.Cover))
-resurvey.2014$Percent.Cover <-as.numeric(as.character(resurvey.2014$Percent.Cover))
+#TODO Build raw percentages into Understory_All.csv. For now, read in raw data files
+raw.2015 <- read.csv("data/Understory_2015.csv", na.strings = c("", " ")) #raw data
+raw.2014 <- read.csv("data/Understory_2014_Aug8.csv", na.strings = c("", " ")) #raw data
+raw.2015$Percent.Cover <- as.numeric(raw.2015$Percent.Cover)
+raw.2014$Percent.Cover <- as.numeric(raw.2014$Percent.Cover)
 
-# Now, I will average % cover to the plot level
-resurvey.2015<-resurvey.2015[complete.cases(resurvey.2015$Percent.Cover),]
-resurvey.2014<-resurvey.2014[complete.cases(resurvey.2014$Percent.Cover),]
-und.2015<-aggregate(resurvey.2015["Percent.Cover"], (resurvey.2015[c("Plot", "Species")]), mean)
-und.2015$Year<-rep(2015)
-und.2014<-aggregate(resurvey.2014["Percent.Cover"], (resurvey.2014[c("Plot", "Species")]), mean)
-und.2014$Year<-rep(2014)
+# Remove rows where % cover was not recorded
+raw.2015 <- raw.2015[complete.cases(raw.2015$Percent.Cover), ]
+raw.2014 <- raw.2014[complete.cases(raw.2014$Percent.Cover), ]
 
-percent.all<-rbind(und.2014, und.2015)
-names(percent.all)[2]<-"Species.Code"
-test<-join(percent.all, nounk.resurvey, type="right")
-test[test$Year=="2015" & is.na(test$Percent.Cover)==TRUE,] #make sure everything crossed over ok
+# Aggregate % cover of species to plot level
+raw.2015.plotavg <- aggregate(raw.2015["Percent.Cover"], 
+                              raw.2015[c("Plot", "Species")], mean)
+raw.2015.plotavg$Year <- rep(2015)
+raw.2014.plotavg <- aggregate(raw.2014["Percent.Cover"], 
+                              raw.2014[c("Plot", "Species")], mean)
+raw.2014.plotavg$Year <- rep(2014)
+raw.plotavg <- rbind(raw.2014.plotavg, raw.2015.plotavg)
+names(raw.plotavg)[2] <- "Species.Code"
 
-# for some reason, Sour4023 refuses to store % cover for O replicate..!?
-test[test$Plot=="Sour4023" & is.na(test$Percent.Cover)==TRUE,4]<-c(0.1, 0.1)
+# Join raw % covers to cover.fires, keeping all cover.fire rows and throwing out any mismatches from raw.plotavg. Legacy % cover automatically coded as NA.
+cover.fires.raw <- join(raw.plotavg, cover.fires, type="right")
 
-#I need to include % cover as a probability weight for all these species so for now I'm just coding all 2014 ACCI covers as their 2015 mean across plots. Same for ACGL
-test[test$Year=="2014" & is.na(test$Percent.Cover)==TRUE & test$Species.Code=="ACCI",4]<-rep(mean(test[test$Species.Code=="ACCI",4], na.rm=TRUE))
-test[test$Year=="2014" & is.na(test$Percent.Cover)==TRUE & test$Species.Code=="ACGL",4]<-rep(mean(test[test$Species.Code=="ACGL",4], na.rm=TRUE))
+# Which resurvey data rows got erroneously coded as NA?
+print(cover.fires.raw[cover.fires.raw$Data.Type=="Resurvey" & 
+                  is.na(cover.fires.raw$Percent.Cover) == TRUE,])
 
-#### STOP!!! You are about to convert the ORIGINAL und.cover into an und.cover of only common species (genus-level ID or more)! ####
-nounk.legacy$Percent.Cover<-rep(NA)
-und.covertemp<-rbind(nounk.legacy, test) #nrow = ~6400
+# Fix CAPA % cover in Sour4023 (unclear why this his happening)
+cover.fires.raw[cover.fires.raw$Plot == "Sour4023" &
+                cover.fires.raw$Species.Code == "CAPA", "Percent.Cover"] <- 0.1
 
-test2 <- und.covertemp[und.covertemp$Species.Code %in% common.sp,]
-test2$Species.Code <- factor(test2$Species.Code)
-test2$Plot <- factor(test2$Plot)
-
-#these plots contain only uncommon species - hardcode them in as NAs
-guh <- und.covertemp[und.covertemp$Plot == "2045" | und.covertemp$Plot == "Hozo140",]
-blerp <- guh[1:2,]
-blerp[,2:3] <- paste(NA) #overwrite as NAs
-
-und.cover <- rbind(test2, blerp)
-und.cover$Plot <- factor(und.cover$Plot)
-
-#is it really just common species?
-length(levels(und.cover$Species.Code)) #should be 131 including 1 NA
-
-
-
-
-
+# Code all 2014 ACCI and ACGL covers as their 2015 mean across plots
+cover.fires.raw[cover.fires.raw$Year == "2014" &
+                cover.fires.raw$Species.Code == "ACCI", 
+                "Percent.Cover"] <- mean(cover.fires.raw
+                [cover.fires.raw$Species.Code == "ACCI", "Percent.Cover"], na.rm = TRUE)
+cover.fires.raw[cover.fires.raw$Year == "2014" &
+                cover.fires.raw$Species.Code == "ACGL", 
+                "Percent.Cover"] <- mean(cover.fires.raw
+                [cover.fires.raw$Species.Code == "ACGL", "Percent.Cover"], na.rm = TRUE)
 
 
 #### STEP 7: Write cover.fires, to be used in subsequent scripts ####
 
-write.csv(cover.fires, file="data/1_cover_with_fires.csv", row.names=FALSE)
+write.csv(cover.fires.raw, file="data/1_cover_with_fires.csv", row.names=FALSE)
 
 
 
@@ -254,6 +244,8 @@ write.csv(cover.fires, file="data/1_cover_with_fires.csv", row.names=FALSE)
 #### STEP 8: Create binary presence (und.presence) file from understory cover data, unrarefied ####
 
 # Important note! The presabs code DOES INCLUDE presences where the cover was recorded as "NA". This is fine as these species were definitely present, we just forgot to record their cover. 
+
+# Important note #2: This file will not contain raw % cover values.
 
 # Creating a new data frame from cover.fires of 1s/0s presence/absence in each plot
 
