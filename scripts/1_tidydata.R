@@ -129,6 +129,10 @@ removal3C.cover <- subset(removal3B.cover, !grepl("unk", removal3B.cover$Species
 length(table(removal3C.cover$Species.Code[removal3C.cover$Data.Type == "Legacy"])) #209 species
 length(table(removal3C.cover$Species.Code[removal3C.cover$Data.Type == "Resurvey"])) #353 species
 
+# Optional: Do the number of genus-level IDs (__XX) differ between surveys? (YES)
+genus.only <- subset(removal3C.cover, grepl("XX", removal3C.cover$Species.Code))
+length(table(genus.only$Species.Code[genus.only$Data.Type == "Legacy"])) # 77 species
+length(table(genus.only$Species.Code[genus.only$Data.Type == "Resurvey"])) # 32 species
 
 
 
