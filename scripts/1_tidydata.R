@@ -1,5 +1,5 @@
 # Created: Nov. 24, 2020
-# Updated: Dec. 11, 2020
+# Updated: Jan. 18, 2020
 
 # This script will be used to create the datasets used in the COVER and PRESENCE analyses. Species not shared appearing in both surveys, hybrids, family-level IDs, invasives, and unknowns are removed in this script.
 
@@ -192,14 +192,66 @@ cover.fires <- merge(removal4B.cover, list.fires[-c(2, 3)], by="Plot")
 cover.fires$Fires <- as.factor(cover.fires$Fires)
 
 
-#### STEP 6: Write cover.fires, to be used in subsequent scripts ####
+#### STEP 6: Adding raw % cover as a covariate, to be used in rarefaction ####
+
+resurvey.2015 <- read.csv("data/Understory_2015.csv", na.strings = c("", " "))
+resurvey.2014<-read.csv("/Users/rachelwilson/Dropbox/Cascades resurveys/NCCO/2015/Data_entry/Understory_2014_Aug8.csv", na.strings = c("", " "))
+resurvey.2015$Percent.Cover <-as.numeric(as.character(resurvey.2015 $Percent.Cover))
+resurvey.2014$Percent.Cover <-as.numeric(as.character(resurvey.2014$Percent.Cover))
+
+# Now, I will average % cover to the plot level
+resurvey.2015<-resurvey.2015[complete.cases(resurvey.2015$Percent.Cover),]
+resurvey.2014<-resurvey.2014[complete.cases(resurvey.2014$Percent.Cover),]
+und.2015<-aggregate(resurvey.2015["Percent.Cover"], (resurvey.2015[c("Plot", "Species")]), mean)
+und.2015$Year<-rep(2015)
+und.2014<-aggregate(resurvey.2014["Percent.Cover"], (resurvey.2014[c("Plot", "Species")]), mean)
+und.2014$Year<-rep(2014)
+
+percent.all<-rbind(und.2014, und.2015)
+names(percent.all)[2]<-"Species.Code"
+test<-join(percent.all, nounk.resurvey, type="right")
+test[test$Year=="2015" & is.na(test$Percent.Cover)==TRUE,] #make sure everything crossed over ok
+
+# for some reason, Sour4023 refuses to store % cover for O replicate..!?
+test[test$Plot=="Sour4023" & is.na(test$Percent.Cover)==TRUE,4]<-c(0.1, 0.1)
+
+#I need to include % cover as a probability weight for all these species so for now I'm just coding all 2014 ACCI covers as their 2015 mean across plots. Same for ACGL
+test[test$Year=="2014" & is.na(test$Percent.Cover)==TRUE & test$Species.Code=="ACCI",4]<-rep(mean(test[test$Species.Code=="ACCI",4], na.rm=TRUE))
+test[test$Year=="2014" & is.na(test$Percent.Cover)==TRUE & test$Species.Code=="ACGL",4]<-rep(mean(test[test$Species.Code=="ACGL",4], na.rm=TRUE))
+
+#### STOP!!! You are about to convert the ORIGINAL und.cover into an und.cover of only common species (genus-level ID or more)! ####
+nounk.legacy$Percent.Cover<-rep(NA)
+und.covertemp<-rbind(nounk.legacy, test) #nrow = ~6400
+
+test2 <- und.covertemp[und.covertemp$Species.Code %in% common.sp,]
+test2$Species.Code <- factor(test2$Species.Code)
+test2$Plot <- factor(test2$Plot)
+
+#these plots contain only uncommon species - hardcode them in as NAs
+guh <- und.covertemp[und.covertemp$Plot == "2045" | und.covertemp$Plot == "Hozo140",]
+blerp <- guh[1:2,]
+blerp[,2:3] <- paste(NA) #overwrite as NAs
+
+und.cover <- rbind(test2, blerp)
+und.cover$Plot <- factor(und.cover$Plot)
+
+#is it really just common species?
+length(levels(und.cover$Species.Code)) #should be 131 including 1 NA
+
+
+
+
+
+
+
+#### STEP 7: Write cover.fires, to be used in subsequent scripts ####
 
 write.csv(cover.fires, file="data/1_cover_with_fires.csv", row.names=FALSE)
 
 
 
 
-#### STEP 7: Create binary presence (und.presence) file from understory cover data, unrarefied ####
+#### STEP 8: Create binary presence (und.presence) file from understory cover data, unrarefied ####
 
 # Important note! The presabs code DOES INCLUDE presences where the cover was recorded as "NA". This is fine as these species were definitely present, we just forgot to record their cover. 
 
