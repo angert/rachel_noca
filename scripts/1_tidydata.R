@@ -266,7 +266,7 @@ names(und.presence.small) <- c("Plot", "Species.Code", "Pres.Abs")
 und.presence <- merge(und.presence.small, list.fires, by = "Plot")
 und.presence$Data.Type <- as.factor(und.presence$Data.Type)
 
-#Correcting for a small number of species that ended up double-counted in Understory_All
+# Correcting for a small number of species that ended up double-counted in Understory_All
 und.presence$Pres.Abs <- ifelse(und.presence$Pres.Abs >= 1, 1, 0)
 
 write.csv(und.presence, "data/1_presence_fires_unrarefied.csv", row.names = FALSE)
@@ -274,13 +274,16 @@ write.csv(und.presence, "data/1_presence_fires_unrarefied.csv", row.names = FALS
 
 
 
-#### STEP 9: Store adjusted plot.names file, used in subsequent scripts ####
+#### STEP 9: Store plot.names and list.fires file, used in subsequent scripts ####
 
 # Remove Hozo140 (resurvey) and 2045 (legacy) - see Step 4
-plot.names.fin <- plot.names[!plot.names$Plot.1980 == "2045" & 
+plot.names <- plot.names[!plot.names$Plot.1980 == "2045" & 
                            !plot.names$Plot.2015 == "Hozo140", ]
+list.fires <- list.fires[!list.fires$Plot == "2045" & 
+                           !list.fires$Plot == "Hozo140", ]
 
-save(plot.names.fin, file = "data/plot.names.Rda")
+save(plot.names, file = "data/plot.names.Rda")
+save(list.fires, file = "data/list.fires.Rda")
 
 
 
