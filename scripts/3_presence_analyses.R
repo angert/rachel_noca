@@ -30,13 +30,15 @@ species.list <- factor(species.list)
 
 #### STEP 2: Error logging ####
 
+# Work in progress
+
 options(keep.source = TRUE)        # source code file name and line number tracking
 options("tryCatchLog.write.error.dump.file" = TRUE) # dump for post-mortem analysis
 
 flog.appender(appender.file("error_logs.log"))  # to log into a file instead of console
 flog.threshold(WARN)    # TRACE, DEBUG, INFO, WARN, ERROR, FATAL
 
-tryCatchLog(source("3_presence_analysis.R"))
+tryCatchLog(source("scripts/3_presence_analysis.R"))
 
 
 
