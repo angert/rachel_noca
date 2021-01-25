@@ -38,7 +38,7 @@ options("tryCatchLog.write.error.dump.file" = TRUE) # dump for post-mortem analy
 flog.appender(appender.file("error_logs.log"))  # to log into a file instead of console
 flog.threshold(WARN)    # TRACE, DEBUG, INFO, WARN, ERROR, FATAL
 
-tryCatchLog(source("scripts/3_presence_analysis.R"))
+tryCatchLog(source("scripts/3_presence_analyses.R"))
 
 
 
