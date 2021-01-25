@@ -1,7 +1,7 @@
 # Created: Jan. 11, 2020
-# Updated: Jan. 11, 2020
+# Updated: Jan. 25, 2020
 
-# This script will be used to created a RAREFIED dataset based on a dataset whittled to shared species (those appearing in both surveys).
+# This script will be used to created a RAREFIED set of datasets, whittled to shared species (those appearing in both surveys).
 
 # Packages needed:
 
