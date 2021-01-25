@@ -75,6 +75,12 @@ for(j in 1:100) {
   if(j == 100) system("say Your loop is done")
 } 
 
+# Saving list of rarefied datasets as R object, to be imported during analysis step
+
+# save(rare.ALL, file = "data/rare.ALL.Rda")
+
+
+
 
 
 
