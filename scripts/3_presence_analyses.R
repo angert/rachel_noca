@@ -1,5 +1,5 @@
 # Created: Dec. 11, 2020
-# Updated: Jan. 25, 2020
+# Updated: Feb. 4, 2020
 
 # This script will be used to undertake the PRESENCE analyses
 
@@ -9,6 +9,7 @@
 
 library(MuMIn)
 library(plyr)
+source("scripts/3_dredge_log_to_df.R")
 
 #### STEP 1: Import data ####
 
@@ -28,7 +29,7 @@ species.list <- factor(species.list)
 
 #### STEP 2: Error logging ####
 
-
+# This is a work in progress. Current approach: log everything in a .txt file, then pull from that file to create a DF
 
 
 
@@ -60,13 +61,19 @@ for(D in 1:2) {
     und.presence.SPEC$Elevation.m2 <- und.presence.SPEC$Elevation.m^2 #TODO better than poly()?
     und.presence.SPEC <- und.presence.SPEC[complete.cases(und.presence.SPEC), ] #Just in case
     
-    #Emptying out previous objects
+    # Emptying out previous objects
     mod.globfi <- NULL
     mod.globnofi <- NULL
     dredge.globfi <- NULL
     dredge.globnofi <- NULL
     avg.mods <- NULL
     top.mods.coeff <- NULL
+    
+    # Create new error-logging file specific to permutation & species
+    log.file <- file(paste("data/warnings", 
+                           D, levels(species.list)[S], ".txt", sep = "_"), open = "wt")
+    sink(log.file, append = TRUE, type = "output") # Sink to log file
+    sink(log.file, append = TRUE, type = "message")
     
     # Did the species occur in burned plots 5+ times?
     num.burns <- 
@@ -99,6 +106,12 @@ for(D in 1:2) {
       top.mods.coeff <- as.data.frame(coef(subset(dredge.globnofi, delta <= 2)))
       avg.mods.coeff <- as.data.frame(t(avg.mods$coefficients["full",]))
     }
+    
+    #TODO End error-logging - not clear how this works
+    sink()
+    sink()
+    # dredge_log_to_df(log.file) - can't get this to work
+    closeAllConnections() # Stop writing errors to log file
     
     # Null model (for Psuedo-R-squared calculation later)
     
