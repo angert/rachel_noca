@@ -42,10 +42,10 @@ species.list <- factor(species.list)
 
 coeff.ALLDAT <- list()
 
-for(D in 1:1) {
+for(D in 1:2) {
   
   coeff.ALLSPEC <- list()
-  #options(warn = 1) # Tell me if a model throws an error.
+  options(warn = 1) # Tell me if a model throws an error.
   und.presence <- rare.ALL[[D]]
   und.presence$Fires <- as.factor(und.presence$Fires)
   und.presence$Data.Type <- as.factor(und.presence$Data.Type)
@@ -134,7 +134,8 @@ for(D in 1:1) {
     
     for(i in 1:nrow(top.mods.coeff)) {
       Mods.list[[i]] <- data.frame(
-        Species = levels(species.list)[S],  
+        Species = levels(species.list)[S], 
+        Dataset = D,
         L.Occ = sum(num.burns["1", , "Legacy"]), 
         R.Occ = sum(num.burns["1", , "Resurvey"]), 
         Fire.Included = ifelse(is.null(mod.globnofi) == TRUE, "Yes", "No"),
@@ -162,7 +163,8 @@ for(D in 1:1) {
     Mods <- ldply(Mods.list, data.frame)
     
     Avg <- data.frame(
-      Species = levels(species.list)[S],  
+      Species = levels(species.list)[S],
+      Dataset = D,
       L.Occ = sum(num.burns["1", , "Legacy"]), 
       R.Occ = sum(num.burns["1", , "Resurvey"]), 
       Fire.Included = ifelse(is.null(mod.globnofi) == TRUE, "Yes", "No"),
@@ -201,7 +203,7 @@ for(D in 1:1) {
 
 # Store output as CSV
 
-write.csv(coeff, file="data/2_presence_analyses_coefficients.csv", row.names=FALSE)
+write.csv(coeff, file = "data/2_presence_analyses_coefficients.csv", row.names=FALSE)
 
   
   
