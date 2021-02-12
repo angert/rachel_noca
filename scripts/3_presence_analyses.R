@@ -138,11 +138,12 @@ for(D in 1:2) { #TODO leave as 2 for now just in case
     # Exclude models for which there was a warning
     coeff.nowarn <- coeff.warn[coeff.warn$Has_warning == FALSE, ]
     
-    # Calculate delta AIC based on warning-less models, reduce to delta <=2
+    # Calculate delta AIC based on warning-less models, reduce to delta <=2, add weights
     coeff.nowarn$delta <- coeff.nowarn$AIC - 
       coeff.nowarn$AIC[coeff.nowarn$AIC == min(coeff.nowarn$AIC)]
     top.mods.coeff <- coeff.nowarn[coeff.nowarn$delta <= 2, ]
-    
+    top.mods.coeff$weight <- Weights(top.mods.coeff$AIC)
+  
     # Null model (for Psuedo-R-squared calculation later)
     mod.NULL <- glm(Pres.Abs ~ 1, 
                     data = und.presence.SPEC, family = "binomial", na.action = na.fail)
@@ -161,7 +162,7 @@ for(D in 1:2) { #TODO leave as 2 for now just in case
         Fire.Included = ifelse(is.null(mod.globnofi) == TRUE, "Yes", "No"),
         Type = "Unavg", 
         deltaAIC = top.mods.coeff$delta[i], 
-        Weight = avg.mods$msTable$weight[i], #TODO calculate this in an earlier step
+        Weight = top.mods.coeff$weight[i], 
         Rsquared = 1 - top.mods.coeff$logLik[i] / as.numeric(logLik(mod.NULL)),
         Intercept = top.mods.coeff$`(Intercept)`[i],
         Data.Type = top.mods.coeff$Data.TypeResurvey[i],
