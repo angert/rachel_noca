@@ -11,7 +11,8 @@ library(MuMIn)
 library(plyr)
 source("scripts/3_dredge_log_to_df.R")
 
-# Function to create data frame of coefficients, AIC and model ID
+# Function to create data frame of coefficients, AIC and model ID:
+
 df.fun <- function(ModID) {
   df <- as.data.frame(t(coef(dredge.list.globfi[[ModID]]))) # Transposed DF of coefs
   df$new_Model_id <- paste(ModID) # Store unique model ID
@@ -36,15 +37,7 @@ species.list <- factor(species.list)
 
 
 
-#### STEP 2: Error logging ####
-
-# This is a work in progress. Current approach: log everything in a .txt file, then pull from that file to create a DF
-
-
-
-
-
-#### STEP 3: Loop to analyze presence data Run time ~ 2 sec ####
+#### STEP 2: Loop to analyze presence data. Run time unknown ####
 
 # Can be run as a loop outputting all species, or S can be modified to isolated specific species. Check number here:
 (numbered.species <- data.frame(Species=species.list, No.=rep(1:42)))
@@ -52,7 +45,7 @@ species.list <- factor(species.list)
 
 coeff.ALLDAT <- list()
 
-for(D in 1:2) {
+for(D in 1:2) { #TODO leave as 2 for now just in case
   
   coeff.ALLSPEC <- list()
   und.presence <- rare.ALL[[D]]
@@ -73,7 +66,9 @@ for(D in 1:2) {
     mod.globfi <- NULL
     mod.globnofi <- NULL
     dredge.globfi <- NULL
+    dredge.list.globfi <- NULL
     dredge.globnofi <- NULL
+    dredge.list.globfnofi <- NULL
     avg.mods <- NULL
     top.mods.coeff <- NULL
    
@@ -134,7 +129,7 @@ for(D in 1:2) {
     log.warn <- dredge_log_to_df(log.file.path) # See 3_dredge_log_to_df.R
     log.warn$new_Model_id <- paste("Mod", log.warn$Model_id, sep = ".")
     
-    # Run df.fun to pull out coefficients, AIC, model ID 
+    # Run df.fun to pull out coefficients, AIC, model ID from dredge list
     coeff.df <- ldply(lapply(log.warn$new_Model_id, df.fun))
     
     # Join warning log to dataframe of coefficients and AIC
@@ -229,30 +224,8 @@ for(D in 1:2) {
 
 # Store output as CSV
 
-write.csv(coeff, file = "data/2_presence_analyses_coefficients.csv", row.names=FALSE)
+# write.csv(coeff, file = "data/3_presence_analyses_coefficients.csv", row.names=FALSE)
 
-  
-# Delete later if you don't need it
-coeff.all <-c("Data.TypeResurvey", 
-              "Elevation.m", 
-              "FiresBurned", 
-              "Data.TypeResurvey:Elevation.m", 
-              "Elevation.m:FiresBurned", 
-              "Data.TypeResurvey:FiresBurned", 
-              "Elevation.m2", 
-              "Data.TypeResurvey:Elevation.m2", 
-              "Elevation.m2:FiresBurned", 
-              "Data.TypeResurvey:Elevation.m:FiresBurned", 
-              "Data.TypeResurvey:Elevation.m2:FiresBurned")
-
-for(C in 1:length(coeff.all)) {
-  if(!coeff.all[C] %in% colnames(top.mods.coeff)) {
-    top.mods.coeff[, coeff.all[C]] <- rep(NA, times = nrow(top.mods.coeff))
-  }
-  if(!coeff.all[C] %in% colnames(avg.mods.coeff)) {
-    avg.mods.coeff[, coeff.all[C]] <- rep(NA, times = 1)
-  }
-}    
   
 
 
