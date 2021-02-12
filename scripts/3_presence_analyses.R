@@ -11,6 +11,14 @@ library(MuMIn)
 library(plyr)
 source("scripts/3_dredge_log_to_df.R")
 
+# Function to create data frame of coefficients, AIC and model ID
+df.fun <- function(ModID) {
+  df <- as.data.frame(t(coef(dredge.list.globfi[[ModID]]))) # Transposed DF of coefs
+  df$new_Model_id <- paste(ModID) # Store unique model ID
+  df$AIC <- dredge.list.globfi[[ModID]]$aic # Store model AIC
+  return(df)
+}
+
 #### STEP 1: Import data ####
 
 # To analyze un-rarefied data (exclude 100x loop):
@@ -46,7 +54,6 @@ coeff.ALLDAT <- list()
 for(D in 1:2) {
   
   coeff.ALLSPEC <- list()
-  options(warn = 1) # Tell me if a model throws an error.
   und.presence <- rare.ALL[[D]]
   und.presence$Fires <- as.factor(und.presence$Fires)
   und.presence$Data.Type <- as.factor(und.presence$Data.Type)
@@ -68,33 +75,47 @@ for(D in 1:2) {
     dredge.globnofi <- NULL
     avg.mods <- NULL
     top.mods.coeff <- NULL
+   
     
-    # Create new error-logging file specific to permutation & species
-    log.file <- file(paste("data/warnings", 
-                           D, levels(species.list)[S], ".txt", sep = "_"), open = "wt")
-    sink(log.file, append = TRUE, type = "output") # Sink to log file
-    sink(log.file, append = TRUE, type = "message")
-    
-    # Did the species occur in burned plots 5+ times?
+     # Did the species occur in burned plots 5+ times?
     num.burns <- 
       table(und.presence.SPEC$Pres.Abs, und.presence.SPEC$Fires, und.presence.SPEC$Data.Type)
     
-    # If yes, include fire as a predictor in global model:
+    
+    # Create new error-logging file specific to permutation & species
+    log.file <- file(paste("data/warning_logs/warnings", 
+                           D, levels(species.list)[S], ".txt", sep = "_"), open = "wt")
+    log.file.path <- paste("data/warning_logs/warnings", 
+                           D, levels(species.list)[S], ".txt", sep = "_")
+    sink(log.file, append = TRUE, type = "output") # Sink to log file
+    sink(log.file, append = TRUE, type = "message")
+    
+    # If > 5, include fire as a predictor in global model:
     if(num.burns["1", "Burned", "Legacy"] >= 5 | num.burns["1", "Burned", "Resurvey"] >= 5) {
       mod.globfi <- glm(Pres.Abs ~ Data.Type * (Elevation.m + Elevation.m2) * Fires, 
                         data = und.presence.SPEC, family = "binomial", na.action = na.fail)
+      options(warn = -1) # Ignore warnings - not for logging.
+      dredge.list.globfi <- lapply(dredge(mod.globfi, rank = AIC, subset = 
+                                dc(Elevation.m, Elevation.m2) &&
+                                dc(Data.Type:Elevation.m, Data.Type:Elevation.m2) &&
+                                dc(Elevation.m:Fires, Elevation.m2:Fires) &&
+                                dc(Data.Type:Elevation.m:Fires, Data.Type:Elevation.m2:Fires), 
+                              trace = FALSE, evaluate = FALSE), eval)
+      names(dredge.list.globfi) <- paste("Mod", 
+                                         as.numeric(names(dredge.list.globfi)) - 1, 
+                                         sep = ".") # Converting to model ID
+      options(warn = 1) # Tell me if a model throws an error - for logging.
       dredge.globfi <- dredge(mod.globfi, rank = AIC, subset = 
                                 dc(Elevation.m, Elevation.m2) &&
                                 dc(Data.Type:Elevation.m, Data.Type:Elevation.m2) &&
                                 dc(Elevation.m:Fires, Elevation.m2:Fires) &&
                                 dc(Data.Type:Elevation.m:Fires, Data.Type:Elevation.m2:Fires), 
                               trace = 1)
-      avg.mods <- model.avg(dredge.globfi, subset = delta <= 2)
-      top.mods.coeff <- as.data.frame(coef(subset(dredge.globfi, delta <= 2)))
-      avg.mods.coeff <- as.data.frame(t(avg.mods$coefficients["full",]))
+      
     }
     
-    # If no, exclude fire from global model:
+    
+    #TODO this part unmodified. If no, exclude fire from global model:
     if(num.burns["1", "Burned", "Legacy"] < 5 & num.burns["1", "Burned", "Resurvey"] < 5) {
       mod.globnofi <- glm(Pres.Abs ~ Data.Type * (Elevation.m + Elevation.m2), 
                           data = und.presence.SPEC, family = "binomial", na.action = na.fail) 
@@ -107,39 +128,27 @@ for(D in 1:2) {
       avg.mods.coeff <- as.data.frame(t(avg.mods$coefficients["full",]))
     }
     
-    #TODO End error-logging - not clear how this works
-    sink()
-    sink()
-    # dredge_log_to_df(log.file) - can't get this to work
-    closeAllConnections() # Stop writing errors to log file
+    # Stop writing to .txt, import dataframe of warning logs
+    closeAllConnections()
+    log.warn <- dredge_log_to_df(log.file.path) # See 3_dredge_log_to_df.R
+    log.warn$new_Model_id <- paste("Mod", log.warn$Model_id, sep = ".")
+    
+    # Run df.fun to pull out coefficients, AIC, model ID 
+    coeff.df <- ldply(lapply(log.warn$new_Model_id, df.fun))
+    
+    # Join warning log to dataframe of coefficients and AIC
+    coeff.warn <- merge(coeff.df, log.warn, by = "new_Model_id", all.x = TRUE)
+    
+    # Exclude models for which there was a warning
+    coeff.nowarn <- coeff.warn[coeff.warn$Has_warning == FALSE, ]
+    coeff.nowarn[order(coeff.nowarn$AIC),]
     
     # Null model (for Psuedo-R-squared calculation later)
-    
     mod.NULL <- glm(Pres.Abs ~ 1, 
                     data = und.presence.SPEC, family = "binomial", na.action = na.fail)
     
-    # Adding NAs to missing coefficients in top.mods.coeff and 
+ 
     
-    coeff.all <- c("Data.TypeResurvey", 
-                   "Elevation.m", 
-                   "FiresBurned", 
-                   "Data.TypeResurvey:Elevation.m", 
-                   "Elevation.m:FiresBurned", 
-                   "Data.TypeResurvey:FiresBurned", 
-                   "Elevation.m2", 
-                   "Data.TypeResurvey:Elevation.m2", 
-                   "Elevation.m2:FiresBurned", 
-                   "Data.TypeResurvey:Elevation.m:FiresBurned", 
-                   "Data.TypeResurvey:Elevation.m2:FiresBurned")
-    
-    for(C in 1:length(coeff.all)) {
-      if(!coeff.all[C] %in% colnames(top.mods.coeff)) {
-        top.mods.coeff[, coeff.all[C]] <- rep(NA, times = nrow(top.mods.coeff))
-      }
-      if(!coeff.all[C] %in% colnames(avg.mods.coeff)) {
-        avg.mods.coeff[, coeff.all[C]] <- rep(NA, times = 1)
-      }
-    }    
     
     # Storing output
     
@@ -219,6 +228,27 @@ for(D in 1:2) {
 write.csv(coeff, file = "data/2_presence_analyses_coefficients.csv", row.names=FALSE)
 
   
+# Delete later if you don't need it
+coeff.all <-c("Data.TypeResurvey", 
+              "Elevation.m", 
+              "FiresBurned", 
+              "Data.TypeResurvey:Elevation.m", 
+              "Elevation.m:FiresBurned", 
+              "Data.TypeResurvey:FiresBurned", 
+              "Elevation.m2", 
+              "Data.TypeResurvey:Elevation.m2", 
+              "Elevation.m2:FiresBurned", 
+              "Data.TypeResurvey:Elevation.m:FiresBurned", 
+              "Data.TypeResurvey:Elevation.m2:FiresBurned")
+
+for(C in 1:length(coeff.all)) {
+  if(!coeff.all[C] %in% colnames(top.mods.coeff)) {
+    top.mods.coeff[, coeff.all[C]] <- rep(NA, times = nrow(top.mods.coeff))
+  }
+  if(!coeff.all[C] %in% colnames(avg.mods.coeff)) {
+    avg.mods.coeff[, coeff.all[C]] <- rep(NA, times = 1)
+  }
+}    
   
 
 

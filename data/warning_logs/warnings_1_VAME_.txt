@@ -1,5 +1,5 @@
-Warning: glm.fit: algorithm did not converge
 Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+Fixed term is "(Intercept)"
 Fixed term is "(Intercept)"
 0 : glm(formula = Pres.Abs ~ 1, family = "binomial", data = und.presence.SPEC, 
     na.action = na.fail)
@@ -98,29 +98,34 @@ Fixed term is "(Intercept)"
 398 : glm(formula = Pres.Abs ~ Elevation.m + Elevation.m2 + Fires + 
     Elevation.m:Fires + Elevation.m2:Fires + 1, family = "binomial", 
     data = und.presence.SPEC, na.action = na.fail)
+Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
 399 : glm(formula = Pres.Abs ~ Data.Type + Elevation.m + Elevation.m2 + 
     Fires + Elevation.m:Fires + Elevation.m2:Fires + 1, family = "binomial", 
     data = und.presence.SPEC, na.action = na.fail)
+Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
 415 : glm(formula = Pres.Abs ~ Data.Type + Elevation.m + Elevation.m2 + 
     Fires + Data.Type:Elevation.m + Elevation.m:Fires + Elevation.m2:Fires + 
     1, family = "binomial", data = und.presence.SPEC, na.action = na.fail)
+Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
 447 : glm(formula = Pres.Abs ~ Data.Type + Elevation.m + Elevation.m2 + 
     Fires + Data.Type:Elevation.m + Data.Type:Elevation.m2 + 
     Elevation.m:Fires + Elevation.m2:Fires + 1, family = "binomial", 
     data = und.presence.SPEC, na.action = na.fail)
+Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
 463 : glm(formula = Pres.Abs ~ Data.Type + Elevation.m + Elevation.m2 + 
     Fires + Data.Type:Fires + Elevation.m:Fires + Elevation.m2:Fires + 
     1, family = "binomial", data = und.presence.SPEC, na.action = na.fail)
+Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
 479 : glm(formula = Pres.Abs ~ Data.Type + Elevation.m + Elevation.m2 + 
     Fires + Data.Type:Elevation.m + Data.Type:Fires + Elevation.m:Fires + 
     Elevation.m2:Fires + 1, family = "binomial", data = und.presence.SPEC, 
     na.action = na.fail)
-Warning in for (i in 1L:d2) { :
-  closing unused connection 3 (data/warnings_1_ACMI)
+Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
 511 : glm(formula = Pres.Abs ~ Data.Type + Elevation.m + Elevation.m2 + 
     Fires + Data.Type:Elevation.m + Data.Type:Elevation.m2 + 
     Data.Type:Fires + Elevation.m:Fires + Elevation.m2:Fires + 
     1, family = "binomial", data = und.presence.SPEC, na.action = na.fail)
+Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
 731 : glm(formula = Pres.Abs ~ Data.Type + Elevation.m + Fires + Data.Type:Elevation.m + 
     Data.Type:Fires + Elevation.m:Fires + Data.Type:Elevation.m:Fires + 
     1, family = "binomial", data = und.presence.SPEC, na.action = na.fail)
@@ -132,22 +137,20 @@ Warning in for (i in 1L:d2) { :
     Fires + Data.Type:Elevation.m + Data.Type:Elevation.m2 + 
     Data.Type:Fires + Elevation.m:Fires + Data.Type:Elevation.m:Fires + 
     1, family = "binomial", data = und.presence.SPEC, na.action = na.fail)
-Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
 991 : glm(formula = Pres.Abs ~ Data.Type + Elevation.m + Elevation.m2 + 
     Fires + Data.Type:Elevation.m + Data.Type:Fires + Elevation.m:Fires + 
     Elevation.m2:Fires + Data.Type:Elevation.m:Fires + 1, family = "binomial", 
     data = und.presence.SPEC, na.action = na.fail)
+Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
 1023 : glm(formula = Pres.Abs ~ Data.Type + Elevation.m + Elevation.m2 + 
     Fires + Data.Type:Elevation.m + Data.Type:Elevation.m2 + 
     Data.Type:Fires + Elevation.m:Fires + Elevation.m2:Fires + 
     Data.Type:Elevation.m:Fires + 1, family = "binomial", data = und.presence.SPEC, 
     na.action = na.fail)
+Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
 2047 : glm(formula = Pres.Abs ~ Data.Type + Elevation.m + Elevation.m2 + 
     Fires + Data.Type:Elevation.m + Data.Type:Elevation.m2 + 
     Data.Type:Fires + Elevation.m:Fires + Elevation.m2:Fires + 
     Data.Type:Elevation.m:Fires + Data.Type:Elevation.m2:Fires + 
     1, family = "binomial", data = und.presence.SPEC, na.action = na.fail)
-Warning: glm.fit: algorithm did not converge
 Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-Warning in sink() : no sink to remove
-Error in readLines(log_file) : cannot read from this connection
