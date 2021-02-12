@@ -141,7 +141,12 @@ for(D in 1:2) {
     
     # Exclude models for which there was a warning
     coeff.nowarn <- coeff.warn[coeff.warn$Has_warning == FALSE, ]
-    coeff.nowarn[order(coeff.nowarn$AIC),]
+    
+    # Calculate delta AIC based on warning-less models, reduce to delta <=2
+    coeff.nowarn$delta <- coeff.nowarn$AIC - 
+      coeff.nowarn$AIC[coeff.nowarn$AIC == min(coeff.nowarn$AIC)]
+    
+    top.mods.coeff <- coeff.nowarn[coeff.nowarn$delta <= 2, ]
     
     # Null model (for Psuedo-R-squared calculation later)
     mod.NULL <- glm(Pres.Abs ~ 1, 
