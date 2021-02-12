@@ -16,6 +16,7 @@ df.fun <- function(ModID) {
   df <- as.data.frame(t(coef(dredge.list.globfi[[ModID]]))) # Transposed DF of coefs
   df$new_Model_id <- paste(ModID) # Store unique model ID
   df$AIC <- dredge.list.globfi[[ModID]]$aic # Store model AIC
+  df$logLik <- as.numeric(logLik(dredge.list.globfi[[ModID]])) # Store logLik
   return(df)
 }
 
@@ -145,14 +146,11 @@ for(D in 1:2) {
     # Calculate delta AIC based on warning-less models, reduce to delta <=2
     coeff.nowarn$delta <- coeff.nowarn$AIC - 
       coeff.nowarn$AIC[coeff.nowarn$AIC == min(coeff.nowarn$AIC)]
-    
     top.mods.coeff <- coeff.nowarn[coeff.nowarn$delta <= 2, ]
     
     # Null model (for Psuedo-R-squared calculation later)
     mod.NULL <- glm(Pres.Abs ~ 1, 
                     data = und.presence.SPEC, family = "binomial", na.action = na.fail)
-    
- 
     
     
     # Storing output
@@ -167,9 +165,9 @@ for(D in 1:2) {
         R.Occ = sum(num.burns["1", , "Resurvey"]), 
         Fire.Included = ifelse(is.null(mod.globnofi) == TRUE, "Yes", "No"),
         Type = "Unavg", 
-        deltaAIC = avg.mods$msTable$delta[i], 
-        Weight = avg.mods$msTable$weight[i],
-        Rsquared = 1 - avg.mods$msTable$logLik[i]/logLik(mod.NULL)[1],
+        deltaAIC = top.mods.coeff$delta[i], 
+        Weight = avg.mods$msTable$weight[i], #TODO calculate this in an earlier step
+        Rsquared = 1 - top.mods.coeff$logLik[i] / as.numeric(logLik(mod.NULL)),
         Intercept = top.mods.coeff$`(Intercept)`[i],
         Data.Type = top.mods.coeff$Data.TypeResurvey[i],
         Elevation.m = top.mods.coeff$Elevation.m[i],
@@ -189,6 +187,7 @@ for(D in 1:2) {
     
     Mods <- ldply(Mods.list, data.frame)
     
+    #TODO: WIP
     Avg <- data.frame(
       Species = levels(species.list)[S],
       Dataset = D,
