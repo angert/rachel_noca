@@ -91,7 +91,7 @@ for(D in 1:2) { #TODO leave as 2 for now just in case
                                 dc(Data.Type:Elevation.m:Fires, Data.Type:Elevation.m2:Fires), 
                               trace = FALSE, evaluate = FALSE), eval)
       names(dredge.list) <- paste("Mod", 
-                                as.numeric(names(dredge.list.globfi)) - 1, 
+                                as.numeric(names(dredge.list)) - 1, 
                               sep = ".") # Converting to model ID
       options(warn = 1) # Tell me if a model throws an error - for logging.
       dredge.globfi <- dredge(mod.globfi, rank = AIC, subset = 
@@ -113,7 +113,7 @@ for(D in 1:2) { #TODO leave as 2 for now just in case
                                      dc(Data.Type:Elevation.m, Data.Type:Elevation.m2), 
                                    trace = FALSE, evaluate = FALSE), eval)
       names(dredge.list) <- paste("Mod", 
-                                  as.numeric(names(dredge.list.globfi)) - 1, 
+                                  as.numeric(names(dredge.list)) - 1, 
                                   sep = ".") # Converting to model ID
       options(warn = 1) # Tell me if a model throws an error - for logging.
       dredge.globnofi <- dredge(mod.globnofi, rank = AIC, subset = 
