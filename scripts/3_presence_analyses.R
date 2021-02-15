@@ -12,7 +12,6 @@ library(plyr)
 source("scripts/3_dredge_log_to_df.R")
 
 # Function to create data frame of coefficients, AIC and model ID:
-
 df.fun <- function(ModID) {
   df <- as.data.frame(t(coef(dredge.list.globfi[[ModID]]))) # Transposed DF of coefs
   df$new_Model_id <- paste(ModID) # Store unique model ID
@@ -62,17 +61,10 @@ for(D in 1:2) { #TODO leave as 2 for now just in case
     und.presence.SPEC$Elevation.m2 <- und.presence.SPEC$Elevation.m^2 #TODO better than poly()?
     und.presence.SPEC <- und.presence.SPEC[complete.cases(und.presence.SPEC), ] #Just in case
     
-    # Emptying out previous objects
+    # Emptying out previous model objects
     mod.globfi <- NULL
     mod.globnofi <- NULL
-    dredge.globfi <- NULL
-    dredge.list.globfi <- NULL
-    dredge.globnofi <- NULL
-    dredge.list.globfnofi <- NULL
-    avg.mods <- NULL
-    top.mods.coeff <- NULL
-   
-    
+
      # Did the species occur in burned plots 5+ times?
     num.burns <- 
       table(und.presence.SPEC$Pres.Abs, und.presence.SPEC$Fires, und.presence.SPEC$Data.Type)
@@ -149,7 +141,7 @@ for(D in 1:2) { #TODO leave as 2 for now just in case
                     data = und.presence.SPEC, family = "binomial", na.action = na.fail)
     
     
-    # Storing output
+    ## Storing top model coefficients
     
     Mods.list <- list()
     
@@ -183,7 +175,12 @@ for(D in 1:2) { #TODO leave as 2 for now just in case
     
     Mods <- ldply(Mods.list, data.frame)
     
-    #TODO: WIP
+    ## Storing model-averaged parameters
+    
+    # Re-code NA coefficients as 0
+    top.mods.zeroes <- top.mods.coeff
+    top.mods.zeroes[is.na(top.mods.zeroes)] <- 0
+    
     Avg <- data.frame(
       Species = levels(species.list)[S],
       Dataset = D,
@@ -194,22 +191,28 @@ for(D in 1:2) { #TODO leave as 2 for now just in case
       deltaAIC = NA, 
       Weight = NA,
       Rsquared = NA,
-      Intercept = avg.mods.coeff$`(Intercept)`,
-      Data.Type = avg.mods.coeff$Data.TypeResurvey,
-      Elevation.m = avg.mods.coeff$Elevation.m,
-      Fires = avg.mods.coeff$FiresBurned,
-      Data.Type.Elevation.m = avg.mods.coeff$`Data.TypeResurvey:Elevation.m`,
-      Elevation.m.Fires = avg.mods.coeff$`Elevation.m:FiresBurned`,
-      Data.Type.Fires = avg.mods.coeff$`Data.TypeResurvey:FiresBurned`,
-      Elevation.m2 = avg.mods.coeff$Elevation.m2,
-      Data.Type.Elevation.m2 = avg.mods.coeff$`Data.TypeResurvey:Elevation.m2`,
-      Elevation.m2.Fires = avg.mods.coeff$`Elevation.m2:FiresBurned`,
+      Intercept = sum(top.mods.zeroes$`(Intercept)` * top.mods.zeroes$weight),
+      Data.Type = sum(top.mods.zeroes$`Data.TypeResurvey` * top.mods.zeroes$weight),
+      Elevation.m = sum(top.mods.zeroes$`Elevation.m` * top.mods.zeroes$weight),
+      Fires = sum(top.mods.zeroes$`FiresBurned` * top.mods.zeroes$weight),
+      Data.Type.Elevation.m =  sum(top.mods.zeroes$`Data.TypeResurvey:Elevation.m` * 
+                                     top.mods.zeroes$weight),
+      Elevation.m.Fires = sum(top.mods.zeroes$`Elevation.m:FiresBurned` * 
+                                      top.mods.zeroes$weight),
+      Data.Type.Fires = sum(top.mods.zeroes$`Data.TypeResurvey:FiresBurned` * 
+                              top.mods.zeroes$weight),
+      Elevation.m2 = sum(top.mods.zeroes$`Elevation.m2` * top.mods.zeroes$weight),
+      Data.Type.Elevation.m2 = sum(top.mods.zeroes$`Data.TypeResurvey:Elevation.m2` * 
+                                     top.mods.zeroes$weight),
+      Elevation.m2.Fires = sum(top.mods.zeroes$`Elevation.m2:FiresBurned` * 
+                                   top.mods.zeroes$weight),
       Data.Type.Elevation.m.Fires = 
-        avg.mods.coeff$`Data.TypeResurvey:Elevation.m:FiresBurned`,
+        sum(top.mods.zeroes$`Data.TypeResurvey:Elevation.m:FiresBurned` * 
+              top.mods.zeroes$weight),
       Data.Type.Elevation.m2.Fires = 
-        avg.mods.coeff$`Data.TypeResurvey:Elevation.m2:FiresBurned`,
+        sum(top.mods.zeroes$`Data.TypeResurvey:Elevation.m2:FiresBurned` * 
+              top.mods.zeroes$weight),
       row.names = NULL)
-    
     
     coeff.ALLSPEC[[S]] <- rbind(Mods, Avg)
     
