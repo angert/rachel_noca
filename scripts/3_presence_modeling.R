@@ -1,7 +1,7 @@
 # Created: Dec. 11, 2020
-# Updated: Feb. 4, 2020
+# Updated: Feb. 15, 2020
 
-# This script will be used to undertake the PRESENCE analyses
+# This script will be used to undertake part 1 of the PRESENCE analyses (modeling)
 
 # IMPORTANT NOTE: unless otherwise indicated, always use Understory_All.csv for these analyses as it is the ONLY file with up-to-date corrections.
 
