@@ -20,6 +20,19 @@ df.fun <- function(ModID) {
   return(df)
 }
 
+# List of coefficients
+coeff.all <-c("Data.TypeResurvey", 
+              "Elevation.m", 
+              "FiresBurned", 
+              "Data.TypeResurvey:Elevation.m", 
+              "Elevation.m:FiresBurned", 
+              "Data.TypeResurvey:FiresBurned", 
+              "Elevation.m2", 
+              "Data.TypeResurvey:Elevation.m2", 
+              "Elevation.m2:FiresBurned", 
+              "Data.TypeResurvey:Elevation.m:FiresBurned", 
+              "Data.TypeResurvey:Elevation.m2:FiresBurned")
+
 #### STEP 1: Import data ####
 
 # To analyze un-rarefied data (exclude 100x loop):
@@ -147,6 +160,13 @@ for(D in 1:2) { #TODO leave as 2 for now just in case
     mod.NULL <- glm(Pres.Abs ~ 1, 
                     data = und.presence.SPEC, family = "binomial", na.action = na.fail)
     
+    # Adding in missing coefficient headers
+
+    for(C in 1:length(coeff.all)) {
+      if(!coeff.all[C] %in% colnames(top.mods.coeff)) {
+        top.mods.coeff[, coeff.all[C]] <- rep(NA, times = nrow(top.mods.coeff))
+      }
+    }
     
     ## Storing top model coefficients
     
