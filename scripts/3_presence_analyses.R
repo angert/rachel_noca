@@ -13,10 +13,10 @@ source("scripts/3_dredge_log_to_df.R")
 
 # Function to create data frame of coefficients, AIC and model ID:
 df.fun <- function(ModID) {
-  df <- as.data.frame(t(coef(dredge.list.globfi[[ModID]]))) # Transposed DF of coefs
+  df <- as.data.frame(t(coef(dredge.list[[ModID]]))) # Transposed DF of coefs
   df$new_Model_id <- paste(ModID) # Store unique model ID
-  df$AIC <- dredge.list.globfi[[ModID]]$aic # Store model AIC
-  df$logLik <- as.numeric(logLik(dredge.list.globfi[[ModID]])) # Store logLik
+  df$AIC <- dredge.list[[ModID]]$aic # Store model AIC
+  df$logLik <- as.numeric(logLik(dredge.list[[ModID]])) # Store logLik
   return(df)
 }
 
@@ -78,20 +78,21 @@ for(D in 1:2) { #TODO leave as 2 for now just in case
     sink(log.file, append = TRUE, type = "output") # Sink to log file
     sink(log.file, append = TRUE, type = "message")
     
-    # If > 5, include fire as a predictor in global model:
+    
+    # If burn > 5, include fire as a predictor in global model:
     if(num.burns["1", "Burned", "Legacy"] >= 5 | num.burns["1", "Burned", "Resurvey"] >= 5) {
       mod.globfi <- glm(Pres.Abs ~ Data.Type * (Elevation.m + Elevation.m2) * Fires, 
                         data = und.presence.SPEC, family = "binomial", na.action = na.fail)
       options(warn = -1) # Ignore warnings - not for logging.
-      dredge.list.globfi <- lapply(dredge(mod.globfi, rank = AIC, subset = 
+      dredge.list <- lapply(dredge(mod.globfi, rank = AIC, subset = 
                                 dc(Elevation.m, Elevation.m2) &&
                                 dc(Data.Type:Elevation.m, Data.Type:Elevation.m2) &&
                                 dc(Elevation.m:Fires, Elevation.m2:Fires) &&
                                 dc(Data.Type:Elevation.m:Fires, Data.Type:Elevation.m2:Fires), 
                               trace = FALSE, evaluate = FALSE), eval)
-      names(dredge.list.globfi) <- paste("Mod", 
-                                         as.numeric(names(dredge.list.globfi)) - 1, 
-                                         sep = ".") # Converting to model ID
+      names(dredge.list) <- paste("Mod", 
+                                as.numeric(names(dredge.list.globfi)) - 1, 
+                              sep = ".") # Converting to model ID
       options(warn = 1) # Tell me if a model throws an error - for logging.
       dredge.globfi <- dredge(mod.globfi, rank = AIC, subset = 
                                 dc(Elevation.m, Elevation.m2) &&
@@ -99,22 +100,28 @@ for(D in 1:2) { #TODO leave as 2 for now just in case
                                 dc(Elevation.m:Fires, Elevation.m2:Fires) &&
                                 dc(Data.Type:Elevation.m:Fires, Data.Type:Elevation.m2:Fires), 
                               trace = 1)
-      
     }
     
     
-    #TODO this part unmodified. If no, exclude fire from global model:
+    #If burn < 5 in both, exclude fire from global model:
     if(num.burns["1", "Burned", "Legacy"] < 5 & num.burns["1", "Burned", "Resurvey"] < 5) {
       mod.globnofi <- glm(Pres.Abs ~ Data.Type * (Elevation.m + Elevation.m2), 
                           data = und.presence.SPEC, family = "binomial", na.action = na.fail) 
+      options(warn = -1) # Ignore warnings - not for logging.
+      dredge.list <- lapply(dredge(mod.globnofi, rank = AIC, subset = 
+                                     dc(Elevation.m, Elevation.m2) &&
+                                     dc(Data.Type:Elevation.m, Data.Type:Elevation.m2), 
+                                   trace = FALSE, evaluate = FALSE), eval)
+      names(dredge.list) <- paste("Mod", 
+                                  as.numeric(names(dredge.list.globfi)) - 1, 
+                                  sep = ".") # Converting to model ID
+      options(warn = 1) # Tell me if a model throws an error - for logging.
       dredge.globnofi <- dredge(mod.globnofi, rank = AIC, subset = 
-                                  dc(Elevation.m, Elevation.m2) &&
-                                  dc(Data.Type:Elevation.m, Data.Type:Elevation.m2), 
-                                trace = 1)
-      avg.mods <- model.avg(dredge.globnofi, subset = delta <= 2)
-      top.mods.coeff <- as.data.frame(coef(subset(dredge.globnofi, delta <= 2)))
-      avg.mods.coeff <- as.data.frame(t(avg.mods$coefficients["full",]))
+                                dc(Elevation.m, Elevation.m2) &&
+                                dc(Data.Type:Elevation.m, Data.Type:Elevation.m2), 
+                              trace = 1)
     }
+    
     
     # Stop writing to .txt, import dataframe of warning logs
     closeAllConnections()
