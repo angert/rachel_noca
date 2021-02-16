@@ -153,7 +153,7 @@ warn.ALLDAT <- list()
     coeff.nowarn <- coeff.warn[coeff.warn$Has_warning == FALSE, ]
     
     # Calculate delta AIC based on warning-less models, reduce to delta <=2, add weights
-    coeff.nowarn$delta <- coeff.nowarn$AIC - min(coeff.nowarn$AIC)]
+    coeff.nowarn$delta <- coeff.nowarn$AIC - min(coeff.nowarn$AIC)
     top.mods.coeff <- coeff.nowarn[coeff.nowarn$delta <= 2, ]
     top.mods.coeff$weight <- Weights(top.mods.coeff$AIC)
   
