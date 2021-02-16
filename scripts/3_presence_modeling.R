@@ -272,7 +272,7 @@ for(D in 1:100) { #RUN TIME: 32 minutes 51 sec
 
 #### END OF DATASET LOOP
 
-# Collate ALLDAT lists into DFs (BIG!)
+# Collate ALLDAT lists into one big DF
 
 coeff.ALLDAT.finaldf <- ldply(coeff.ALLDAT, data.frame)
 warn.ALLDAT.finaldf <- ldply(warn.ALLDAT, data.frame)
