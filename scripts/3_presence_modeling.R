@@ -49,7 +49,7 @@ species.list <- factor(species.list)
 
 
 
-#### STEP 2: Loop to analyze presence data. Run time unknown ####
+#### STEP 2: Loop to analyze presence data ####
 
 # Can be run as a loop outputting all species, or S can be modified to isolated specific species. Check number here:
 (numbered.species <- data.frame(Species=species.list, No.=rep(1:42)))
@@ -58,7 +58,7 @@ species.list <- factor(species.list)
 coeff.ALLDAT <- list()
 warn.ALLDAT <- list()
 
-for(D in 1:100) { #RUN TIME: 32 minutes 51 sec
+#for(D in 1:100) { #RUN TIME: 32 minutes 51 sec
   
   coeff.ALLSPEC <- list()
   warn.ALLSPEC <- list()
@@ -153,8 +153,7 @@ for(D in 1:100) { #RUN TIME: 32 minutes 51 sec
     coeff.nowarn <- coeff.warn[coeff.warn$Has_warning == FALSE, ]
     
     # Calculate delta AIC based on warning-less models, reduce to delta <=2, add weights
-    coeff.nowarn$delta <- coeff.nowarn$AIC - 
-      coeff.nowarn$AIC[coeff.nowarn$AIC == min(coeff.nowarn$AIC)]
+    coeff.nowarn$delta <- coeff.nowarn$AIC - min(coeff.nowarn$AIC)]
     top.mods.coeff <- coeff.nowarn[coeff.nowarn$delta <= 2, ]
     top.mods.coeff$weight <- Weights(top.mods.coeff$AIC)
   
