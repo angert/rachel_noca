@@ -1,0 +1,150 @@
+Warning: glm.fit: algorithm did not converge
+Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+Fixed term is "(Intercept)"
+Fixed term is "(Intercept)"
+0 : glm(formula = Pres.Abs ~ 1, family = "binomial", data = und.presence.SPEC, 
+    na.action = na.fail)
+1 : glm(formula = Pres.Abs ~ Data.Type + 1, family = "binomial", 
+    data = und.presence.SPEC, na.action = na.fail)
+2 : glm(formula = Pres.Abs ~ Elevation.m + 1, family = "binomial", 
+    data = und.presence.SPEC, na.action = na.fail)
+3 : glm(formula = Pres.Abs ~ Data.Type + Elevation.m + 1, family = "binomial", 
+    data = und.presence.SPEC, na.action = na.fail)
+6 : glm(formula = Pres.Abs ~ Elevation.m + Elevation.m2 + 1, family = "binomial", 
+    data = und.presence.SPEC, na.action = na.fail)
+7 : glm(formula = Pres.Abs ~ Data.Type + Elevation.m + Elevation.m2 + 
+    1, family = "binomial", data = und.presence.SPEC, na.action = na.fail)
+8 : glm(formula = Pres.Abs ~ Fires + 1, family = "binomial", data = und.presence.SPEC, 
+    na.action = na.fail)
+9 : glm(formula = Pres.Abs ~ Data.Type + Fires + 1, family = "binomial", 
+    data = und.presence.SPEC, na.action = na.fail)
+10 : glm(formula = Pres.Abs ~ Elevation.m + Fires + 1, family = "binomial", 
+    data = und.presence.SPEC, na.action = na.fail)
+11 : glm(formula = Pres.Abs ~ Data.Type + Elevation.m + Fires + 1, 
+    family = "binomial", data = und.presence.SPEC, na.action = na.fail)
+14 : glm(formula = Pres.Abs ~ Elevation.m + Elevation.m2 + Fires + 
+    1, family = "binomial", data = und.presence.SPEC, na.action = na.fail)
+15 : glm(formula = Pres.Abs ~ Data.Type + Elevation.m + Elevation.m2 + 
+    Fires + 1, family = "binomial", data = und.presence.SPEC, 
+    na.action = na.fail)
+19 : glm(formula = Pres.Abs ~ Data.Type + Elevation.m + Data.Type:Elevation.m + 
+    1, family = "binomial", data = und.presence.SPEC, na.action = na.fail)
+23 : glm(formula = Pres.Abs ~ Data.Type + Elevation.m + Elevation.m2 + 
+    Data.Type:Elevation.m + 1, family = "binomial", data = und.presence.SPEC, 
+    na.action = na.fail)
+27 : glm(formula = Pres.Abs ~ Data.Type + Elevation.m + Fires + Data.Type:Elevation.m + 
+    1, family = "binomial", data = und.presence.SPEC, na.action = na.fail)
+31 : glm(formula = Pres.Abs ~ Data.Type + Elevation.m + Elevation.m2 + 
+    Fires + Data.Type:Elevation.m + 1, family = "binomial", data = und.presence.SPEC, 
+    na.action = na.fail)
+55 : glm(formula = Pres.Abs ~ Data.Type + Elevation.m + Elevation.m2 + 
+    Data.Type:Elevation.m + Data.Type:Elevation.m2 + 1, family = "binomial", 
+    data = und.presence.SPEC, na.action = na.fail)
+63 : glm(formula = Pres.Abs ~ Data.Type + Elevation.m + Elevation.m2 + 
+    Fires + Data.Type:Elevation.m + Data.Type:Elevation.m2 + 
+    1, family = "binomial", data = und.presence.SPEC, na.action = na.fail)
+73 : glm(formula = Pres.Abs ~ Data.Type + Fires + Data.Type:Fires + 
+    1, family = "binomial", data = und.presence.SPEC, na.action = na.fail)
+75 : glm(formula = Pres.Abs ~ Data.Type + Elevation.m + Fires + Data.Type:Fires + 
+    1, family = "binomial", data = und.presence.SPEC, na.action = na.fail)
+79 : glm(formula = Pres.Abs ~ Data.Type + Elevation.m + Elevation.m2 + 
+    Fires + Data.Type:Fires + 1, family = "binomial", data = und.presence.SPEC, 
+    na.action = na.fail)
+91 : glm(formula = Pres.Abs ~ Data.Type + Elevation.m + Fires + Data.Type:Elevation.m + 
+    Data.Type:Fires + 1, family = "binomial", data = und.presence.SPEC, 
+    na.action = na.fail)
+95 : glm(formula = Pres.Abs ~ Data.Type + Elevation.m + Elevation.m2 + 
+    Fires + Data.Type:Elevation.m + Data.Type:Fires + 1, family = "binomial", 
+    data = und.presence.SPEC, na.action = na.fail)
+127 : glm(formula = Pres.Abs ~ Data.Type + Elevation.m + Elevation.m2 + 
+    Fires + Data.Type:Elevation.m + Data.Type:Elevation.m2 + 
+    Data.Type:Fires + 1, family = "binomial", data = und.presence.SPEC, 
+    na.action = na.fail)
+138 : glm(formula = Pres.Abs ~ Elevation.m + Fires + Elevation.m:Fires + 
+    1, family = "binomial", data = und.presence.SPEC, na.action = na.fail)
+139 : glm(formula = Pres.Abs ~ Data.Type + Elevation.m + Fires + Elevation.m:Fires + 
+    1, family = "binomial", data = und.presence.SPEC, na.action = na.fail)
+142 : glm(formula = Pres.Abs ~ Elevation.m + Elevation.m2 + Fires + 
+    Elevation.m:Fires + 1, family = "binomial", data = und.presence.SPEC, 
+    na.action = na.fail)
+143 : glm(formula = Pres.Abs ~ Data.Type + Elevation.m + Elevation.m2 + 
+    Fires + Elevation.m:Fires + 1, family = "binomial", data = und.presence.SPEC, 
+    na.action = na.fail)
+155 : glm(formula = Pres.Abs ~ Data.Type + Elevation.m + Fires + Data.Type:Elevation.m + 
+    Elevation.m:Fires + 1, family = "binomial", data = und.presence.SPEC, 
+    na.action = na.fail)
+159 : glm(formula = Pres.Abs ~ Data.Type + Elevation.m + Elevation.m2 + 
+    Fires + Data.Type:Elevation.m + Elevation.m:Fires + 1, family = "binomial", 
+    data = und.presence.SPEC, na.action = na.fail)
+191 : glm(formula = Pres.Abs ~ Data.Type + Elevation.m + Elevation.m2 + 
+    Fires + Data.Type:Elevation.m + Data.Type:Elevation.m2 + 
+    Elevation.m:Fires + 1, family = "binomial", data = und.presence.SPEC, 
+    na.action = na.fail)
+203 : glm(formula = Pres.Abs ~ Data.Type + Elevation.m + Fires + Data.Type:Fires + 
+    Elevation.m:Fires + 1, family = "binomial", data = und.presence.SPEC, 
+    na.action = na.fail)
+207 : glm(formula = Pres.Abs ~ Data.Type + Elevation.m + Elevation.m2 + 
+    Fires + Data.Type:Fires + Elevation.m:Fires + 1, family = "binomial", 
+    data = und.presence.SPEC, na.action = na.fail)
+219 : glm(formula = Pres.Abs ~ Data.Type + Elevation.m + Fires + Data.Type:Elevation.m + 
+    Data.Type:Fires + Elevation.m:Fires + 1, family = "binomial", 
+    data = und.presence.SPEC, na.action = na.fail)
+223 : glm(formula = Pres.Abs ~ Data.Type + Elevation.m + Elevation.m2 + 
+    Fires + Data.Type:Elevation.m + Data.Type:Fires + Elevation.m:Fires + 
+    1, family = "binomial", data = und.presence.SPEC, na.action = na.fail)
+255 : glm(formula = Pres.Abs ~ Data.Type + Elevation.m + Elevation.m2 + 
+    Fires + Data.Type:Elevation.m + Data.Type:Elevation.m2 + 
+    Data.Type:Fires + Elevation.m:Fires + 1, family = "binomial", 
+    data = und.presence.SPEC, na.action = na.fail)
+398 : glm(formula = Pres.Abs ~ Elevation.m + Elevation.m2 + Fires + 
+    Elevation.m:Fires + Elevation.m2:Fires + 1, family = "binomial", 
+    data = und.presence.SPEC, na.action = na.fail)
+399 : glm(formula = Pres.Abs ~ Data.Type + Elevation.m + Elevation.m2 + 
+    Fires + Elevation.m:Fires + Elevation.m2:Fires + 1, family = "binomial", 
+    data = und.presence.SPEC, na.action = na.fail)
+415 : glm(formula = Pres.Abs ~ Data.Type + Elevation.m + Elevation.m2 + 
+    Fires + Data.Type:Elevation.m + Elevation.m:Fires + Elevation.m2:Fires + 
+    1, family = "binomial", data = und.presence.SPEC, na.action = na.fail)
+447 : glm(formula = Pres.Abs ~ Data.Type + Elevation.m + Elevation.m2 + 
+    Fires + Data.Type:Elevation.m + Data.Type:Elevation.m2 + 
+    Elevation.m:Fires + Elevation.m2:Fires + 1, family = "binomial", 
+    data = und.presence.SPEC, na.action = na.fail)
+463 : glm(formula = Pres.Abs ~ Data.Type + Elevation.m + Elevation.m2 + 
+    Fires + Data.Type:Fires + Elevation.m:Fires + Elevation.m2:Fires + 
+    1, family = "binomial", data = und.presence.SPEC, na.action = na.fail)
+479 : glm(formula = Pres.Abs ~ Data.Type + Elevation.m + Elevation.m2 + 
+    Fires + Data.Type:Elevation.m + Data.Type:Fires + Elevation.m:Fires + 
+    Elevation.m2:Fires + 1, family = "binomial", data = und.presence.SPEC, 
+    na.action = na.fail)
+511 : glm(formula = Pres.Abs ~ Data.Type + Elevation.m + Elevation.m2 + 
+    Fires + Data.Type:Elevation.m + Data.Type:Elevation.m2 + 
+    Data.Type:Fires + Elevation.m:Fires + Elevation.m2:Fires + 
+    1, family = "binomial", data = und.presence.SPEC, na.action = na.fail)
+731 : glm(formula = Pres.Abs ~ Data.Type + Elevation.m + Fires + Data.Type:Elevation.m + 
+    Data.Type:Fires + Elevation.m:Fires + Data.Type:Elevation.m:Fires + 
+    1, family = "binomial", data = und.presence.SPEC, na.action = na.fail)
+735 : glm(formula = Pres.Abs ~ Data.Type + Elevation.m + Elevation.m2 + 
+    Fires + Data.Type:Elevation.m + Data.Type:Fires + Elevation.m:Fires + 
+    Data.Type:Elevation.m:Fires + 1, family = "binomial", data = und.presence.SPEC, 
+    na.action = na.fail)
+767 : glm(formula = Pres.Abs ~ Data.Type + Elevation.m + Elevation.m2 + 
+    Fires + Data.Type:Elevation.m + Data.Type:Elevation.m2 + 
+    Data.Type:Fires + Elevation.m:Fires + Data.Type:Elevation.m:Fires + 
+    1, family = "binomial", data = und.presence.SPEC, na.action = na.fail)
+Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+991 : glm(formula = Pres.Abs ~ Data.Type + Elevation.m + Elevation.m2 + 
+    Fires + Data.Type:Elevation.m + Data.Type:Fires + Elevation.m:Fires + 
+    Elevation.m2:Fires + Data.Type:Elevation.m:Fires + 1, family = "binomial", 
+    data = und.presence.SPEC, na.action = na.fail)
+1023 : glm(formula = Pres.Abs ~ Data.Type + Elevation.m + Elevation.m2 + 
+    Fires + Data.Type:Elevation.m + Data.Type:Elevation.m2 + 
+    Data.Type:Fires + Elevation.m:Fires + Elevation.m2:Fires + 
+    Data.Type:Elevation.m:Fires + 1, family = "binomial", data = und.presence.SPEC, 
+    na.action = na.fail)
+2047 : glm(formula = Pres.Abs ~ Data.Type + Elevation.m + Elevation.m2 + 
+    Fires + Data.Type:Elevation.m + Data.Type:Elevation.m2 + 
+    Data.Type:Fires + Elevation.m:Fires + Elevation.m2:Fires + 
+    Data.Type:Elevation.m:Fires + Data.Type:Elevation.m2:Fires + 
+    1, family = "binomial", data = und.presence.SPEC, na.action = na.fail)
+Warning: glm.fit: algorithm did not converge
+Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred

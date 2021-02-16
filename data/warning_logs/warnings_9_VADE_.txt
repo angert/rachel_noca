@@ -1,0 +1,27 @@
+Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+Fixed term is "(Intercept)"
+Fixed term is "(Intercept)"
+0 : glm(formula = Pres.Abs ~ 1, family = "binomial", data = und.presence.SPEC, 
+    na.action = na.fail)
+1 : glm(formula = Pres.Abs ~ Data.Type + 1, family = "binomial", 
+    data = und.presence.SPEC, na.action = na.fail)
+2 : glm(formula = Pres.Abs ~ Elevation.m + 1, family = "binomial", 
+    data = und.presence.SPEC, na.action = na.fail)
+3 : glm(formula = Pres.Abs ~ Data.Type + Elevation.m + 1, family = "binomial", 
+    data = und.presence.SPEC, na.action = na.fail)
+6 : glm(formula = Pres.Abs ~ Elevation.m + Elevation.m2 + 1, family = "binomial", 
+    data = und.presence.SPEC, na.action = na.fail)
+Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+7 : glm(formula = Pres.Abs ~ Data.Type + Elevation.m + Elevation.m2 + 
+    1, family = "binomial", data = und.presence.SPEC, na.action = na.fail)
+Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+11 : glm(formula = Pres.Abs ~ Data.Type + Elevation.m + Data.Type:Elevation.m + 
+    1, family = "binomial", data = und.presence.SPEC, na.action = na.fail)
+15 : glm(formula = Pres.Abs ~ Data.Type + Elevation.m + Elevation.m2 + 
+    Data.Type:Elevation.m + 1, family = "binomial", data = und.presence.SPEC, 
+    na.action = na.fail)
+Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+31 : glm(formula = Pres.Abs ~ Data.Type + Elevation.m + Elevation.m2 + 
+    Data.Type:Elevation.m + Data.Type:Elevation.m2 + 1, family = "binomial", 
+    data = und.presence.SPEC, na.action = na.fail)
+Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
