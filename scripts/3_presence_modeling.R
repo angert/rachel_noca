@@ -58,7 +58,7 @@ species.list <- factor(species.list)
 coeff.ALLDAT <- list()
 warn.ALLDAT <- list()
 
-for(D in 1:2) { #TODO leave as 2 for now to avoid long runtimes
+for(D in 1:100) { #RUN TIME: 32 minutes 51 sec
   
   coeff.ALLSPEC <- list()
   warn.ALLSPEC <- list()
@@ -265,7 +265,9 @@ for(D in 1:2) { #TODO leave as 2 for now to avoid long runtimes
   warn.ALLDAT[[D]] <- ldply(warn.ALLSPEC, data.frame)
   
   #### END OF SPECIES LOOP
-  
+ 
+  if(D == 100) system("say Your loop is done")
+   
 }
 
 #### END OF DATASET LOOP
