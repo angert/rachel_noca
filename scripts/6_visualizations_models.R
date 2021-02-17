@@ -85,8 +85,8 @@ for (i in 1:dim(species.fire)[1]) {
   
  gg <- ggplot(graph.dat, aes(x=elev.vec, y=mean.resp, color=V2)) +
     theme_classic() +
-    ylab("Elevation (m)") +
-    xlab("Probability of presence") +
+    xlab("Elevation (m)") +
+    ylab("Probability of presence") +
     geom_errorbar(aes(ymin=lower.resp, ymax=upper.resp), alpha=0.05) +
     geom_line() +
     scale_color_manual(values=col.pal)
@@ -141,8 +141,8 @@ for (i in 1:dim(species.nofire)[1]) {
   
   gg <- ggplot(graph.dat, aes(x=elev.vec, y=mean.resp, color=V2)) +
     theme_classic() +
-    ylab("Elevation (m)") +
-    xlab("Probability of presence") +
+    xlab("Elevation (m)") +
+    ylab("Probability of presence") +
     geom_errorbar(aes(ymin=lower.resp, ymax=upper.resp), alpha=0.05) +
     geom_line() +
     scale_color_manual(values=col.pal)
