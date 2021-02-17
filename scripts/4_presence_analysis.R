@@ -18,13 +18,12 @@ species.list <- factor(species.list)
 
 just.avg <- coeff.ALLDAT[coeff.ALLDAT$Type == "Avg", ]
 just.avg.fire <- just.avg[just.avg$Fire.Included == "Yes", ]
-table(just.avg.fire$Species, just.avg.fire$)
 
 #### STEP 2: Exploratory visualizations of warnings ####
 
 (numbered.species <- data.frame(Species=species.list, No.=rep(1:42)))
 
-warn.SPEC <- warn.ALLDAT[warn.ALLDAT$Species == "VASI", ]
+warn.SPEC <- warn.ALLDAT[warn.ALLDAT$Species == "EPAN", ]
 
 table(warn.SPEC$Has_warning, warn.SPEC$Dataset)
 table(table(warn.SPEC$Has_warning, warn.SPEC$Dataset))
