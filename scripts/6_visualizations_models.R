@@ -21,12 +21,13 @@ species.short <- anti_join(as.data.frame(species.list), as.data.frame(problems),
 coeffs <- semi_join(coeff.avgs, species.short, by=c("Species"="species.list")) #should be length 100*n less than coeff.avgs; where n=# problematic species
 
 coeffs.fire <- coeffs %>% filter(Fire.Included=="Yes")
+coeffs.nofire <- coeffs %>% filter(Fire.Included=="No")
 
-# focusing on species with updated fire interaction models for now
+# focusing on species with updated fire interaction models first
 species.fire <- semi_join(species.short, coeffs.fire, by=c("species.list"="Species"))
 
 elev.vec = seq(0, 2200, by=1)
-pred.leg.unburn.reps = matrix(nrow=length(elev.vec),ncol=100)
+pred.leg.reps = matrix(nrow=length(elev.vec),ncol=100)
 pred.res.unburn.reps = matrix(nrow=length(elev.vec),ncol=100)
 pred.res.burn.reps = matrix(nrow=length(elev.vec),ncol=100)
 
@@ -37,27 +38,25 @@ for (i in 1:dim(species.fire)[1]) {
   mods <- coeffs %>% 
     filter(Species==sp) %>% 
     select(Int=Intercept, 
-           Year=Data.Type, 
            Elev=Elevation.m, 
-           Fire=Fires, 
-           YearxElev=Data.Type.Elevation.m, 
-           ElevxFire=Elevation.m.Fires, 
-           YearxFire=Data.Type.Fires, 
            Elev2=Elevation.m2, 
-           YearxElev2=Data.Type.Elevation.m2, 
-           Elev2xFire=Elevation.m2.Fires, 
-           YearxElevxFire=Data.Type.Elevation.m.Fires, 
-           YearxElev2xFire=Data.Type.Elevation.m2.Fires)
+           ResurvBurn = Resurvey.Burned.fi,
+           ResurvUnburn = Resurvey.Unburned.fi,
+           ResurvBurnxElev = Elevation.m.Res.Burn.fi,
+           ResurvBurnxElev2 = Elevation.m2.Res.Burn.fi,
+           ResurvUnburnxElev = Elevation.m2.Res.Unburn.fi,
+           ResurvUnburnXElev2 = Elevation.m2.Res.Unburn.fi
+           )
     for (j in 1:dim(mods)[1]) {
-      pred.leg.unburn.reps[,j] = mods$Int[j] + mods$Elev[j]*elev.vec + mods$Elev2[j]*elev.vec*elev.vec
-      pred.res.unburn.reps[,j] = mods$Int[j] + mods$Elev[j]*elev.vec + mods$Elev2[j]*elev.vec*elev.vec +
-        mods$Year[j] + mods$YearxElev[j]*elev.vec + mods$YearxElev2[j]*elev.vec*elev.vec
+      pred.leg.reps[,j] = mods$Int[j] + mods$Elev[j]*elev.vec + mods$Elev2[j]*elev.vec*elev.vec
+      pred.res.unburn.reps[,j] = mods$Int[j]  + mods$Elev[j]*elev.vec + mods$Elev2[j]*elev.vec*elev.vec +
+                                 mods$ResurvUnburn[j] + mods$ResurvUnburnxElev[j]*elev.vec + 
+                                 mods$ResurvUnburnXElev2[j]*elev.vec*elev.vec
       pred.res.burn.reps[,j] = mods$Int[j] + mods$Elev[j]*elev.vec + mods$Elev2[j]*elev.vec*elev.vec +
-        mods$Year[j] + mods$YearxElev[j]*elev.vec + mods$YearxElev2[j]*elev.vec*elev.vec + 
-        mods$Fire[j] + mods$ElevxFire[j]*elev.vec + mods$YearxFire[j] + mods$Elev2xFire[j]*elev.vec*elev.vec + 
-        mods$YearxElevxFire[j]*elev.vec + mods$YearxElev2xFire[j]*elev.vec*elev.vec
+                               mods$ResurvBurn[j] + mods$ResurvBurnxElev[j]*elev.vec + 
+                               mods$ResurvBurnxElev2[j]*elev.vec*elev.vec
     }
-  t1.unburn.reps <- as.data.frame(cbind(elev.vec, 'leg.unburn', pred.leg.unburn.reps))
+  t1.unburn.reps <- as.data.frame(cbind(elev.vec, 'legacy', pred.leg.reps))
   t1.unburn.reps.tall <- gather(t1.unburn.reps, "rep", "preds", 3:102)
   t1.unburn.summary <- t1.unburn.reps.tall %>% 
     mutate(resp = exp(as.numeric(preds))/(1+exp(as.numeric(preds)))) %>% 
@@ -88,7 +87,7 @@ for (i in 1:dim(species.fire)[1]) {
     theme_classic() +
     ylab("Elevation (m)") +
     xlab("Probability of presence") +
-    geom_errorbar(aes(ymin=lower.resp, ymax=upper.resp), alpha=0.1) +
+    geom_errorbar(aes(ymin=lower.resp, ymax=upper.resp), alpha=0.05) +
     geom_line() +
     scale_color_manual(values=col.pal)
   
