@@ -14,8 +14,34 @@ load("data/Species.List.Rda") #TODO this file was made in an undocumented step
 species.list <- shifts$Species.Code[!shifts$Species.Code=="MOSS"] #removing "MOSS"
 species.list <- factor(species.list)
 
-# get rid of 12 species that Rachel flagged as having too many model warnings
-problems = c("ACMI", "CAME", "COST", "HODI", "LUPE", "MEFE", "PHEM", "RHAL", "TRBO", "VAAL", "VADE", "VAME") #3 of these are probably salvageable (CAME, HODI, TRBO) but leaving out for now
+### good spp - no fire (n=24)
+#"ACCI", "ACGL", "ATFI", "CHUM", "CLUN", "COCA", "GASH", "GOOB", "GYDR", "LIBO", "MANE", "MEFE", "OPHO", "POMU", "PTAQ", "RUPA", "RUPE", "RUSP", "SOSI", "TITR", "VASE"
+#"HIAL" (based on 99 datasets without warnings)
+#"RULA" (based on 99 datasets without warnings)
+#"GAOV" (based on 99 datasets with warnings)
+
+### good spp - fire (n=6)
+#"ACMI", "CEVE", "EPAN", "PAMY"
+#"AMAL" (based on 98 datasets without warnings)
+#"ARUV" (based on 98 datasets without warnings)
+
+### iffy spp - no fire (n=3)
+#"SPBE" (35 datasets ran with fire)
+#"CAMI" (ok if based on 74 datasets without warnings)
+#"TRBO" (ok if based on 70 datasets without warnings)
+
+### iffy spp - fire (n=1)
+#"CARU" (21 datasets that ran without fire)
+
+### bad spp - no fire (n=7)
+#"COST", "LUPE", "PHEM", "RHAL", "VAAL", "VADE"
+#"HODI" (could remove most complex model)
+
+### bad spp - fire (n=1)
+#"VAME" (could remove most complex model)
+
+# for now, get rid of iffy and bad species per above
+problems = c("COST", "LUPE", "PHEM", "RHAL", "VAAL", "VADE", "HODI", "VAME") 
 species.short <- anti_join(as.data.frame(species.list), as.data.frame(problems), by=c("species.list"="problems"))
 
 coeffs <- semi_join(coeff.avgs, species.short, by=c("Species"="species.list")) #should be length 100*n less than coeff.avgs; where n=# problematic species
