@@ -17,21 +17,21 @@ species.list <- shifts$Species.Code[!shifts$Species.Code=="MOSS"] #removing "MOS
 species.list <- factor(species.list)
 
 just.avg <- coeff.ALLDAT[coeff.ALLDAT$Type == "Avg", ]
-just.avg.fire <- just.avg[just.avg$Fire.Included == "Yes", ]
+table(just.avg$Species, just.avg$Fire.Included)
 
 #### STEP 2: Exploratory visualizations of warnings ####
 
 (numbered.species <- data.frame(Species=species.list, No.=rep(1:42)))
 
-warn.SPEC <- warn.ALLDAT[warn.ALLDAT$Species == "EPAN", ]
+warn.SPEC <- warn.ALLDAT[warn.ALLDAT$Species == "PHEM", ]
 
 table(warn.SPEC$Has_warning, warn.SPEC$Dataset)
 table(table(warn.SPEC$Has_warning, warn.SPEC$Dataset))
- nhead(warn.SPEC[warn.SPEC$Has_warning == TRUE, ])
+head(warn.SPEC[warn.SPEC$Has_warning == TRUE, ])
 
 
 
-coeff.SPEC <- coeff.ALLDAT[coeff.ALLDAT$Species == "RHAL", ]
+coeff.SPEC <- coeff.ALLDAT[coeff.ALLDAT$Species == "CAME", ]
 
 # Exploring coefficients
 mean(coeff.SPEC$Data.Type.Elevation.m.Fires[coeff.SPEC$Type == "Avg"], na.rm = TRUE)
