@@ -63,7 +63,7 @@ for(D in 1:100) {
 coeff.ALLDAT <- list()
 warn.ALLDAT <- list()
 
-for(D in 1:100) { #RUN TIME: 32 minutes 51 sec
+#for(D in 1:100) { #RUN TIME: 32 minutes 51 sec
   
   coeff.ALLSPEC <- list()
   warn.ALLSPEC <- list()
