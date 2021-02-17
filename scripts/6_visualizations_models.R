@@ -18,7 +18,7 @@ species.list <- factor(species.list)
 #"ACCI", "ACGL", "ATFI", "CHUM", "CLUN", "COCA", "GASH", "GOOB", "GYDR", "LIBO", "MANE", "MEFE", "OPHO", "POMU", "PTAQ", "RUPA", "RUPE", "RUSP", "SOSI", "TITR", "VASE"
 #"HIAL" (based on 99 datasets without warnings)
 #"RULA" (based on 99 datasets without warnings)
-#"GAOV" (based on 99 datasets with warnings)
+#"GAOV" (based on 99 datasets without warnings)
 
 ### good spp - fire (n=6)
 #"ACMI", "CEVE", "EPAN", "PAMY"
@@ -31,17 +31,17 @@ species.list <- factor(species.list)
 #"TRBO" (ok if based on 70 datasets without warnings)
 
 ### iffy spp - fire (n=1)
-#"CARU" (21 datasets that ran without fire)
+#"CARU" (21 datasets ran without fire)
 
 ### bad spp - no fire (n=7)
 #"COST", "LUPE", "PHEM", "RHAL", "VAAL", "VADE"
-#"HODI" (could remove most complex model)
+#"HODI" (ok if remove most complex model)
 
 ### bad spp - fire (n=1)
-#"VAME" (could remove most complex model)
+#"VAME" (ok if remove most complex model)
 
-# for now, get rid of iffy and bad species per above
-problems = c("COST", "LUPE", "PHEM", "RHAL", "VAAL", "VADE", "HODI", "VAME") 
+# for now, get rid of bad species per above
+problems = c("COST", "LUPE", "PHEM", "RHAL", "VAAL", "VADE") 
 species.short <- anti_join(as.data.frame(species.list), as.data.frame(problems), by=c("species.list"="problems"))
 
 coeffs <- semi_join(coeff.avgs, species.short, by=c("Species"="species.list")) #should be length 100*n less than coeff.avgs; where n=# problematic species
