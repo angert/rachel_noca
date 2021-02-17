@@ -105,6 +105,9 @@ for(S in 1:nrow(numbered.species)) {
   
   coeff.count.SPEC <- bind_cols((lapply(names(coeff.count.empty), count.fun)))
   coeff.count.SPEC$Species <- levels(factor(coeff.SPEC.avg$Species))
+  if(length(levels(factor(coeff.SPEC.avg$Fire.Included))) == 1) {
+    coeff.count.SPEC$Fire.Included <- levels(factor(coeff.SPEC.avg$Fire.Included))
+  } else(coeff.count.SPEC$Fire.Included <- "Sometimes")
   coeff.count.SPEC$Effect <- row.names(coeff.count.SPEC)
   coeff.count.LIST[[S]] <- coeff.count.SPEC
 }
