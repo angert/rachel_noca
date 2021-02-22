@@ -1,7 +1,20 @@
-# Created: Dec. 11, 2020
-# Updated: Feb. 15, 2020
+# Created: Feb. 22, 2020
+# Updated: Feb. 22, 2020
 
-# This script will be used to undertake part 1 of the PRESENCE analyses (modeling)
+# This script will be used to undertake part b of the PRESENCE analyses (modeling)
+# Use this script to produce the FINAL version of the analysis, plus CIs. No error logging.
+
+# This script accommodates the following species-specific issues:
+# --> Discard species for whom 2 or more models threw warnings
+# # ---> COST, LUPE, PHEM, RHAL, VAAL, VADE
+# --> Exclude the most-complex model (X * elev^2) for species in which this model threw warnings
+# # ---> HODI, VAME*
+# --> For species that flip-flopped between yes/no fire, use "majority rules" to decide
+#     which framework to use
+# # ---> No fire: AMAL, SPBE
+# # ---> Fire: ARUV, CARU, VAME*
+# --> Exclude problematic sets when remainder threw no warnings 
+# # ---> CAME, GAOV, HIAL, RULA, TRBO
 
 # IMPORTANT NOTE: unless otherwise indicated, always use Understory_All.csv for these analyses as it is the ONLY file with up-to-date corrections.
 
@@ -9,16 +22,7 @@
 
 library(MuMIn)
 library(plyr)
-source("scripts/3_dredge_log_to_df.R")
 
-# Function to create data frame of coefficients, AIC and model ID:
-df.fun <- function(ModID) {
-  df <- as.data.frame(t(coef(dredge.list[[ModID]]))) # Transposed DF of coefs
-  df$new_Model_id <- paste(ModID) # Store unique model ID
-  df$AIC <- dredge.list[[ModID]]$aic # Store model AIC
-  df$logLik <- as.numeric(logLik(dredge.list[[ModID]])) # Store logLik
-  return(df)
-}
 
 # List of coefficients between fire and non-fire model framework
 #TODO: confusing
@@ -47,7 +51,7 @@ load("data/Species.List.Rda") #TODO this file was made in an undocumented step
 species.list <- shifts$Species.Code[!shifts$Species.Code=="MOSS"] #removing "MOSS"
 species.list <- factor(species.list)
 
-#TODO Formula to correct erroneous burn coding. Run time 3 sec
+# Formula to correct erroneous burn coding. Run time 3 sec
 for(D in 1:100) {
   rare.ALL[[D]]$Fires[rare.ALL[[D]]$Data.Type == "Legacy"] <- rep("Unburned")
   rare.ALL[[D]]$New.Data.Type <- paste(rare.ALL[[D]]$Data.Type, rare.ALL[[D]]$Fires, sep = ".")

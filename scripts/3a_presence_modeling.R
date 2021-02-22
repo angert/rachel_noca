@@ -1,7 +1,9 @@
 # Created: Dec. 11, 2020
-# Updated: Feb. 15, 2020
+# Updated: Feb. 22, 2020
 
-# This script will be used to undertake part 1 of the PRESENCE analyses (modeling)
+# This script will be used to undertake part a of the PRESENCE analyses (modeling)
+# It will NOT produce the final version of the analysis, but is instead used for learning about
+# model warnings and framework-switching (fire vs. no fire). No CIs generated in this version.
 
 # IMPORTANT NOTE: unless otherwise indicated, always use Understory_All.csv for these analyses as it is the ONLY file with up-to-date corrections.
 
