@@ -48,8 +48,15 @@ load("data/rare.ALL.Rda") # Run time 5 sec
 
 # Import for both data types:
 load("data/Species.List.Rda") #TODO this file was made in an undocumented step
-species.list <- shifts$Species.Code[!shifts$Species.Code=="MOSS"] #removing "MOSS"
+species.list <- shifts$Species.Code[!shifts$Species.Code=="MOSS" &
+                                    !shifts$Species.Code=="COST" &
+                                    !shifts$Species.Code=="LUPE" &
+                                    !shifts$Species.Code=="PHEM" &
+                                    !shifts$Species.Code=="RHAL" &
+                                    !shifts$Species.Code=="VAAL" &
+                                    !shifts$Species.Code=="VADE"] #removing problematic species
 species.list <- factor(species.list)
+warn.ALLDAT <- read.csv("data/3_presence_ALLDAT_ALLSPEC_warnings.csv", header = TRUE)
 
 # Formula to correct erroneous burn coding. Run time 3 sec
 for(D in 1:100) {
@@ -61,21 +68,32 @@ for(D in 1:100) {
 #### STEP 2: Loop to analyze presence data ####
 
 # Can be run as a loop outputting all species, or S can be modified to isolated specific species. Check number here:
-(numbered.species <- data.frame(Species=species.list, No.=rep(1:42)))
+(numbered.species <- data.frame(Species=species.list, No.=rep(1:length(species.list))))
+species.with.fire <- numbered.species[numbered.species$Species == "ACMI" |
+                                      numbered.species$Species == "ARUV" |
+                                      numbered.species$Species == "CARU" |
+                                      numbered.species$Species == "CEVE" |
+                                      numbered.species$Species == "EPAN" |
+                                      numbered.species$Species == "PAMY" |
+                                      numbered.species$Species == "VAME", ]
+species.without.fire <- numbered.species[!numbered.species$Species 
+                                         %in% species.with.fire$Species, ]
 # Exclude D loop to run for only one dataset (e.g. unrarefied data)
 
 coeff.ALLDAT <- list()
-warn.ALLDAT <- list()
 
 #for(D in 1:100) { #RUN TIME: 32 minutes 51 sec
   
   coeff.ALLSPEC <- list()
-  warn.ALLSPEC <- list()
   und.presence <- rare.ALL[[D]]
   und.presence$Elevation.m <- as.numeric(und.presence$Elevation.m)
   und.presence$New.Data.Type <- factor(und.presence$New)
   und.presence$Fires <- as.factor(und.presence$Fires)
   und.presence$Data.Type <- as.factor(und.presence$Data.Type)
+  
+  # Create dataframe of warnings for this dataset
+  warn.dataset <- subset(warn.ALLDAT, Dataset == D,
+                         select = c(Species, Dataset, Fire.Included, Has_warning))
   
   for(S in 1:length(species.list)) { # RUN TIME: ~15-20 sec for 1 dataset
     
@@ -87,6 +105,9 @@ warn.ALLDAT <- list()
     und.presence.SPEC$Data.Type <- relevel(und.presence.SPEC$Data.Type, ref="Legacy")
     und.presence.SPEC$Elevation.m2 <- und.presence.SPEC$Elevation.m^2 #TODO better than poly()?
     und.presence.SPEC <- und.presence.SPEC[complete.cases(und.presence.SPEC), ] #Just in case
+  
+    # Create subset of warnings for species of interest S
+    warn.SPEC <- subset(warn.dataset, Species == levels(species.list)[S])
     
     # Emptying out previous model objects
     mod.globfi <- NULL
@@ -97,41 +118,38 @@ warn.ALLDAT <- list()
       table(und.presence.SPEC$Pres.Abs, und.presence.SPEC$Fires, und.presence.SPEC$Data.Type)
     
     
-    # Create new error-logging file specific to permutation & species
-    log.file <- file(paste("data/warning_logs/warnings", 
-                           D, levels(species.list)[S], ".txt", sep = "_"), open = "wt")
-    log.file.path <- paste("data/warning_logs/warnings", 
-                           D, levels(species.list)[S], ".txt", sep = "_")
-    sink(log.file, append = TRUE, type = "output") # Sink to log file
-    sink(log.file, append = TRUE, type = "message")
-    
-    
-    # If burn > 5, include fire as a predictor in global model (New.Data.Type):
-    if(num.burns["1", "Burned", "Resurvey"] >= 5) {
-      mod.globfi <- glm(Pres.Abs ~ (Elevation.m + Elevation.m2) * New.Data.Type, 
-                        data = und.presence.SPEC, family = "binomial", na.action = na.fail)
-      options(warn = -1) # Ignore warnings - not for logging.
-      dredge.list <- lapply(dredge(mod.globfi, rank = AIC, subset = 
-                                dc(Elevation.m, Elevation.m2) &&
-                                dc(Data.Type:Elevation.m, Data.Type:Elevation.m2) &&
-                                dc(Elevation.m:Fires, Elevation.m2:Fires) &&
-                                dc(Data.Type:Elevation.m:Fires, Data.Type:Elevation.m2:Fires), 
-                              trace = FALSE, evaluate = FALSE), eval)
-      names(dredge.list) <- paste("Mod", 
-                                as.numeric(names(dredge.list)) - 1, 
-                              sep = ".") # Converting to model ID
-      options(warn = 1) # Tell me if a model throws an error - for logging.
-      dredge.globfi <- dredge(mod.globfi, rank = AIC, subset = 
-                                dc(Elevation.m, Elevation.m2) &&
-                                dc(Data.Type:Elevation.m, Data.Type:Elevation.m2) &&
-                                dc(Elevation.m:Fires, Elevation.m2:Fires) &&
-                                dc(Data.Type:Elevation.m:Fires, Data.Type:Elevation.m2:Fires), 
-                              trace = 1)
+    # If burn > 5 in >50% of datasets, include fire as a predictor in global model (New.Data.Type):
+    if(levels(species.list)[S] %in% species.with.fire$Species == TRUE) {
+      
+      if(levels(factor(warn.SPEC$Fire.Included)) == "No") {
+        print("problematic") #TODO placeholder - record somewhere
+      }
+      
+      if(levels(species.list)[S] == "VAME") {
+        print("insert simpler model framework") #TODO placeholder
+      } else {
+        mod.globfi <- glm(Pres.Abs ~ (Elevation.m + Elevation.m2) * New.Data.Type, 
+                          data = und.presence.SPEC, family = "binomial", na.action = na.fail)
+        dredge.globfi <- dredge(mod.globfi, rank = AIC, subset = 
+                                  dc(Elevation.m, Elevation.m2) &&
+                                  dc(Data.Type:Elevation.m, Data.Type:Elevation.m2) &&
+                                  dc(Elevation.m:Fires, Elevation.m2:Fires) &&
+                                  dc(Data.Type:Elevation.m:Fires, Data.Type:Elevation.m2:Fires, 
+                                  trace = 1))
+        avg.mods <- model.avg(dredge.globfi, subset = delta <= 2)
+        top.mods.coeff <- as.data.frame(coef(subset(dredge.globfi, delta <= 2)))
+        avg.mods.coeff <- as.data.frame(t(avg.mods$coefficients["full",]))
+        avg.mods.confint <- as.data.frame(t(confint(avg.mods, full = TRUE)))
+        
+      }
+     
+     
+      
     }
     
     
-    #If burn < 5 in both, exclude fire from global model:
-    if(num.burns["1", "Burned", "Resurvey"] < 5) {
+    #If burn < 5 in >50% of datasets, exclude fire from global model:
+    if(levels(species.list)[S] %in% species.with.fire$Species == FALSE) {
       mod.globnofi <- glm(Pres.Abs ~ Data.Type * (Elevation.m + Elevation.m2), 
                           data = und.presence.SPEC, family = "binomial", na.action = na.fail) 
       options(warn = -1) # Ignore warnings - not for logging.
