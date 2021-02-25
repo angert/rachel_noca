@@ -111,9 +111,8 @@ warn.ALLDAT <- list()
       options(warn = -1) # Ignore warnings - not for logging.
       dredge.list <- lapply(dredge(mod.globfi, rank = AIC, subset = 
                                 dc(Elevation.m, Elevation.m2) &&
-                                dc(Data.Type:Elevation.m, Data.Type:Elevation.m2) &&
-                                dc(Elevation.m:Fires, Elevation.m2:Fires) &&
-                                dc(Data.Type:Elevation.m:Fires, Data.Type:Elevation.m2:Fires), 
+                                dc(New.Data.Type:Elevation.m, New.Data.Type:Elevation.m2) &&
+                                dc(Elevation.m:New.Data.Type, Elevation.m2:New.Data.Type), 
                               trace = FALSE, evaluate = FALSE), eval)
       names(dredge.list) <- paste("Mod", 
                                 as.numeric(names(dredge.list)) - 1, 
