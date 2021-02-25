@@ -65,7 +65,7 @@ for(D in 1:100) {
 coeff.ALLDAT <- list()
 warn.ALLDAT <- list()
 
-#for(D in 1:100) { #RUN TIME: 32 minutes 51 sec
+for(D in 1:100) { #RUN TIME: 32 minutes 51 sec
   
   coeff.ALLSPEC <- list()
   warn.ALLSPEC <- list()
@@ -120,9 +120,8 @@ warn.ALLDAT <- list()
       options(warn = 1) # Tell me if a model throws an error - for logging.
       dredge.globfi <- dredge(mod.globfi, rank = AIC, subset = 
                                 dc(Elevation.m, Elevation.m2) &&
-                                dc(Data.Type:Elevation.m, Data.Type:Elevation.m2) &&
-                                dc(Elevation.m:Fires, Elevation.m2:Fires) &&
-                                dc(Data.Type:Elevation.m:Fires, Data.Type:Elevation.m2:Fires), 
+                                dc(New.Data.Type:Elevation.m, New.Data.Type:Elevation.m2) &&
+                                dc(Elevation.m:New.Data.Type, Elevation.m2:New.Data.Type), 
                               trace = 1)
     }
     
