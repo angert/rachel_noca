@@ -18,9 +18,6 @@ Fixed term is "(Intercept)"
 15 : glm(formula = Pres.Abs ~ Elevation.m + Elevation.m2 + New.Data.Type + 
     Elevation.m:New.Data.Type + 1, family = "binomial", data = und.presence.SPEC, 
     na.action = na.fail)
-23 : glm(formula = Pres.Abs ~ Elevation.m + Elevation.m2 + New.Data.Type + 
-    Elevation.m2:New.Data.Type + 1, family = "binomial", data = und.presence.SPEC, 
-    na.action = na.fail)
 31 : glm(formula = Pres.Abs ~ Elevation.m + Elevation.m2 + New.Data.Type + 
     Elevation.m:New.Data.Type + Elevation.m2:New.Data.Type + 
     1, family = "binomial", data = und.presence.SPEC, na.action = na.fail)
