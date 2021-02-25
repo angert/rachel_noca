@@ -95,7 +95,7 @@ coeff.ALLDAT <- list()
   warn.dataset <- subset(warn.ALLDAT, Dataset == D,
                          select = c(Species, Dataset, Fire.Included, Has_warning))
   
-  for(S in 1:length(species.list)) { # RUN TIME: ~15-20 sec for 1 dataset
+  #for(S in 1:length(species.list)) { # RUN TIME: ~15-20 sec for 1 dataset
     
     # Create subset for species of interest S
     und.presence.SPEC <- subset(und.presence, Species.Code == levels(species.list)[S])
@@ -122,28 +122,40 @@ coeff.ALLDAT <- list()
     if(levels(species.list)[S] %in% species.with.fire$Species == TRUE) {
       
       if(levels(factor(warn.SPEC$Fire.Included)) == "No") {
-        print("problematic") #TODO placeholder - record somewhere
+        print("problematic") #TODO placeholder - record somewhere. This means it was forced
       }
       
-      if(levels(species.list)[S] == "VAME") {
-        print("insert simpler model framework") #TODO placeholder
-      } else {
+      if("TRUE" %in% levels(factor(warn.dataset$Has_warning[warn.dataset$Species 
+                                                == levels(species.list)[S]]))) {
+        print("problematic") #TODO placeholder - record somewhere
+        # Maybe here: ask if VAME then do model framework, else record issue for later removal, then below another else?
+      }
+      
+      if(levels(species.list)[S] == "VAME") { # No elev^2 * year-burn
         mod.globfi <- glm(Pres.Abs ~ (Elevation.m + Elevation.m2) * New.Data.Type, 
                           data = und.presence.SPEC, family = "binomial", na.action = na.fail)
         dredge.globfi <- dredge(mod.globfi, rank = AIC, subset = 
                                   dc(Elevation.m, Elevation.m2) &&
-                                  dc(Data.Type:Elevation.m, Data.Type:Elevation.m2) &&
-                                  dc(Elevation.m:Fires, Elevation.m2:Fires) &&
-                                  dc(Data.Type:Elevation.m:Fires, Data.Type:Elevation.m2:Fires, 
-                                  trace = 1))
+                                  dc(New.Data.Type:Elevation.m, New.Data.Type:Elevation.m2) &&
+                                  dc(Elevation.m:New.Data.Type, Elevation.m2:New.Data.Type), 
+                                     trace = 1)
         avg.mods <- model.avg(dredge.globfi, subset = delta <= 2)
         top.mods.coeff <- as.data.frame(coef(subset(dredge.globfi, delta <= 2)))
         avg.mods.coeff <- as.data.frame(t(avg.mods$coefficients["full",]))
         avg.mods.confint <- as.data.frame(t(confint(avg.mods, full = TRUE)))
-        
-      }
-     
-     
+        } else { # Full model
+        mod.globfi <- glm(Pres.Abs ~ (Elevation.m + Elevation.m2) * New.Data.Type, 
+                          data = und.presence.SPEC, family = "binomial", na.action = na.fail)
+        dredge.globfi <- dredge(mod.globfi, rank = AIC, subset = 
+                                  dc(Elevation.m, Elevation.m2) &&
+                                  dc(New.Data.Type:Elevation.m, New.Data.Type:Elevation.m2) &&
+                                  dc(Elevation.m:New.Data.Type, Elevation.m2:New.Data.Type), 
+                                  trace = 1)
+        avg.mods <- model.avg(dredge.globfi, subset = delta <= 2)
+        top.mods.coeff <- as.data.frame(coef(subset(dredge.globfi, delta <= 2)))
+        avg.mods.coeff <- as.data.frame(t(avg.mods$coefficients["full",]))
+        avg.mods.confint <- as.data.frame(t(confint(avg.mods, full = TRUE)))
+        }
       
     }
     
