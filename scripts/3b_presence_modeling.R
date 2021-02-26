@@ -80,11 +80,13 @@ species.without.fire <- numbered.species[!numbered.species$Species
                                          %in% species.with.fire$Species, ]
 # Exclude D loop to run for only one dataset (e.g. unrarefied data)
 
-coeff.ALLDAT <- list()
+coeff.ALLDAT <- list() # Store coefficient outputs
+framework.ALLDAT <- list () # Store record of which decision framework was used
 
 #for(D in 1:100) { #RUN TIME: 32 minutes 51 sec
   
   coeff.ALLSPEC <- list()
+  framework.ALLSPEC <- list()
   und.presence <- rare.ALL[[D]]
   und.presence$Elevation.m <- as.numeric(und.presence$Elevation.m)
   und.presence$New.Data.Type <- factor(und.presence$New)
@@ -109,41 +111,77 @@ coeff.ALLDAT <- list()
     # Create subset of warnings for species of interest S
     warn.SPEC <- subset(warn.dataset, Species == levels(species.list)[S])
     
+    # Create empty data frame to record decision framework
+    framework.SPEC <- data.frame(Dataset = paste(D), 
+                                 Species = paste(levels(species.list)[S]),
+                                 Forced.Fire = paste(NA),
+                                 Forced.No.Fire = paste(NA),
+                                 Forced.Simpler.Mod = paste(NA),
+                                 Discard.Later = paste(NA),
+                                 One.Top.Mod = paste(NA))
+    
     # Emptying out previous model objects
     mod.globfi <- NULL
     mod.globnofi <- NULL
+    mod.globfi.reduced <- NULL
+    mod.globnofi.reduced <- NULL
+    dredge.globfi <- NULL
+    dredge.globnofi <- NULL
+    avg.mods.coeff <- NULL
+    avg.mods.confint <- NULL
+    top.mods.coeff <- NULL
 
      # Did the species occur in burned plots 5+ times?
     num.burns <- 
       table(und.presence.SPEC$Pres.Abs, und.presence.SPEC$Fires, und.presence.SPEC$Data.Type)
     
+    #### START OF MODEL FRAMEWORK #### 
     
     # If burn > 5 in >50% of datasets, include fire as a predictor in global model (New.Data.Type):
     if(levels(species.list)[S] %in% species.with.fire$Species == TRUE) {
       
+      # Did we force this D & S to run in the fire framework?
       if(levels(factor(warn.SPEC$Fire.Included)) == "No") {
-        print("problematic") #TODO placeholder - record somewhere. This means it was forced
+        framework.SPEC$Forced.Fire <- paste("Yes") # Record
+      } else {
+        framework.SPEC$Forced.Fire <- paste("No") # Record
       }
       
+      # Was there a warning associated with this D & S?
       if("TRUE" %in% levels(factor(warn.dataset$Has_warning[warn.dataset$Species 
                                                 == levels(species.list)[S]]))) {
-        print("problematic") #TODO placeholder - record somewhere
-        # Maybe here: ask if VAME then do model framework, else record issue for later removal, then below another else?
-      }
-      
-      if(levels(species.list)[S] == "VAME") { # No elev^2 * year-burn
-        mod.globfi <- glm(Pres.Abs ~ (Elevation.m + Elevation.m2) * New.Data.Type, 
-                          data = und.presence.SPEC, family = "binomial", na.action = na.fail)
-        dredge.globfi <- dredge(mod.globfi, rank = AIC, subset = 
-                                  dc(Elevation.m, Elevation.m2) &&
-                                  dc(New.Data.Type:Elevation.m, New.Data.Type:Elevation.m2) &&
-                                  dc(Elevation.m:New.Data.Type, Elevation.m2:New.Data.Type), 
-                                     trace = 1)
-        avg.mods <- model.avg(dredge.globfi, subset = delta <= 2)
-        top.mods.coeff <- as.data.frame(coef(subset(dredge.globfi, delta <= 2)))
-        avg.mods.coeff <- as.data.frame(t(avg.mods$coefficients["full",]))
-        avg.mods.confint <- as.data.frame(t(confint(avg.mods, full = TRUE)))
-        } else { # Full model
+        
+        if(levels(species.list)[S] == "VAME") { # No elev^2 * year-burn
+          mod.globfi.reduced <- glm(Pres.Abs ~ Elevation.m + Elevation.m2 + 
+                              New.Data.Type + Elevation.m:New.Data.Type, 
+                            data = und.presence.SPEC, family = "binomial", na.action = na.fail)
+          dredge.globfi.reduced <- dredge(mod.globfi.reduced, rank = AIC, subset = 
+                                    dc(Elevation.m, Elevation.m2), 
+                                  trace = 1)
+          
+          if(nrow(subset(dredge.globfi.reduced, delta <= 2)) == 1) { # Error workaround
+            avg.mods.coeff <- as.data.frame(coef(subset(dredge.globfi.reduced, delta <= 2)))
+            avg.mods.confint <- #TODO Hideously clunky
+              as.data.frame(t(as.data.frame(lapply(get.models(dredge.globfi.reduced, 
+                                          subset = delta <= 2), confint))))
+            row.names(avg.mods.confint) <- c("2.5 %", "97.5 %")
+            framework.SPEC$One.Top.Mod <- paste("Yes")
+            } else { # Normal
+            avg.mods <- model.avg(dredge.globfi.reduced, subset = delta <= 2)
+            avg.mods.coeff <- as.data.frame(t(avg.mods$coefficients["full",]))
+            avg.mods.confint <- as.data.frame(t(confint(avg.mods, full = TRUE)))
+            framework.SPEC$One.Top.Mod <- paste("No")
+            }
+          
+          framework.SPEC$Forced.Simpler.Mod <- paste("Yes") # Record
+          top.mods.coeff <- as.data.frame(coef(subset(dredge.globfi.reduced, delta <= 2)))
+          
+          } else {
+          framework.SPEC$Discard.Later <- paste("Yes") # Record
+          }
+        
+        
+        } else { # Run as normal
         mod.globfi <- glm(Pres.Abs ~ (Elevation.m + Elevation.m2) * New.Data.Type, 
                           data = und.presence.SPEC, family = "binomial", na.action = na.fail)
         dredge.globfi <- dredge(mod.globfi, rank = AIC, subset = 
@@ -151,39 +189,95 @@ coeff.ALLDAT <- list()
                                   dc(New.Data.Type:Elevation.m, New.Data.Type:Elevation.m2) &&
                                   dc(Elevation.m:New.Data.Type, Elevation.m2:New.Data.Type), 
                                   trace = 1)
-        avg.mods <- model.avg(dredge.globfi, subset = delta <= 2)
+        if(nrow(subset(dredge.globfi, delta <= 2)) == 1) { # Error workaround
+          avg.mods.coeff <- as.data.frame(coef(subset(dredge.globfi, delta <= 2)))
+          avg.mods.confint <- #TODO Hideously clunky
+            as.data.frame(t(as.data.frame(lapply(get.models(dredge.globfi, 
+                                                            subset = delta <= 2), confint))))
+          row.names(avg.mods.confint) <- c("2.5 %", "97.5 %")
+          framework.SPEC$One.Top.Mod <- paste("Yes")
+          } else { # Normal
+          avg.mods <- model.avg(dredge.globfi, subset = delta <= 2)
+          avg.mods.coeff <- as.data.frame(t(avg.mods$coefficients["full",]))
+          avg.mods.confint <- as.data.frame(t(confint(avg.mods, full = TRUE)))
+          framework.SPEC$One.Top.Mod <- paste("No")
+          }
+        
         top.mods.coeff <- as.data.frame(coef(subset(dredge.globfi, delta <= 2)))
-        avg.mods.coeff <- as.data.frame(t(avg.mods$coefficients["full",]))
-        avg.mods.confint <- as.data.frame(t(confint(avg.mods, full = TRUE)))
-        }
       
-    }
-    
+        }
+      }
     
     #If burn < 5 in >50% of datasets, exclude fire from global model:
     if(levels(species.list)[S] %in% species.with.fire$Species == FALSE) {
+      
+      # Did we force this D & S to run in the no-fire framework?
+      if(levels(factor(warn.SPEC$Fire.Included)) == "Yes") {
+        framework.SPEC$Forced.No.Fire <- paste("Yes") # Record
+      } else {
+        framework.SPEC$Forced.No.Fire <- paste("No") # Record
+      }
+      
+      # Was there a warning associated with this D & S?
+      if("TRUE" %in% levels(factor(warn.dataset$Has_warning[warn.dataset$Species 
+                                                            == levels(species.list)[S]]))) {
+        if(levels(species.list)[S] == "HODI") { # No elev^2 * year
+          mod.globnofi.reduced <- glm(Pres.Abs ~ Elevation.m + Elevation.m2 + 
+                                     Data.Type + Elevation.m:Data.Type, 
+                                    data = und.presence.SPEC, family = "binomial", 
+                                    na.action = na.fail)
+          dredge.globfi.reduced <- dredge(mod.globnofi.reduced, rank = AIC, subset = 
+                                            dc(Elevation.m, Elevation.m2), 
+                                          trace = 1)
+          
+          if(nrow(subset(dredge.globfi.reduced, delta <= 2)) == 1) { # Error workaround
+            avg.mods.coeff <- as.data.frame(coef(subset(dredge.globfi.reduced, delta <= 2)))
+            avg.mods.confint <- #TODO Hideously clunky
+              as.data.frame(t(as.data.frame(lapply(get.models(dredge.globfi.reduced, 
+                                                              subset = delta <= 2), confint))))
+            row.names(avg.mods.confint) <- c("2.5 %", "97.5 %")
+            framework.SPEC$One.Top.Mod <- paste("Yes")
+          } else { # Normal
+            avg.mods <- model.avg(dredge.globfi.reduced, subset = delta <= 2)
+            avg.mods.coeff <- as.data.frame(t(avg.mods$coefficients["full",]))
+            avg.mods.confint <- as.data.frame(t(confint(avg.mods, full = TRUE)))
+            framework.SPEC$One.Top.Mod <- paste("No")
+          }
+          
+          framework.SPEC$Forced.Simpler.Mod <- paste("Yes") # Record
+          top.mods.coeff <- as.data.frame(coef(subset(dredge.globfi.reduced, delta <= 2)))
+          
+        } else {
+          framework.SPEC$Discard.Later <- paste("Yes") # Record
+          }
+      }
+      
+    } else { # Run as normal
       mod.globnofi <- glm(Pres.Abs ~ Data.Type * (Elevation.m + Elevation.m2), 
                           data = und.presence.SPEC, family = "binomial", na.action = na.fail) 
-      options(warn = -1) # Ignore warnings - not for logging.
-      dredge.list <- lapply(dredge(mod.globnofi, rank = AIC, subset = 
-                                     dc(Elevation.m, Elevation.m2) &&
-                                     dc(Data.Type:Elevation.m, Data.Type:Elevation.m2), 
-                                   trace = FALSE, evaluate = FALSE), eval)
-      names(dredge.list) <- paste("Mod", 
-                                  as.numeric(names(dredge.list)) - 1, 
-                                  sep = ".") # Converting to model ID
-      options(warn = 1) # Tell me if a model throws an error - for logging.
       dredge.globnofi <- dredge(mod.globnofi, rank = AIC, subset = 
-                                dc(Elevation.m, Elevation.m2) &&
-                                dc(Data.Type:Elevation.m, Data.Type:Elevation.m2), 
-                              trace = 1)
-    }
+                                  dc(Elevation.m, Elevation.m2) &&
+                                  dc(Data.Type:Elevation.m, Data.Type:Elevation.m2), 
+                                trace = 1)
+      
+      if(nrow(subset(dredge.globnofi, delta <= 2)) == 1) { # Error workaround
+        avg.mods.coeff <- as.data.frame(coef(subset(dredge.globnofi, delta <= 2)))
+        avg.mods.confint <- #TODO Hideously clunky
+          as.data.frame(t(as.data.frame(lapply(get.models(dredge.globnofi, 
+                                                          subset = delta <= 2), confint))))
+        row.names(avg.mods.confint) <- c("2.5 %", "97.5 %")
+        framework.SPEC$One.Top.Mod <- paste("Yes")
+      } else { # Normal
+        avg.mods <- model.avg(dredge.globnofi, subset = delta <= 2)
+        avg.mods.coeff <- as.data.frame(t(avg.mods$coefficients["full",]))
+        avg.mods.confint <- as.data.frame(t(confint(avg.mods, full = TRUE)))
+        framework.SPEC$One.Top.Mod <- paste("No")
+      }
+      
+      top.mods.coeff <- as.data.frame(coef(subset(dredge.globnofi, delta <= 2)))
+      }
     
-    
-    # Stop writing to .txt, import dataframe of warning logs
-    closeAllConnections()
-    log.warn <- dredge_log_to_df(log.file.path) # See 3_dredge_log_to_df.R
-    log.warn$new_Model_id <- paste("Mod", log.warn$Model_id, sep = ".")
+    #### END OF MODEL FRAMEWORK ####
     
     # Run df.fun to pull out coefficients, AIC, model ID from dredge list
     coeff.df <- ldply(lapply(log.warn$new_Model_id, df.fun))
