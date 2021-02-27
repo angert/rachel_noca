@@ -26,7 +26,8 @@ library(plyr)
 
 # List of coefficients between fire and non-fire model framework
 #TODO: confusing
-coeff.all <-c( "Elevation.m", 
+coeff.all <-c("(Intercept)",
+              "Elevation.m", 
               "Elevation.m2", 
               "New.Data.TypeResurvey.Burned", 
               "New.Data.TypeResurvey.Unburned", 
@@ -81,11 +82,13 @@ species.without.fire <- numbered.species[!numbered.species$Species
 # Exclude D loop to run for only one dataset (e.g. unrarefied data)
 
 coeff.ALLDAT <- list() # Store coefficient outputs
+avg.confint.ALLDAT <- list() # Store model-averaged coefficients
 framework.ALLDAT <- list () # Store record of which decision framework was used
 
-#for(D in 1:100) { #RUN TIME: 32 minutes 51 sec
+for(D in 1:100) { #RUN TIME: 5 min
   
   coeff.ALLSPEC <- list()
+  avg.confint.ALLSPEC <- list() 
   framework.ALLSPEC <- list()
   und.presence <- rare.ALL[[D]]
   und.presence$Elevation.m <- as.numeric(und.presence$Elevation.m)
@@ -97,7 +100,7 @@ framework.ALLDAT <- list () # Store record of which decision framework was used
   warn.dataset <- subset(warn.ALLDAT, Dataset == D,
                          select = c(Species, Dataset, Fire.Included, Has_warning))
   
-  #for(S in 1:length(species.list)) { # RUN TIME: ~15-20 sec for 1 dataset
+  for(S in 1:length(species.list)) {
     
     # Create subset for species of interest S
     und.presence.SPEC <- subset(und.presence, Species.Code == levels(species.list)[S])
@@ -156,9 +159,9 @@ framework.ALLDAT <- list () # Store record of which decision framework was used
                               New.Data.Type + Elevation.m:New.Data.Type, 
                             data = und.presence.SPEC, family = "binomial", na.action = na.fail)
           dredge.globfi.reduced <- dredge(mod.globfi.reduced, rank = AIC, subset = 
-                                    dc(Elevation.m, Elevation.m2), 
-                                  trace = 1)
+                                    dc(Elevation.m, Elevation.m2))
           
+          # Model averaging:
           if(nrow(subset(dredge.globfi.reduced, delta <= 2)) == 1) { # Error workaround
             avg.mods.coeff <- as.data.frame(coef(subset(dredge.globfi.reduced, delta <= 2)))
             avg.mods.confint <- #TODO Hideously clunky
@@ -173,11 +176,23 @@ framework.ALLDAT <- list () # Store record of which decision framework was used
             framework.SPEC$One.Top.Mod <- paste("No")
             }
           
-          framework.SPEC$Forced.Simpler.Mod <- paste("Yes") # Record
+          # Coefficients:
           top.mods.coeff <- as.data.frame(coef(subset(dredge.globfi.reduced, delta <= 2)))
+          top.mods.coeff$delta <- dredge.globfi.reduced$delta[dredge.globfi.reduced$delta <= 2]
+          top.mods.coeff$weight <- Weights(top.mods.coeff$delta)
+          top.mods.coeff$logLik <- dredge.globfi.reduced$logLik[dredge.globfi.reduced$delta <= 2]
           
+          framework.SPEC$Forced.Simpler.Mod <- paste("Yes") # Record
+
           } else {
           framework.SPEC$Discard.Later <- paste("Yes") # Record
+          # Create empty DFs
+          top.mods.coeff <- data.frame(delta = rep(NA, 1), 
+                                       weight = rep(NA, 1),
+                                       logLik = rep(NA, 1))
+          avg.mods.coeff <- data.frame(Elevation.m = rep(NA, 1))
+          avg.mods.confint <- data.frame(Elevation.m = rep(NA, 2), 
+                                         row.names = c("2.5 %", "97.5 %"))
           }
         
         
@@ -187,8 +202,9 @@ framework.ALLDAT <- list () # Store record of which decision framework was used
         dredge.globfi <- dredge(mod.globfi, rank = AIC, subset = 
                                   dc(Elevation.m, Elevation.m2) &&
                                   dc(New.Data.Type:Elevation.m, New.Data.Type:Elevation.m2) &&
-                                  dc(Elevation.m:New.Data.Type, Elevation.m2:New.Data.Type), 
-                                  trace = 1)
+                                  dc(Elevation.m:New.Data.Type, Elevation.m2:New.Data.Type))
+        
+        # Model averaging:
         if(nrow(subset(dredge.globfi, delta <= 2)) == 1) { # Error workaround
           avg.mods.coeff <- as.data.frame(coef(subset(dredge.globfi, delta <= 2)))
           avg.mods.confint <- #TODO Hideously clunky
@@ -203,8 +219,12 @@ framework.ALLDAT <- list () # Store record of which decision framework was used
           framework.SPEC$One.Top.Mod <- paste("No")
           }
         
+        # Storing coefficients:
         top.mods.coeff <- as.data.frame(coef(subset(dredge.globfi, delta <= 2)))
-      
+        top.mods.coeff$delta <- dredge.globfi$delta[dredge.globfi$delta <= 2]
+        top.mods.coeff$weight <- Weights(top.mods.coeff$delta)
+        top.mods.coeff$logLik <- dredge.globfi$logLik[dredge.globfi$delta <= 2]
+        
         }
       }
     
@@ -226,40 +246,52 @@ framework.ALLDAT <- list () # Store record of which decision framework was used
                                      Data.Type + Elevation.m:Data.Type, 
                                     data = und.presence.SPEC, family = "binomial", 
                                     na.action = na.fail)
-          dredge.globfi.reduced <- dredge(mod.globnofi.reduced, rank = AIC, subset = 
-                                            dc(Elevation.m, Elevation.m2), 
-                                          trace = 1)
+          dredge.globnofi.reduced <- dredge(mod.globnofi.reduced, rank = AIC, subset = 
+                                            dc(Elevation.m, Elevation.m2))
           
-          if(nrow(subset(dredge.globfi.reduced, delta <= 2)) == 1) { # Error workaround
-            avg.mods.coeff <- as.data.frame(coef(subset(dredge.globfi.reduced, delta <= 2)))
+          # Model averaging:
+          if(nrow(subset(dredge.globnofi.reduced, delta <= 2)) == 1) { # Error workaround
+            avg.mods.coeff <- as.data.frame(coef(subset(dredge.globnofi.reduced, delta <= 2)))
             avg.mods.confint <- #TODO Hideously clunky
-              as.data.frame(t(as.data.frame(lapply(get.models(dredge.globfi.reduced, 
+              as.data.frame(t(as.data.frame(lapply(get.models(dredge.globnofi.reduced, 
                                                               subset = delta <= 2), confint))))
             row.names(avg.mods.confint) <- c("2.5 %", "97.5 %")
             framework.SPEC$One.Top.Mod <- paste("Yes")
           } else { # Normal
-            avg.mods <- model.avg(dredge.globfi.reduced, subset = delta <= 2)
+            avg.mods <- model.avg(dredge.globnofi.reduced, subset = delta <= 2)
             avg.mods.coeff <- as.data.frame(t(avg.mods$coefficients["full",]))
             avg.mods.confint <- as.data.frame(t(confint(avg.mods, full = TRUE)))
             framework.SPEC$One.Top.Mod <- paste("No")
           }
           
+          # Coefficients:
+          top.mods.coeff <- as.data.frame(coef(subset(dredge.globnofi.reduced, delta <= 2)))
+          top.mods.coeff$delta <- dredge.globnofi.reduced$delta[dredge.globnofi.reduced$delta <= 2]
+          top.mods.coeff$weight <- Weights(top.mods.coeff$delta)
+          top.mods.coeff$logLik <- 
+            dredge.globnofi.reduced$logLik[dredge.globnofi.reduced$delta <= 2]
+          
           framework.SPEC$Forced.Simpler.Mod <- paste("Yes") # Record
-          top.mods.coeff <- as.data.frame(coef(subset(dredge.globfi.reduced, delta <= 2)))
           
         } else {
           framework.SPEC$Discard.Later <- paste("Yes") # Record
-          }
-      }
-      
-    } else { # Run as normal
+          # Create empty DFs
+          top.mods.coeff <- data.frame(delta = rep(NA, 1), 
+                                       weight = rep(NA, 1), 
+                                       logLik = rep(NA, 1))
+          avg.mods.coeff <- data.frame(Elevation.m = rep(NA, 1))
+          avg.mods.confint <- data.frame(Elevation.m = rep(NA, 2), 
+                                         row.names = c("2.5 %", "97.5 %"))
+        }
+        
+      } else { # Run as normal
       mod.globnofi <- glm(Pres.Abs ~ Data.Type * (Elevation.m + Elevation.m2), 
                           data = und.presence.SPEC, family = "binomial", na.action = na.fail) 
       dredge.globnofi <- dredge(mod.globnofi, rank = AIC, subset = 
                                   dc(Elevation.m, Elevation.m2) &&
-                                  dc(Data.Type:Elevation.m, Data.Type:Elevation.m2), 
-                                trace = 1)
+                                  dc(Data.Type:Elevation.m, Data.Type:Elevation.m2))
       
+      # Model averaging
       if(nrow(subset(dredge.globnofi, delta <= 2)) == 1) { # Error workaround
         avg.mods.coeff <- as.data.frame(coef(subset(dredge.globnofi, delta <= 2)))
         avg.mods.confint <- #TODO Hideously clunky
@@ -274,25 +306,20 @@ framework.ALLDAT <- list () # Store record of which decision framework was used
         framework.SPEC$One.Top.Mod <- paste("No")
       }
       
+      # Coefficients:
       top.mods.coeff <- as.data.frame(coef(subset(dredge.globnofi, delta <= 2)))
+      top.mods.coeff$delta <- dredge.globnofi$delta[dredge.globnofi$delta <= 2]
+      top.mods.coeff$weight <- Weights(top.mods.coeff$delta)
+      top.mods.coeff$logLik <- dredge.globnofi$logLik[dredge.globnofi$delta <= 2]
       }
-    
+    }
+      
+
+      
     #### END OF MODEL FRAMEWORK ####
+      # Output: 3 DFs named top.mods.coeff, avg.mods.coeff, avg.mods.confint
     
-    # Run df.fun to pull out coefficients, AIC, model ID from dredge list
-    coeff.df <- ldply(lapply(log.warn$new_Model_id, df.fun))
     
-    # Join warning log to dataframe of coefficients and AIC
-    coeff.warn <- merge(coeff.df, log.warn, by = "new_Model_id", all.x = TRUE)
-    
-    # Exclude models for which there was a warning
-    coeff.nowarn <- coeff.warn[coeff.warn$Has_warning == FALSE, ]
-    
-    # Calculate delta AIC based on warning-less models, reduce to delta <=2, add weights
-    coeff.nowarn$delta <- coeff.nowarn$AIC - min(coeff.nowarn$AIC)
-    top.mods.coeff <- coeff.nowarn[coeff.nowarn$delta <= 2, ]
-    top.mods.coeff$weight <- Weights(top.mods.coeff$AIC)
-  
     # Null model (for Psuedo-R-squared calculation later)
     mod.NULL <- glm(Pres.Abs ~ 1, 
                     data = und.presence.SPEC, family = "binomial", na.action = na.fail)
@@ -301,6 +328,12 @@ framework.ALLDAT <- list () # Store record of which decision framework was used
     for(C in 1:length(coeff.all)) {
       if(!coeff.all[C] %in% colnames(top.mods.coeff)) {
         top.mods.coeff[, coeff.all[C]] <- rep(NA, times = nrow(top.mods.coeff))
+      }
+      if(!coeff.all[C] %in% colnames(avg.mods.coeff)) {
+        avg.mods.coeff[, coeff.all[C]] <- rep(NA, times = nrow(avg.mods.coeff))
+      }
+      if(!coeff.all[C] %in% colnames(avg.mods.confint)) {
+        avg.mods.confint[, coeff.all[C]] <- rep(NA, times = nrow(avg.mods.confint))
       }
     }
     
@@ -314,9 +347,9 @@ framework.ALLDAT <- list () # Store record of which decision framework was used
         Dataset = D,
         L.Occ = sum(num.burns["1", , "Legacy"]), 
         R.Occ = sum(num.burns["1", , "Resurvey"]), 
-        Fire.Included = ifelse(is.null(mod.globnofi) == TRUE, "Yes", "No"),
+        Fire.Included = ifelse(levels(species.list)[S] 
+                               %in% species.with.fire$Species == TRUE, "Yes", "No"),
         Type = "Unavg", 
-        Mod.ID = top.mods.coeff$new_Model_id[i],
         deltaAIC = top.mods.coeff$delta[i], 
         Weight = top.mods.coeff$weight[i], 
         Rsquared = 1 - top.mods.coeff$logLik[i] / as.numeric(logLik(mod.NULL)),
@@ -344,65 +377,104 @@ framework.ALLDAT <- list () # Store record of which decision framework was used
     Mods <- ldply(Mods.list, data.frame)
     
     ## Storing model-averaged parameters
-    
-    # Re-code NA coefficients as 0
-    top.mods.zeroes <- top.mods.coeff
-    top.mods.zeroes[is.na(top.mods.zeroes)] <- 0
-    
+
     Avg <- data.frame(
       Species = levels(species.list)[S],
       Dataset = D,
       L.Occ = sum(num.burns["1", , "Legacy"]), 
       R.Occ = sum(num.burns["1", , "Resurvey"]), 
-      Fire.Included = ifelse(is.null(mod.globnofi) == TRUE, "Yes", "No"),
+      Fire.Included = ifelse(levels(species.list)[S] 
+                             %in% species.with.fire$Species == TRUE, "Yes", "No"),
       Type = "Avg", 
-      Mod.ID = NA,
       deltaAIC = NA, 
       Weight = NA,
       Rsquared = NA,
-      Intercept = sum(top.mods.zeroes$`(Intercept)` * top.mods.zeroes$weight),
-      Elevation.m = sum(top.mods.zeroes$`Elevation.m` * top.mods.zeroes$weight),
-      Elevation.m2 = sum(top.mods.zeroes$`Elevation.m2` * top.mods.zeroes$weight),
-      Data.Type.nofi = sum(top.mods.zeroes$`Data.TypeResurvey` * top.mods.zeroes$weight),
-      Data.Type.Elevation.m.nofi = sum(top.mods.zeroes$`Data.TypeResurvey:Elevation.m` * 
-                                         top.mods.zeroes$weight),
-      Data.Type.Elevation.m2.nofi = sum(top.mods.zeroes$`Data.TypeResurvey:Elevation.m2` * 
-                                          top.mods.zeroes$weight),
+      Intercept = avg.mods.coeff$`(Intercept)`,
+      Elevation.m = avg.mods.coeff$Elevation.m,
+      Elevation.m2 = avg.mods.coeff$Elevation.m2,
+      Data.Type.nofi = avg.mods.coeff$Data.TypeResurvey,
+      Data.Type.Elevation.m.nofi = avg.mods.coeff$`Data.TypeResurvey:Elevation.m`,
+      Data.Type.Elevation.m2.nofi = avg.mods.coeff$`Data.TypeResurvey:Elevation.m2`,
       Resurvey.Burned.fi = 
-        sum(top.mods.zeroes$`New.Data.TypeResurvey.Burned` * top.mods.zeroes$weight),
+        avg.mods.coeff$New.Data.TypeResurvey.Burned,
       Resurvey.Unburned.fi = 
-        sum(top.mods.zeroes$`New.Data.TypeResurvey.Unburned` * top.mods.zeroes$weight),
+        avg.mods.coeff$New.Data.TypeResurvey.Unburned,
       Elevation.m.Res.Burn.fi = 
-        sum(top.mods.zeroes$`Elevation.m:New.Data.TypeResurvey.Burned` * top.mods.zeroes$weight),
+        avg.mods.coeff$`Elevation.m:New.Data.TypeResurvey.Burned`,
       Elevation.m.Res.Unburn.fi = 
-        sum(top.mods.zeroes$`Elevation.m:New.Data.TypeResurvey.Unburned` * top.mods.zeroes$weight),
+        avg.mods.coeff$`Elevation.m:New.Data.TypeResurvey.Unburned`,
       Elevation.m2.Res.Burn.fi = 
-        sum(top.mods.zeroes$`Elevation.m2:New.Data.TypeResurvey.Burned` * top.mods.zeroes$weight),
+        avg.mods.coeff$`Elevation.m2:New.Data.TypeResurvey.Burned`,
       Elevation.m2.Res.Unburn.fi = 
-        sum(top.mods.zeroes$`Elevation.m2:New.Data.TypeResurvey.Unburned` * 
-              top.mods.zeroes$weight),
+        avg.mods.coeff$`Elevation.m2:New.Data.TypeResurvey.Unburned`,
       row.names = NULL)
-    
     
     coeff.ALLSPEC[[S]] <- rbind(Mods, Avg)
     
-    ## Storing errors
     
-    coeff.warn$Species <- levels(species.list)[S]
-    coeff.warn$Dataset <- D
-    coeff.warn$L.Occ <- sum(num.burns["1", , "Legacy"])
-    coeff.warn$R.Occ <- sum(num.burns["1", , "Resurvey"])
-    coeff.warn$Fire.Included <- ifelse(is.null(mod.globnofi) == TRUE, "Yes", "No")
-    coeff.warn$Type <- "Unavg.w.warn"
+    ## Storing model-averaged CIs
     
-    warn.ALLSPEC[[S]] <- coeff.warn
+    Avg.Confint <- data.frame(
+      Species = levels(species.list)[S],
+      Dataset = D,
+      L.Occ = sum(num.burns["1", , "Legacy"]), 
+      R.Occ = sum(num.burns["1", , "Resurvey"]), 
+      Fire.Included = ifelse(levels(species.list)[S] 
+                             %in% species.with.fire$Species == TRUE, "Yes", "No"),
+      Type = "Avg.Confidence",
+      # Lower CIs:
+      Intercept.CI.Lower = avg.mods.confint$`(Intercept)`[1],
+      Elevation.m.CI.Lower = avg.mods.confint$Elevation.m[1],
+      Elevation.m2.CI.Lower = avg.mods.confint$Elevation.m2[1],
+      Data.Type.nofi.CI.Lower = avg.mods.confint$Data.TypeResurvey[1],
+      Data.Type.Elevation.m.nofi.CI.Lower = avg.mods.confint$`Data.TypeResurvey:Elevation.m`[1],
+      Data.Type.Elevation.m2.nofi.CI.Lower = avg.mods.confint$`Data.TypeResurvey:Elevation.m2`[1],
+      Resurvey.Burned.fi.CI.Lower = 
+        avg.mods.confint$New.Data.TypeResurvey.Burned[1],
+      Resurvey.Unburned.fi.CI.Lower = 
+        avg.mods.confint$New.Data.TypeResurvey.Unburned[1],
+      Elevation.m.Res.Burn.fi.CI.Lower = 
+        avg.mods.confint$`Elevation.m:New.Data.TypeResurvey.Burned`[1],
+      Elevation.m.Res.Unburn.fi.CI.Lower = 
+        avg.mods.confint$`Elevation.m:New.Data.TypeResurvey.Unburned`[1],
+      Elevation.m2.Res.Burn.fi.CI.Lower = 
+        avg.mods.confint$`Elevation.m2:New.Data.TypeResurvey.Burned`[1],
+      Elevation.m2.Res.Unburn.fi.CI.Lower = 
+        avg.mods.confint$`Elevation.m2:New.Data.TypeResurvey.Unburned`[1],
+      # Upper CIs: 
+      Intercept.CI.Upper = avg.mods.confint$`(Intercept)`[2],
+      Elevation.m.CI.Upper = avg.mods.confint$Elevation.m[2],
+      Elevation.m2.CI.Upper = avg.mods.confint$Elevation.m2[2],
+      Data.Type.nofi.CI.Upper = avg.mods.confint$Data.TypeResurvey[2],
+      Data.Type.Elevation.m.nofi.CI.Upper = avg.mods.confint$`Data.TypeResurvey:Elevation.m`[2],
+      Data.Type.Elevation.m2.nofi.CI.Upper = avg.mods.confint$`Data.TypeResurvey:Elevation.m2`[2],
+      Resurvey.Burned.fi.CI.Upper = 
+        avg.mods.confint$New.Data.TypeResurvey.Burned[2],
+      Resurvey.Unburned.fi.CI.Upper = 
+        avg.mods.confint$New.Data.TypeResurvey.Unburned[2],
+      Elevation.m.Res.Burn.fi.CI.Upper = 
+        avg.mods.confint$`Elevation.m:New.Data.TypeResurvey.Burned`[2],
+      Elevation.m.Res.Unburn.fi.CI.Upper = 
+        avg.mods.confint$`Elevation.m:New.Data.TypeResurvey.Unburned`[2],
+      Elevation.m2.Res.Burn.fi.CI.Upper = 
+        avg.mods.confint$`Elevation.m2:New.Data.TypeResurvey.Burned`[2],
+      Elevation.m2.Res.Unburn.fi.CI.Upper = 
+        avg.mods.confint$`Elevation.m2:New.Data.TypeResurvey.Unburned`[2],
+      row.names = NULL)
+    
+    avg.confint.ALLSPEC[[S]] <- Avg.Confint
+    
+    ## Storing record of framework
+    
+    framework.ALLSPEC[[S]] <- framework.SPEC
     
   }  
   
-  #Collapse ALLSPEC list into single dataframe, store that df as part of ALLDAT list
+  #Collapse ALLSPEC lists into single dataframe, store that df as part of ALLDAT list
   
   coeff.ALLDAT[[D]] <- ldply(coeff.ALLSPEC, data.frame)
-  warn.ALLDAT[[D]] <- ldply(warn.ALLSPEC, data.frame)
+  avg.confint.ALLDAT[[D]] <- ldply(avg.confint.ALLSPEC, data.frame)
+  framework.ALLDAT[[D]] <- ldply(framework.ALLSPEC, data.frame)
   
   #### END OF SPECIES LOOP
  
@@ -415,17 +487,22 @@ framework.ALLDAT <- list () # Store record of which decision framework was used
 # Collate ALLDAT lists into one big DF
 
 coeff.ALLDAT.finaldf <- ldply(coeff.ALLDAT, data.frame)
-warn.ALLDAT.finaldf <- ldply(warn.ALLDAT, data.frame)
+avg.confint.ALLDAT.finaldf <- ldply(avg.confint.ALLDAT, data.frame)
+framework.ALLDAT.finaldf <- ldply(framework.ALLDAT, data.frame)
 
 
 # Store output as CSV
 
 write.csv(coeff.ALLDAT.finaldf, 
-          file = "data/3_presence_ALLDAT_ALLSPEC_coefficients.csv", 
+          file = "data/3b_new_coefficients.csv", 
           row.names = FALSE)
-write.csv(warn.ALLDAT.finaldf, 
-          file = "data/3_presence_ALLDAT_ALLSPEC_warnings.csv", 
+write.csv(avg.confint.ALLDAT.finaldf, 
+          file = "data/3b_new_confint.csv", 
           row.names = FALSE)
+write.csv(framework.ALLDAT.finaldf, 
+          file = "data/3b_new_framework_logs.csv", 
+          row.names = FALSE)
+
 
   
 
