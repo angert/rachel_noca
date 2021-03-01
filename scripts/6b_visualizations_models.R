@@ -187,7 +187,7 @@ for (i in 1:dim(species.fire)[1]) {
     geom_line() +
     scale_color_manual(values=col.pal)
   
- ggsave(paste("figures/model.preds_",sp,".pdf",sep=""), gg, width=5, height=5)
+ ggsave(paste("figures/model.preds.CIs_",sp,".pdf",sep=""), gg, width=5, height=5)
 
 }
   
@@ -196,53 +196,110 @@ species.nofire <- semi_join(species.short, coeffs.nofire, by=c("species.list"="S
 
 elev.vec = seq(0, 2200, by=1)
 pred.leg.reps = matrix(nrow=length(elev.vec),ncol=100)
+pred.leg.reps.low = matrix(nrow=length(elev.vec),ncol=100)
+pred.leg.reps.high = matrix(nrow=length(elev.vec),ncol=100)
 pred.res.reps = matrix(nrow=length(elev.vec),ncol=100)
+pred.res.reps.low = matrix(nrow=length(elev.vec),ncol=100)
+pred.res.reps.high = matrix(nrow=length(elev.vec),ncol=100)
 
 col.pal <- c("turquoise4", "goldenrod1")
 
 for (i in 1:dim(species.nofire)[1]) {
   sp = species.nofire[i,]
-  mods <- coeffs %>% 
+  mods <- coeffs.nofire %>% 
     filter(Species==sp) %>% 
     select(Int=Intercept, 
            Elev=Elevation.m, 
            Elev2=Elevation.m2, 
            Year = Data.Type.nofi,
            YearxElev = Data.Type.Elevation.m.nofi,
-           YearxElev2 = Data.Type.Elevation.m2.nofi,
-    )
+           YearxElev2 = Data.Type.Elevation.m2.nofi)
+  mods[is.na(mods)] <- 0
+  confs <- cis.nofire %>% 
+    filter(Species==sp) %>% 
+    select(Int.low=Intercept.CI.Lower, 
+           Elev.low=Elevation.m.CI.Lower, 
+           Elev2.low=Elevation.m2.CI.Lower, 
+           Year.low = Data.Type.nofi.CI.Lower,
+           YearxElev.low = Data.Type.Elevation.m.nofi.CI.Lower,
+           YearxElev2.low = Data.Type.Elevation.m2.nofi.CI.Lower,
+           Int.high=Intercept.CI.Upper, 
+           Elev.high=Elevation.m.CI.Upper, 
+           Elev2.high=Elevation.m2.CI.Upper, 
+           Year.high = Data.Type.nofi.CI.Upper,
+           YearxElev.high = Data.Type.Elevation.m.nofi.CI.Upper,
+           YearxElev2.high = Data.Type.Elevation.m2.nofi.CI.Upper)
+  confs[is.na(confs)] <- 0
   for (j in 1:dim(mods)[1]) {
     pred.leg.reps[,j] = mods$Int[j] + mods$Elev[j]*elev.vec + mods$Elev2[j]*elev.vec*elev.vec
+    pred.leg.reps.low[,j] = confs$Int.low[j] + confs$Elev.low[j]*elev.vec + confs$Elev2.low[j]*elev.vec*elev.vec
+    pred.leg.reps.high[,j] = confs$Int.high[j] + confs$Elev.high[j]*elev.vec + confs$Elev2.high[j]*elev.vec*elev.vec
+
     pred.res.reps[,j] = mods$Int[j]  + mods$Elev[j]*elev.vec + mods$Elev2[j]*elev.vec*elev.vec +
       mods$Year[j] + mods$YearxElev[j]*elev.vec + mods$YearxElev2[j]*elev.vec^2
+    pred.res.reps.low[,j] = confs$Int.low[j]  + confs$Elev.low[j]*elev.vec + confs$Elev2.low[j]*elev.vec*elev.vec +
+      confs$Year.low[j] + confs$YearxElev.low[j]*elev.vec + confs$YearxElev2.low[j]*elev.vec^2
+    pred.res.reps.high[,j] = confs$Int.high[j]  + confs$Elev.high[j]*elev.vec + confs$Elev2.high[j]*elev.vec*elev.vec +
+      confs$Year.high[j] + confs$YearxElev.high[j]*elev.vec + confs$YearxElev2.high[j]*elev.vec^2
   }
+  
   t1.reps <- as.data.frame(cbind(elev.vec, 'legacy', pred.leg.reps))
+  t1.reps.low <- as.data.frame(cbind(elev.vec, 'legacy', pred.leg.reps.low))
+  t1.reps.high <- as.data.frame(cbind(elev.vec, 'legacy', pred.leg.reps.high))
+
   t1.reps.tall <- gather(t1.reps, "rep", "preds", 3:102)
+  t1.reps.tall.low <- gather(t1.reps.low, "rep", "preds", 3:102)
+  t1.reps.tall.high <- gather(t1.reps.high, "rep", "preds", 3:102)
+
   t1.summary <- t1.reps.tall %>% 
     mutate(resp = exp(as.numeric(preds))/(1+exp(as.numeric(preds)))) %>% 
     group_by(V2, elev.vec) %>% 
-    summarise(mean.resp = mean(resp),
-              lower.resp = unname(quantile(resp, c(0.05))),
-              upper.resp = unname(quantile(resp, c(0.95))))
+    summarise(mean.resp = mean(resp))
+  t1.summary.low <- t1.reps.tall.low %>% 
+    mutate(lower = exp(as.numeric(preds))/(1+exp(as.numeric(preds)))) %>% 
+    group_by(V2, elev.vec) %>% 
+    summarise(mean.lower = mean(lower))
+  t1.summary.high <- t1.reps.tall.high %>% 
+    mutate(upper = exp(as.numeric(preds))/(1+exp(as.numeric(preds)))) %>% 
+    group_by(V2, elev.vec) %>% 
+    summarise(mean.upper = mean(upper))
+  
   t2.reps <- as.data.frame(cbind(elev.vec, 'resurvey', pred.res.reps))
+  t2.reps.low <- as.data.frame(cbind(elev.vec, 'resurvey', pred.res.reps.low))
+  t2.reps.high <- as.data.frame(cbind(elev.vec, 'resurvey', pred.res.reps.high))
+
   t2.reps.tall <- gather(t2.reps, "rep", "preds", 3:102)
+  t2.reps.tall.low <- gather(t2.reps.low, "rep", "preds", 3:102)
+  t2.reps.tall.high <- gather(t2.reps.high, "rep", "preds", 3:102)
+  
   t2.summary <- t2.reps.tall %>% 
     mutate(resp = exp(as.numeric(preds))/(1+exp(as.numeric(preds)))) %>% 
     group_by(V2, elev.vec) %>% 
-    summarise(mean.resp = mean(resp),
-              lower.resp = unname(quantile(resp, c(0.05))),
-              upper.resp = unname(quantile(resp, c(0.95))))
-  graph.dat <- bind_rows(t1.summary, t2.summary)
+    summarise(mean.resp = mean(resp))
+  t2.summary.low <- t2.reps.tall.low %>% 
+    mutate(lower = exp(as.numeric(preds))/(1+exp(as.numeric(preds)))) %>% 
+    group_by(V2, elev.vec) %>% 
+    summarise(mean.lower = mean(lower))
+  t2.summary.high <- t2.reps.tall.high %>% 
+    mutate(upper = exp(as.numeric(preds))/(1+exp(as.numeric(preds)))) %>% 
+    group_by(V2, elev.vec) %>% 
+    summarise(mean.upper = mean(upper))
+  
+  mean.dat <- bind_rows(t1.summary, t2.summary)
+  low.dat <- bind_rows(t1.summary.low, t2.summary.low)
+  high.dat <- bind_rows(t1.summary.high, t2.summary.high)
+  
+  graph.dat <- left_join(left_join(mean.dat, low.dat), high.dat)
   graph.dat$elev.vec <- as.numeric(graph.dat$elev.vec)
   
   gg <- ggplot(graph.dat, aes(x=elev.vec, y=mean.resp, color=V2)) +
     theme_classic() +
     xlab("Elevation (m)") +
     ylab("Probability of presence") +
-    geom_errorbar(aes(ymin=lower.resp, ymax=upper.resp), alpha=0.05) +
+    geom_errorbar(aes(ymin=mean.lower, ymax=mean.upper), alpha=0.05) +
     geom_line() +
     scale_color_manual(values=col.pal)
   
-  ggsave(paste("figures/model.preds_",sp,".pdf",sep=""), gg, width=5, height=5)
+  ggsave(paste("figures/model.preds.CI_",sp,".pdf",sep=""), gg, width=5, height=5)
   
 }
