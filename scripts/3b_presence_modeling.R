@@ -16,6 +16,8 @@
 # # ---> Fire: ARUV, CARU, VAME*
 # --> Exclude problematic sets when remainder threw no warnings 
 # # ---> CAME, GAOV, HIAL, RULA, TRBO
+# As well as the following general changes:
+# --> Switch elevation^2 term to poly(elevation)
 
 # IMPORTANT NOTE: unless otherwise indicated, always use Understory_All.csv for these analyses as it is the ONLY file with up-to-date corrections.
 
@@ -28,17 +30,17 @@ library(plyr)
 # List of coefficients between fire and non-fire model framework
 #TODO: confusing
 coeff.all <-c("(Intercept)",
-              "Elevation.m", 
-              "Elevation.m2", 
+              "Elevation.m.poly", 
+              "Elevation.m2.poly", 
               "New.Data.TypeResurvey.Burned", 
               "New.Data.TypeResurvey.Unburned", 
-              "Elevation.m:New.Data.TypeResurvey.Burned", 
-              "Elevation.m:New.Data.TypeResurvey.Unburned", 
-              "Elevation.m2:New.Data.TypeResurvey.Burned", 
-              "Elevation.m2:New.Data.TypeResurvey.Unburned",
+              "Elevation.m.poly:New.Data.TypeResurvey.Burned", 
+              "Elevation.m.poly:New.Data.TypeResurvey.Unburned", 
+              "Elevation.m2.poly:New.Data.TypeResurvey.Burned", 
+              "Elevation.m2.poly:New.Data.TypeResurvey.Unburned",
               "Data.TypeResurvey",
-              "Data.TypeResurvey:Elevation.m",
-              "Data.TypeResurvey:Elevation.m2")
+              "Data.TypeResurvey:Elevation.m.poly",
+              "Data.TypeResurvey:Elevation.m2.poly")
 
 #### STEP 1: Import data #### Takes ~ 5 sec to run
 
@@ -93,7 +95,7 @@ for(D in 1:100) { #RUN TIME: 5 min
   framework.ALLSPEC <- list()
   und.presence <- rare.ALL[[D]]
   und.presence$Elevation.m <- as.numeric(und.presence$Elevation.m)
-  und.presence$New.Data.Type <- factor(und.presence$New)
+  und.presence$New.Data.Type <- factor(und.presence$New.Data.Type)
   und.presence$Fires <- as.factor(und.presence$Fires)
   und.presence$Data.Type <- as.factor(und.presence$Data.Type)
   
@@ -109,7 +111,10 @@ for(D in 1:100) { #RUN TIME: 5 min
                                                ref="Legacy.Unburned")
     und.presence.SPEC$Fires <- relevel(und.presence.SPEC$Fires, ref="Unburned")
     und.presence.SPEC$Data.Type <- relevel(und.presence.SPEC$Data.Type, ref="Legacy")
-    und.presence.SPEC$Elevation.m2 <- und.presence.SPEC$Elevation.m^2 #TODO better than poly()?
+    #und.presence.SPEC$Elevation.m2 <- und.presence.SPEC$Elevation.m^2
+    # Added Mar. 1: Replace Elevation.m with poly()
+    und.presence.SPEC$Elevation.m.poly <- poly(und.presence.SPEC$Elevation.m, 2)[ , 1]
+    und.presence.SPEC$Elevation.m2.poly <- poly(und.presence.SPEC$Elevation.m, 2)[ , 2]
     und.presence.SPEC <- und.presence.SPEC[complete.cases(und.presence.SPEC), ] #Just in case
   
     # Create subset of warnings for species of interest S
@@ -156,11 +161,11 @@ for(D in 1:100) { #RUN TIME: 5 min
                                                 == levels(species.list)[S]]))) {
         
         if(levels(species.list)[S] == "VAME") { # No elev^2 * year-burn
-          mod.globfi.reduced <- glm(Pres.Abs ~ Elevation.m + Elevation.m2 + 
-                              New.Data.Type + Elevation.m:New.Data.Type, 
+          mod.globfi.reduced <- glm(Pres.Abs ~ (Elevation.m.poly + Elevation.m2.poly) + 
+                              New.Data.Type + Elevation.m.poly:New.Data.Type, 
                             data = und.presence.SPEC, family = "binomial", na.action = na.fail)
           dredge.globfi.reduced <- dredge(mod.globfi.reduced, rank = AIC, subset = 
-                                    dc(Elevation.m, Elevation.m2))
+                                    dc(Elevation.m.poly, Elevation.m2.poly))
           
           # Model averaging:
           if(nrow(subset(dredge.globfi.reduced, delta <= 2)) == 1) { # Error workaround
@@ -191,19 +196,21 @@ for(D in 1:100) { #RUN TIME: 5 min
           top.mods.coeff <- data.frame(delta = rep(NA, 1), 
                                        weight = rep(NA, 1),
                                        logLik = rep(NA, 1))
-          avg.mods.coeff <- data.frame(Elevation.m = rep(NA, 1))
-          avg.mods.confint <- data.frame(Elevation.m = rep(NA, 2), 
+          avg.mods.coeff <- data.frame(Elevation.m.poly = rep(NA, 1))
+          avg.mods.confint <- data.frame(Elevation.m.poly = rep(NA, 2), 
                                          row.names = c("2.5 %", "97.5 %"))
           }
         
         
         } else { # Run as normal
-        mod.globfi <- glm(Pres.Abs ~ (Elevation.m + Elevation.m2) * New.Data.Type, 
+        mod.globfi <- glm(Pres.Abs ~ (Elevation.m.poly + Elevation.m2.poly) * New.Data.Type, 
                           data = und.presence.SPEC, family = "binomial", na.action = na.fail)
         dredge.globfi <- dredge(mod.globfi, rank = AIC, subset = 
-                                  dc(Elevation.m, Elevation.m2) &&
-                                  dc(New.Data.Type:Elevation.m, New.Data.Type:Elevation.m2) &&
-                                  dc(Elevation.m:New.Data.Type, Elevation.m2:New.Data.Type))
+                                  dc(Elevation.m.poly, Elevation.m2.poly) &&
+                                  dc(New.Data.Type:Elevation.m.poly, 
+                                     New.Data.Type:Elevation.m2.poly) &&
+                                  dc(Elevation.m.poly:New.Data.Type, 
+                                     Elevation.m2.poly:New.Data.Type))
         
         # Model averaging:
         if(nrow(subset(dredge.globfi, delta <= 2)) == 1) { # Error workaround
@@ -243,12 +250,12 @@ for(D in 1:100) { #RUN TIME: 5 min
       if("TRUE" %in% levels(factor(warn.dataset$Has_warning[warn.dataset$Species 
                                                             == levels(species.list)[S]]))) {
         if(levels(species.list)[S] == "HODI") { # No elev^2 * year
-          mod.globnofi.reduced <- glm(Pres.Abs ~ Elevation.m + Elevation.m2 + 
-                                     Data.Type + Elevation.m:Data.Type, 
+          mod.globnofi.reduced <- glm(Pres.Abs ~ Elevation.m.poly + Elevation.m2.poly + 
+                                     Data.Type + Elevation.m.poly:Data.Type, 
                                     data = und.presence.SPEC, family = "binomial", 
                                     na.action = na.fail)
           dredge.globnofi.reduced <- dredge(mod.globnofi.reduced, rank = AIC, subset = 
-                                            dc(Elevation.m, Elevation.m2))
+                                            dc(Elevation.m.poly, Elevation.m2.poly))
           
           # Model averaging:
           if(nrow(subset(dredge.globnofi.reduced, delta <= 2)) == 1) { # Error workaround
@@ -280,17 +287,17 @@ for(D in 1:100) { #RUN TIME: 5 min
           top.mods.coeff <- data.frame(delta = rep(NA, 1), 
                                        weight = rep(NA, 1), 
                                        logLik = rep(NA, 1))
-          avg.mods.coeff <- data.frame(Elevation.m = rep(NA, 1))
-          avg.mods.confint <- data.frame(Elevation.m = rep(NA, 2), 
+          avg.mods.coeff <- data.frame(Elevation.m.poly = rep(NA, 1))
+          avg.mods.confint <- data.frame(Elevation.m.poly = rep(NA, 2), 
                                          row.names = c("2.5 %", "97.5 %"))
         }
         
       } else { # Run as normal
-      mod.globnofi <- glm(Pres.Abs ~ Data.Type * (Elevation.m + Elevation.m2), 
+      mod.globnofi <- glm(Pres.Abs ~ Data.Type * (Elevation.m.poly + Elevation.m2.poly), 
                           data = und.presence.SPEC, family = "binomial", na.action = na.fail) 
       dredge.globnofi <- dredge(mod.globnofi, rank = AIC, subset = 
-                                  dc(Elevation.m, Elevation.m2) &&
-                                  dc(Data.Type:Elevation.m, Data.Type:Elevation.m2))
+                                  dc(Elevation.m.poly, Elevation.m2.poly) &&
+                                  dc(Data.Type:Elevation.m.poly, Data.Type:Elevation.m2.poly))
       
       # Model averaging
       if(nrow(subset(dredge.globnofi, delta <= 2)) == 1) { # Error workaround
@@ -355,23 +362,23 @@ for(D in 1:100) { #RUN TIME: 5 min
         Weight = top.mods.coeff$weight[i], 
         Rsquared = 1 - top.mods.coeff$logLik[i] / as.numeric(logLik(mod.NULL)),
         Intercept = top.mods.coeff$`(Intercept)`[i],
-        Elevation.m = top.mods.coeff$Elevation.m[i],
-        Elevation.m2 = top.mods.coeff$Elevation.m2[i],
+        Elevation.m = top.mods.coeff$Elevation.m.poly[i],
+        Elevation.m2 = top.mods.coeff$Elevation.m2.poly[i],
         Data.Type.nofi = top.mods.coeff$Data.TypeResurvey[i],
-        Data.Type.Elevation.m.nofi = top.mods.coeff$`Data.TypeResurvey:Elevation.m`[i],
-        Data.Type.Elevation.m2.nofi = top.mods.coeff$`Data.TypeResurvey:Elevation.m2`[i],
+        Data.Type.Elevation.m.nofi = top.mods.coeff$`Data.TypeResurvey:Elevation.m.poly`[i],
+        Data.Type.Elevation.m2.nofi = top.mods.coeff$`Data.TypeResurvey:Elevation.m2.poly`[i],
         Resurvey.Burned.fi = 
           top.mods.coeff$New.Data.TypeResurvey.Burned[i],
         Resurvey.Unburned.fi = 
           top.mods.coeff$New.Data.TypeResurvey.Unburned[i],
         Elevation.m.Res.Burn.fi = 
-          top.mods.coeff$`Elevation.m:New.Data.TypeResurvey.Burned`[i],
+          top.mods.coeff$`Elevation.m.poly:New.Data.TypeResurvey.Burned`[i],
         Elevation.m.Res.Unburn.fi = 
-          top.mods.coeff$`Elevation.m:New.Data.TypeResurvey.Unburned`[i],
+          top.mods.coeff$`Elevation.m.poly:New.Data.TypeResurvey.Unburned`[i],
         Elevation.m2.Res.Burn.fi = 
-          top.mods.coeff$`Elevation.m2:New.Data.TypeResurvey.Burned`[i],
+          top.mods.coeff$`Elevation.m2.poly:New.Data.TypeResurvey.Burned`[i],
         Elevation.m2.Res.Unburn.fi = 
-          top.mods.coeff$`Elevation.m2:New.Data.TypeResurvey.Unburned`[i],
+          top.mods.coeff$`Elevation.m2.poly:New.Data.TypeResurvey.Unburned`[i],
         row.names = NULL)
     }
     
@@ -391,23 +398,23 @@ for(D in 1:100) { #RUN TIME: 5 min
       Weight = NA,
       Rsquared = NA,
       Intercept = avg.mods.coeff$`(Intercept)`,
-      Elevation.m = avg.mods.coeff$Elevation.m,
-      Elevation.m2 = avg.mods.coeff$Elevation.m2,
+      Elevation.m = avg.mods.coeff$Elevation.m.poly,
+      Elevation.m2 = avg.mods.coeff$Elevation.m2.poly,
       Data.Type.nofi = avg.mods.coeff$Data.TypeResurvey,
-      Data.Type.Elevation.m.nofi = avg.mods.coeff$`Data.TypeResurvey:Elevation.m`,
-      Data.Type.Elevation.m2.nofi = avg.mods.coeff$`Data.TypeResurvey:Elevation.m2`,
+      Data.Type.Elevation.m.nofi = avg.mods.coeff$`Data.TypeResurvey:Elevation.m.poly`,
+      Data.Type.Elevation.m2.nofi = avg.mods.coeff$`Data.TypeResurvey:Elevation.m2.poly`,
       Resurvey.Burned.fi = 
         avg.mods.coeff$New.Data.TypeResurvey.Burned,
       Resurvey.Unburned.fi = 
         avg.mods.coeff$New.Data.TypeResurvey.Unburned,
       Elevation.m.Res.Burn.fi = 
-        avg.mods.coeff$`Elevation.m:New.Data.TypeResurvey.Burned`,
+        avg.mods.coeff$`Elevation.m.poly:New.Data.TypeResurvey.Burned`,
       Elevation.m.Res.Unburn.fi = 
-        avg.mods.coeff$`Elevation.m:New.Data.TypeResurvey.Unburned`,
+        avg.mods.coeff$`Elevation.m.poly:New.Data.TypeResurvey.Unburned`,
       Elevation.m2.Res.Burn.fi = 
-        avg.mods.coeff$`Elevation.m2:New.Data.TypeResurvey.Burned`,
+        avg.mods.coeff$`Elevation.m2.poly:New.Data.TypeResurvey.Burned`,
       Elevation.m2.Res.Unburn.fi = 
-        avg.mods.coeff$`Elevation.m2:New.Data.TypeResurvey.Unburned`,
+        avg.mods.coeff$`Elevation.m2.poly:New.Data.TypeResurvey.Unburned`,
       row.names = NULL)
     
     coeff.ALLSPEC[[S]] <- rbind(Mods, Avg)
@@ -425,42 +432,46 @@ for(D in 1:100) { #RUN TIME: 5 min
       Type = "Avg.Confidence",
       # Lower CIs:
       Intercept.CI.Lower = avg.mods.confint$`(Intercept)`[1],
-      Elevation.m.CI.Lower = avg.mods.confint$Elevation.m[1],
-      Elevation.m2.CI.Lower = avg.mods.confint$Elevation.m2[1],
+      Elevation.m.CI.Lower = avg.mods.confint$Elevation.m.poly[1],
+      Elevation.m2.CI.Lower = avg.mods.confint$Elevation.m2.poly[1],
       Data.Type.nofi.CI.Lower = avg.mods.confint$Data.TypeResurvey[1],
-      Data.Type.Elevation.m.nofi.CI.Lower = avg.mods.confint$`Data.TypeResurvey:Elevation.m`[1],
-      Data.Type.Elevation.m2.nofi.CI.Lower = avg.mods.confint$`Data.TypeResurvey:Elevation.m2`[1],
+      Data.Type.Elevation.m.nofi.CI.Lower = 
+        avg.mods.confint$`Data.TypeResurvey:Elevation.m.poly`[1],
+      Data.Type.Elevation.m2.nofi.CI.Lower = 
+        avg.mods.confint$`Data.TypeResurvey:Elevation.m2.poly`[1],
       Resurvey.Burned.fi.CI.Lower = 
         avg.mods.confint$New.Data.TypeResurvey.Burned[1],
       Resurvey.Unburned.fi.CI.Lower = 
         avg.mods.confint$New.Data.TypeResurvey.Unburned[1],
       Elevation.m.Res.Burn.fi.CI.Lower = 
-        avg.mods.confint$`Elevation.m:New.Data.TypeResurvey.Burned`[1],
+        avg.mods.confint$`Elevation.m.poly:New.Data.TypeResurvey.Burned`[1],
       Elevation.m.Res.Unburn.fi.CI.Lower = 
-        avg.mods.confint$`Elevation.m:New.Data.TypeResurvey.Unburned`[1],
+        avg.mods.confint$`Elevation.m.poly:New.Data.TypeResurvey.Unburned`[1],
       Elevation.m2.Res.Burn.fi.CI.Lower = 
-        avg.mods.confint$`Elevation.m2:New.Data.TypeResurvey.Burned`[1],
+        avg.mods.confint$`Elevation.m2.poly:New.Data.TypeResurvey.Burned`[1],
       Elevation.m2.Res.Unburn.fi.CI.Lower = 
-        avg.mods.confint$`Elevation.m2:New.Data.TypeResurvey.Unburned`[1],
+        avg.mods.confint$`Elevation.m2.poly:New.Data.TypeResurvey.Unburned`[1],
       # Upper CIs: 
       Intercept.CI.Upper = avg.mods.confint$`(Intercept)`[2],
-      Elevation.m.CI.Upper = avg.mods.confint$Elevation.m[2],
-      Elevation.m2.CI.Upper = avg.mods.confint$Elevation.m2[2],
+      Elevation.m.CI.Upper = avg.mods.confint$Elevation.m.poly[2],
+      Elevation.m2.CI.Upper = avg.mods.confint$Elevation.m2.poly[2],
       Data.Type.nofi.CI.Upper = avg.mods.confint$Data.TypeResurvey[2],
-      Data.Type.Elevation.m.nofi.CI.Upper = avg.mods.confint$`Data.TypeResurvey:Elevation.m`[2],
-      Data.Type.Elevation.m2.nofi.CI.Upper = avg.mods.confint$`Data.TypeResurvey:Elevation.m2`[2],
+      Data.Type.Elevation.m.nofi.CI.Upper = 
+        avg.mods.confint$`Data.TypeResurvey:Elevation.m.poly`[2],
+      Data.Type.Elevation.m2.nofi.CI.Upper = 
+        avg.mods.confint$`Data.TypeResurvey:Elevation.m2.poly`[2],
       Resurvey.Burned.fi.CI.Upper = 
         avg.mods.confint$New.Data.TypeResurvey.Burned[2],
       Resurvey.Unburned.fi.CI.Upper = 
         avg.mods.confint$New.Data.TypeResurvey.Unburned[2],
       Elevation.m.Res.Burn.fi.CI.Upper = 
-        avg.mods.confint$`Elevation.m:New.Data.TypeResurvey.Burned`[2],
+        avg.mods.confint$`Elevation.m.poly:New.Data.TypeResurvey.Burned`[2],
       Elevation.m.Res.Unburn.fi.CI.Upper = 
-        avg.mods.confint$`Elevation.m:New.Data.TypeResurvey.Unburned`[2],
+        avg.mods.confint$`Elevation.m.poly:New.Data.TypeResurvey.Unburned`[2],
       Elevation.m2.Res.Burn.fi.CI.Upper = 
-        avg.mods.confint$`Elevation.m2:New.Data.TypeResurvey.Burned`[2],
+        avg.mods.confint$`Elevation.m2.poly:New.Data.TypeResurvey.Burned`[2],
       Elevation.m2.Res.Unburn.fi.CI.Upper = 
-        avg.mods.confint$`Elevation.m2:New.Data.TypeResurvey.Unburned`[2],
+        avg.mods.confint$`Elevation.m2.poly:New.Data.TypeResurvey.Unburned`[2],
       row.names = NULL)
     
     avg.confint.ALLSPEC[[S]] <- Avg.Confint
@@ -505,7 +516,8 @@ write.csv(framework.ALLDAT.finaldf,
           row.names = FALSE)
 
 
-  
+
+
 
 
 
