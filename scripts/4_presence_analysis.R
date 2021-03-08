@@ -11,17 +11,17 @@ library(dplyr)
 # Functions needed:
 
 # Turning averaged coefficients into +/-/0
-simplify.fun <- function(var) {
-  coeff.summary.SPEC <- coeff.summary.empty[var]
+simplify.fun <- function(varib) {
+  coeff.summary.SPEC <- coeff.summary.empty[varib]
   for(d in 1:100) {
-    if(coeff.SPEC.avg[d, var] > 0) {
-      coeff.summary.SPEC[d, var] <- paste("+")
+    if(coeff.SPEC.avg[d, varib] > 0) {
+      coeff.summary.SPEC[d, varib] <- paste("+")
     }
-    if(coeff.SPEC.avg[d, var] == 0) {
-      coeff.summary.SPEC[d, var] <- paste("0")
+    if(coeff.SPEC.avg[d, varib] == 0) {
+      coeff.summary.SPEC[d, varib] <- paste("0")
     }
-    if(coeff.SPEC.avg[d, var] < 0) {
-      coeff.summary.SPEC[d, var] <- paste("-")
+    if(coeff.SPEC.avg[d, varib] < 0) {
+      coeff.summary.SPEC[d, varib] <- paste("-")
     }
   }
   return(coeff.summary.SPEC)
@@ -42,16 +42,16 @@ coeff.count.empty <- data.frame(Elevation.m = rep("NULL", times = 3),
                                 Data.Type.Elevation.m2.nofi = rep("NULL", times = 3),
                                 row.names = c("+", "-", 0))
 # Function
-count.fun <- function(var) {
-  df.count <- coeff.count.empty[var]
-  if(is.na(table(simple.coeffs.SPEC[var])["+"]) == FALSE) {
-    df.count["+", var] <- table(simple.coeffs.SPEC[var])["+"]
+count.fun <- function(varib) {
+  df.count <- coeff.count.empty[varib]
+  if(is.na(table(simple.coeffs.SPEC[varib])["+"]) == FALSE) {
+    df.count["+", varib] <- table(simple.coeffs.SPEC[varib])["+"]
   } 
-  if(is.na(table(simple.coeffs.SPEC[var])["-"]) == FALSE) {
-    df.count["-", var] <- table(simple.coeffs.SPEC[var])["-"]
+  if(is.na(table(simple.coeffs.SPEC[varib])["-"]) == FALSE) {
+    df.count["-", varib] <- table(simple.coeffs.SPEC[varib])["-"]
   } 
-  if(is.na(table(simple.coeffs.SPEC[var])["0"]) == FALSE) {
-    df.count["0", var] <- table(simple.coeffs.SPEC[var])["0"]
+  if(is.na(table(simple.coeffs.SPEC[varib])["0"]) == FALSE) {
+    df.count["0", varib] <- table(simple.coeffs.SPEC[varib])["0"]
   } 
   return(df.count)
 }
@@ -63,15 +63,20 @@ warn.ALLDAT <- read.csv("data/3_presence_ALLDAT_ALLSPEC_warnings.csv", header = 
 
 # Changed to 3c input file Mar. 8 2021
 coeff.ALLDAT <- read.csv("data/3c_top_mod_coefficients.csv", header = TRUE)
-is.na(coeff.ALLDAT) <- paste(0)
+coeff.ALLDAT[is.na(coeff.ALLDAT)] <- paste(0)
 load("data/Species.List.Rda") #TODO this file was made in an undocumented step
-species.list <- shifts$Species.Code[!shifts$Species.Code=="MOSS"] #removing "MOSS"
+species.list <- shifts$Species.Code[!shifts$Species.Code=="MOSS" &
+                                      !shifts$Species.Code=="COST" &
+                                      !shifts$Species.Code=="LUPE" &
+                                      !shifts$Species.Code=="PHEM" &
+                                      !shifts$Species.Code=="RHAL" &
+                                      !shifts$Species.Code=="VAAL" &
+                                      !shifts$Species.Code=="VADE"] #removing problematic species
 species.list <- factor(species.list)
-
 
 #### STEP 2 (OPTIONAL): Exploratory visualizations of warnings ####
 
-(numbered.species <- data.frame(Species=species.list, No.=rep(1:42)))
+(numbered.species <- data.frame(Species=species.list, No.=rep(1:nrow(numbered.species))))
 
 # Choose species of interest
 warn.SPEC <- warn.ALLDAT[warn.ALLDAT$Species == "VAME", ]
@@ -87,7 +92,7 @@ head(warn.SPEC[warn.SPEC$Has_warning == TRUE, ])
 coeff.count.LIST <- list()
 
 for(S in 1:nrow(numbered.species)) {
-  coeff.SPEC.avg <- coeff.ALLDAT
+  coeff.SPEC.avg <- coeff.ALLDAT[coeff.ALLDAT$Species == levels(numbered.species$Species)[S], ]
   #coeff.SPEC.avg <- coeff.ALLDAT[coeff.ALLDAT$Species == levels(numbered.species$Species)[S] & 
   #                                 coeff.ALLDAT$Type == "Avg", ]
   
@@ -118,7 +123,7 @@ for(S in 1:nrow(numbered.species)) {
 
 coeff.count <- ldply(coeff.count.LIST, data.frame)
 write.csv(coeff.count, 
-          file = "data/4_presence_coefficients_count.csv", 
+          file = "data/4c_temp_presence_coefficients_count.csv", 
           row.names = FALSE)
 
 
