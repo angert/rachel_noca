@@ -1,6 +1,5 @@
 #TODO: Try without framework-switching species
-# Created: Feb. 22, 2020
-# Updated: Feb. 26, 2020
+# Created: Mar. 8, 2021
 
 # This script will be used to undertake part d of the PRESENCE analyses (modeling)
 # Use this script to produce the set of best models
