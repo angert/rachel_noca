@@ -85,7 +85,6 @@ species.without.fire <- numbered.species[!numbered.species$Species
 # Exclude D loop to run for only one dataset (e.g. unrarefied data)
 
 coeff.ALLDAT <- list() # Store coefficient outputs
-avg.confint.ALLDAT <- list() # Store model-averaged coefficients
 framework.ALLDAT <- list () # Store record of which decision framework was used
 
 for(D in 1:100) { #RUN TIME: 5 min
