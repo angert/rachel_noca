@@ -502,6 +502,8 @@ coeff.ALLDAT.finaldf <- ldply(coeff.ALLDAT, data.frame)
 avg.confint.ALLDAT.finaldf <- ldply(avg.confint.ALLDAT, data.frame)
 framework.ALLDAT.finaldf <- ldply(framework.ALLDAT, data.frame)
 
+#TODO remove error-laden coeffs
+
 
 # Store output as CSV
 
