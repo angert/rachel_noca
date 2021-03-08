@@ -6,7 +6,7 @@
 # IMPORTANT NOTE: unless otherwise indicated, always use Understory_All.csv for these analyses as it is the ONLY file with up-to-date corrections.
 
 # Packages needed:
-library(plyr)
+library(dplyr)
 
 # Functions needed:
 
@@ -60,7 +60,10 @@ count.fun <- function(var) {
 #### STEP 1: Import data ####
 
 warn.ALLDAT <- read.csv("data/3_presence_ALLDAT_ALLSPEC_warnings.csv", header = TRUE)
-coeff.ALLDAT <- read.csv("data/3_presence_ALLDAT_ALLSPEC_coefficients.csv", header = TRUE)
+
+# Changed to 3c input file Mar. 8 2021
+coeff.ALLDAT <- read.csv("data/3c_top_mod_coefficients.csv", header = TRUE)
+is.na(coeff.ALLDAT) <- paste(0)
 load("data/Species.List.Rda") #TODO this file was made in an undocumented step
 species.list <- shifts$Species.Code[!shifts$Species.Code=="MOSS"] #removing "MOSS"
 species.list <- factor(species.list)
@@ -84,8 +87,9 @@ head(warn.SPEC[warn.SPEC$Has_warning == TRUE, ])
 coeff.count.LIST <- list()
 
 for(S in 1:nrow(numbered.species)) {
-  coeff.SPEC.avg <- coeff.ALLDAT[coeff.ALLDAT$Species == levels(numbered.species$Species)[S] & 
-                                   coeff.ALLDAT$Type == "Avg", ]
+  coeff.SPEC.avg <- coeff.ALLDAT
+  #coeff.SPEC.avg <- coeff.ALLDAT[coeff.ALLDAT$Species == levels(numbered.species$Species)[S] & 
+  #                                 coeff.ALLDAT$Type == "Avg", ]
   
   coeff.summary.empty <- data.frame(Elevation.m = rep("NULL", times = 100), 
                                     Elevation.m2 = rep("NULL", times = 100), 

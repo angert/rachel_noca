@@ -187,8 +187,8 @@ for(D in 1:100) { #RUN TIME: 5 min
                                      Elevation.m2.poly:New.Data.Type))
         
         # Storing coefficients:
-        top.mods.coeff <- as.data.frame(coef(subset(dredge.globfi.reduced, delta == 0)))
-        top.mods.coeff$logLik <- dredge.globfi.reduced$logLik[dredge.globfi.reduced$delta == 0]
+        top.mods.coeff <- as.data.frame(coef(subset(dredge.globfi, delta == 0)))
+        top.mods.coeff$logLik <- dredge.globfi$logLik[dredge.globfi$delta == 0]
         
       }
     }
@@ -215,8 +215,8 @@ for(D in 1:100) { #RUN TIME: 5 min
                                               dc(Elevation.m.poly, Elevation.m2.poly))
           
           # Coefficients:
-          top.mods.coeff <- as.data.frame(coef(subset(dredge.globfi.reduced, delta == 0)))
-          top.mods.coeff$logLik <- dredge.globfi.reduced$logLik[dredge.globfi.reduced$delta == 0]
+          top.mods.coeff <- as.data.frame(coef(subset(dredge.globnofi.reduced, delta == 0)))
+          top.mods.coeff$logLik <- dredge.globnofi.reduced$logLik[dredge.globnofi.reduced$delta == 0]
           
           framework.SPEC$Forced.Simpler.Mod <- paste("Yes") # Record
           
@@ -235,8 +235,8 @@ for(D in 1:100) { #RUN TIME: 5 min
                                     dc(Data.Type:Elevation.m.poly, Data.Type:Elevation.m2.poly))
         
         # Coefficients:
-        top.mods.coeff <- as.data.frame(coef(subset(dredge.globfi.reduced, delta == 0)))
-        top.mods.coeff$logLik <- dredge.globfi.reduced$logLik[dredge.globfi.reduced$delta == 0]
+        top.mods.coeff <- as.data.frame(coef(subset(dredge.globnofi, delta == 0)))
+        top.mods.coeff$logLik <- dredge.globnofi$logLik[dredge.globnofi$delta == 0]
       }
     }
     
@@ -269,7 +269,7 @@ for(D in 1:100) { #RUN TIME: 5 min
         R.Occ = sum(num.burns["1", , "Resurvey"]), 
         Fire.Included = ifelse(levels(species.list)[S] 
                                %in% species.with.fire$Species == TRUE, "Yes", "No"),
-        Type = "Top", 
+        Type = "Unavg", 
         Rsquared = 1 - top.mods.coeff$logLik[i] / as.numeric(logLik(mod.NULL)),
         Intercept = top.mods.coeff$`(Intercept)`[i],
         Elevation.m = top.mods.coeff$Elevation.m.poly[i],
