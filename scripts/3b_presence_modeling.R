@@ -498,12 +498,34 @@ for(D in 1:100) { #RUN TIME: 5 min
 
 # Collate ALLDAT lists into one big DF
 
-coeff.ALLDAT.finaldf <- ldply(coeff.ALLDAT, data.frame)
-avg.confint.ALLDAT.finaldf <- ldply(avg.confint.ALLDAT, data.frame)
-framework.ALLDAT.finaldf <- ldply(framework.ALLDAT, data.frame)
+coeff.ALLDAT.allsets <- ldply(coeff.ALLDAT, data.frame)
+avg.confint.ALLDAT.allsets <- ldply(avg.confint.ALLDAT, data.frame)
+framework.ALLDAT.allsets <- ldply(framework.ALLDAT, data.frame)
 
-#TODO remove error-laden coeffs
+## Remove error-laden datasets
 
+# Create new column for joining
+framework.ALLDAT.allsets$Join <- 
+  paste(framework.ALLDAT.allsets$Dataset, framework.ALLDAT.allsets$Species, sep = ".")
+discard.me <- framework.ALLDAT.allsets[ , c(6, 8)]
+coeff.ALLDAT.allsets$Join <- 
+  paste(coeff.ALLDAT.allsets$Dataset, coeff.ALLDAT.allsets$Species, sep = ".")
+avg.confint.ALLDAT.allsets$Join <- 
+  paste(avg.confint.ALLDAT.allsets$Dataset, avg.confint.ALLDAT.allsets$Species, sep = ".")
+
+# Merge framework DF with coeff and confint DF
+coeff.ALLDAT.allsets.join <- merge(coeff.ALLDAT.allsets, discard.me, 
+                                   by = "Join")
+avg.confint.ALLDAT.allsets.join <- merge(avg.confint.ALLDAT.allsets, discard.me, 
+                                   by = "Join")
+
+# Remove datasets associated with errors (Discard.Later == Yes)
+coeff.ALLDAT.finaldf.big <- 
+  coeff.ALLDAT.allsets.join[!coeff.ALLDAT.allsets.join$Discard.Later == "Yes", ]
+avg.confint.ALLDAT.finaldf.big <- 
+  avg.confint.ALLDAT.allsets.join[!avg.confint.ALLDAT.allsets.join$Discard.Later == "Yes", ]
+coeff.ALLDAT.finaldf <- coeff.ALLDAT.finaldf.big[, c(2:22)]
+coeff.ALLDAT.finaldf <- avg.confint.ALLDAT.finaldf.big[, c(2:31)]
 
 # Store output as CSV
 
