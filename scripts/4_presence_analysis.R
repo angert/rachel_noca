@@ -1,5 +1,5 @@
 # Created: Dec. 11, 2020
-# Updated: Mar. 8, 2021
+# Updated: Mar. 11, 2021
 
 # This script will be used to undertake part 1 of the PRESENCE analyses (modeling)
 
@@ -61,8 +61,8 @@ count.fun <- function(varib) {
 
 warn.ALLDAT <- read.csv("data/3_presence_ALLDAT_ALLSPEC_warnings.csv", header = TRUE)
 
-# Changed to 3c input file Mar. 8 2021
-coeff.ALLDAT <- read.csv("data/3c_top_mod_coefficients.csv", header = TRUE)
+# Can use either top_mod input or new_coefficients input
+coeff.ALLDAT <- read.csv("data/3b_new_coefficients.csv", header = TRUE)
 coeff.ALLDAT[is.na(coeff.ALLDAT)] <- paste(0)
 load("data/Species.List.Rda") #TODO this file was made in an undocumented step
 species.list <- shifts$Species.Code[!shifts$Species.Code=="MOSS" &
