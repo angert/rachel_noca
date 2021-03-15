@@ -1,5 +1,5 @@
 # Created: Dec. 11, 2020
-# Updated: Mar. 11, 2021
+# Updated: Mar. 15, 2021
 
 # This script will be used to undertake part 1 of the PRESENCE analyses (modeling)
 
@@ -76,7 +76,7 @@ species.list <- factor(species.list)
 
 #### STEP 2 (OPTIONAL): Exploratory visualizations of warnings ####
 
-(numbered.species <- data.frame(Species=species.list, No.=rep(1:nrow(numbered.species))))
+(numbered.species <- data.frame(Species=species.list, No.=rep(1:length(species.list))))
 
 # Choose species of interest
 warn.SPEC <- warn.ALLDAT[warn.ALLDAT$Species == "VAME", ]
@@ -123,7 +123,7 @@ for(S in 1:nrow(numbered.species)) {
 
 coeff.count <- ldply(coeff.count.LIST, data.frame)
 write.csv(coeff.count, 
-          file = "data/4c_temp_presence_coefficients_count.csv", 
+          file = "data/4_presence_coefficients_count.csv", 
           row.names = FALSE)
 
 
