@@ -1,6 +1,6 @@
 #TODO: Try without framework-switching species
 # Created: Feb. 22, 2021
-# Updated: Feb. 26, 2021
+# Updated: Mar. 15, 2021
 
 # This script will be used to undertake part b of the PRESENCE analyses (modeling)
 # Use this script to produce the FINAL version of the analysis, plus CIs. No error logging.
@@ -525,7 +525,7 @@ coeff.ALLDAT.finaldf.big <-
 avg.confint.ALLDAT.finaldf.big <- 
   avg.confint.ALLDAT.allsets.join[!avg.confint.ALLDAT.allsets.join$Discard.Later == "Yes", ]
 coeff.ALLDAT.finaldf <- coeff.ALLDAT.finaldf.big[, c(2:22)]
-coeff.ALLDAT.finaldf <- avg.confint.ALLDAT.finaldf.big[, c(2:31)]
+avg.confint.ALLDAT.finaldf <- avg.confint.ALLDAT.finaldf.big[, c(2:31)]
 
 # Store output as CSV
 
@@ -535,7 +535,7 @@ write.csv(coeff.ALLDAT.finaldf,
 write.csv(avg.confint.ALLDAT.finaldf, 
           file = "data/3b_new_confint.csv", 
           row.names = FALSE)
-write.csv(framework.ALLDAT.finaldf, 
+write.csv(framework.ALLDAT.allsets, 
           file = "data/3b_new_framework_logs.csv", 
           row.names = FALSE)
 
