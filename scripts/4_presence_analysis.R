@@ -42,7 +42,8 @@ coeff.count.empty <- data.frame(Elevation.m = rep(NA, times = 4),
                                 Data.Type.Elevation.m.nofi = rep(NA, times = 4), 
                                 Data.Type.Elevation.m2.nofi = rep(NA, times = 4),
                                 row.names = c("+", "-", 0, "Ignore"))
-# Function
+
+# Collapsing 100 rows of +/-/0 into summary
 count.fun <- function(varib) {
   df.count <- coeff.count.empty[varib]
   if(is.na(table(simple.coeffs.SPEC[varib])["+"]) == FALSE) {
