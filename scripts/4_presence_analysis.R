@@ -13,15 +13,16 @@ library(dplyr)
 # Turning averaged coefficients into +/-/0
 simplify.fun <- function(varib) {
   coeff.summary.SPEC <- coeff.summary.empty[varib]
-  for(d in 1:100) {
-    if(coeff.SPEC.avg[d, varib] > 0) {
-      coeff.summary.SPEC[d, varib] <- paste("+")
-    }
-    if(coeff.SPEC.avg[d, varib] == 0) {
-      coeff.summary.SPEC[d, varib] <- paste("0")
-    }
-    if(coeff.SPEC.avg[d, varib] < 0) {
-      coeff.summary.SPEC[d, varib] <- paste("-")
+  dataset.vect <- as.vector(coeff.SPEC.avg$Dataset)
+  for(d in dataset.vect) {
+    if(coeff.SPEC.avg[coeff.SPEC.avg$Dataset == d, varib] > 0) {
+          coeff.summary.SPEC[d, varib] <- paste("+")
+          }
+    if(coeff.SPEC.avg[coeff.SPEC.avg$Dataset == d, varib] == 0) {
+          coeff.summary.SPEC[d, varib] <- paste("0")
+          }
+    if(coeff.SPEC.avg[coeff.SPEC.avg$Dataset == d, varib] < 0) {
+          coeff.summary.SPEC[d, varib] <- paste("-")
     }
   }
   return(coeff.summary.SPEC)
@@ -29,18 +30,18 @@ simplify.fun <- function(varib) {
 
 # Summing numbers of +/-/0 for each coeff for one species
 # Empty data frame
-coeff.count.empty <- data.frame(Elevation.m = rep("NULL", times = 3), 
-                                Elevation.m2 = rep("NULL", times = 3), 
-                                Resurvey.Burned.fi = rep("NULL", times = 3), 
-                                Resurvey.Unburned.fi = rep("NULL", times = 3), 
-                                Elevation.m.Res.Burn.fi = rep("NULL", times = 3), 
-                                Elevation.m.Res.Unburn.fi = rep("NULL", times = 3), 
-                                Elevation.m2.Res.Burn.fi = rep("NULL", times = 3), 
-                                Elevation.m2.Res.Unburn.fi = rep("NULL", times = 3), 
-                                Data.Type.nofi = rep("NULL", times = 3), 
-                                Data.Type.Elevation.m.nofi = rep("NULL", times = 3), 
-                                Data.Type.Elevation.m2.nofi = rep("NULL", times = 3),
-                                row.names = c("+", "-", 0))
+coeff.count.empty <- data.frame(Elevation.m = rep(NA, times = 4), 
+                                Elevation.m2 = rep(NA, times = 4), 
+                                Resurvey.Burned.fi = rep(NA, times = 4), 
+                                Resurvey.Unburned.fi = rep(NA, times = 4), 
+                                Elevation.m.Res.Burn.fi = rep(NA, times = 4), 
+                                Elevation.m.Res.Unburn.fi = rep(NA, times = 4), 
+                                Elevation.m2.Res.Burn.fi = rep(NA, times = 4), 
+                                Elevation.m2.Res.Unburn.fi = rep(NA, times = 4), 
+                                Data.Type.nofi = rep(NA, times = 4), 
+                                Data.Type.Elevation.m.nofi = rep(NA, times = 4), 
+                                Data.Type.Elevation.m2.nofi = rep(NA, times = 4),
+                                row.names = c("+", "-", 0, "Ignore"))
 # Function
 count.fun <- function(varib) {
   df.count <- coeff.count.empty[varib]
@@ -52,6 +53,9 @@ count.fun <- function(varib) {
   } 
   if(is.na(table(simple.coeffs.SPEC[varib])["0"]) == FALSE) {
     df.count["0", varib] <- table(simple.coeffs.SPEC[varib])["0"]
+  } 
+  if(is.na(table(simple.coeffs.SPEC[varib])["Ignore"]) == FALSE) {
+    df.count["Ignore", varib] <- table(simple.coeffs.SPEC[varib])["Ignore"]
   } 
   return(df.count)
 }
@@ -86,29 +90,34 @@ table(warn.SPEC$Has_warning, warn.SPEC$Dataset)
 table(table(warn.SPEC$Has_warning, warn.SPEC$Dataset))
 head(warn.SPEC[warn.SPEC$Has_warning == TRUE, ])
 
+# (Optional): How did rarefaction vary between species? #
+#par(mfrow=c(1,1), mar=c(5, 1.5, 1, 0), oma=c(0,4,0,0)) # 3-paneled graph
+#hist(coeff.SPEC$R.Occ, main = "RHAL", xlab = "No. resurvey occ", ylab = "Frequency")
+
 
 #### STEP 3: Exploring coefficients ####
 
 coeff.count.LIST <- list()
 
 for(S in 1:nrow(numbered.species)) {
-  coeff.SPEC.avg <- coeff.ALLDAT[coeff.ALLDAT$Species == levels(numbered.species$Species)[S], ]
-  #coeff.SPEC.avg <- coeff.ALLDAT[coeff.ALLDAT$Species == levels(numbered.species$Species)[S] & 
-  #                                 coeff.ALLDAT$Type == "Avg", ]
+  #coeff.SPEC.avg <- coeff.ALLDAT[coeff.ALLDAT$Species == levels(numbered.species$Species)[S], ]
+  coeff.SPEC.avg <- coeff.ALLDAT[coeff.ALLDAT$Species == levels(numbered.species$Species)[S] & 
+                                   coeff.ALLDAT$Type == "Avg", ]
   
-  coeff.summary.empty <- data.frame(Elevation.m = rep("NULL", times = 100), 
-                                    Elevation.m2 = rep("NULL", times = 100), 
-                                    Resurvey.Burned.fi = rep("NULL", times = 100), 
-                                    Resurvey.Unburned.fi = rep("NULL", times = 100), 
-                                    Elevation.m.Res.Burn.fi = rep("NULL", times = 100), 
-                                    Elevation.m.Res.Unburn.fi = rep("NULL", times = 100), 
-                                    Elevation.m2.Res.Burn.fi = rep("NULL", times = 100), 
-                                    Elevation.m2.Res.Unburn.fi = rep("NULL", times = 100), 
-                                    Data.Type.nofi = rep("NULL", times = 100), 
-                                    Data.Type.Elevation.m.nofi = rep("NULL", times = 100), 
-                                    Data.Type.Elevation.m2.nofi = rep("NULL", times = 100))
+  coeff.summary.empty <- data.frame(Elevation.m = rep(NA, times = 100), 
+                                    Elevation.m2 = rep(NA, times = 100), 
+                                    Resurvey.Burned.fi = rep(NA, times = 100), 
+                                    Resurvey.Unburned.fi = rep(NA, times = 100), 
+                                    Elevation.m.Res.Burn.fi = rep(NA, times = 100), 
+                                    Elevation.m.Res.Unburn.fi = rep(NA, times = 100), 
+                                    Elevation.m2.Res.Burn.fi = rep(NA, times = 100), 
+                                    Elevation.m2.Res.Unburn.fi = rep(NA, times = 100), 
+                                    Data.Type.nofi = rep(NA, times = 100), 
+                                    Data.Type.Elevation.m.nofi = rep(NA, times = 100), 
+                                    Data.Type.Elevation.m2.nofi = rep(NA, times = 100))
   
   simple.coeffs.SPEC <- bind_cols(lapply(names(coeff.summary.empty), simplify.fun))
+  simple.coeffs.SPEC[is.na(simple.coeffs.SPEC)] <- paste("Ignore")
   
   # Summarizing the summary
   
@@ -128,14 +137,68 @@ write.csv(coeff.count,
 
 
 
+#### Step 4: Visualizing summary output ####
+#TODO fix this nonsense
+
+# Split into yes/no fire, remove row specifying term wasn't included
+
+rowsum(as.data.frame(sapply(coeff.count[, c("Elevation.m", 
+                                            "Elevation.m2",
+                                             "Resurvey.Burned.fi",
+                                             "Resurvey.Unburned.fi",
+                                             "Elevation.m.Res.Burn.fi",
+                                             "Elevation.m.Res.Unburn.fi",
+                                             "Elevation.m2.Res.Burn.fi",
+                                             "Elevation.m2.Res.Unburn.fi")], 
+                         as.numeric)), group = coeff.count$Species, na.rm = TRUE)
+
+coeff.nozero.fi <- coeff.count[coeff.count$Fire.Included == "Yes" & !coeff.count$Effect == 0, ]
+coeff.nozero.nofi <- coeff.count[coeff.count$Fire.Included == "No" & !coeff.count$Effect == 0, ]
+coeff.nozero.fi[is.na(coeff.nozero.fi)] <- paste(0)
+coeff.nozero.fi[is.na(coeff.nozero.fi)] <- paste(0)
+
+# Summing across +/-
+coeff.sum.fi <- rowsum(as.data.frame(sapply(coeff.nozero.fi[, c("Elevation.m", 
+                                                    "Elevation.m2",
+                                                    "Resurvey.Burned.fi",
+                                                    "Resurvey.Unburned.fi",
+                                                    "Elevation.m.Res.Burn.fi",
+                                                    "Elevation.m.Res.Unburn.fi",
+                                                    "Elevation.m2.Res.Burn.fi",
+                                                    "Elevation.m2.Res.Unburn.fi")], 
+                              as.numeric)), group = coeff.nozero.fi$Species)
+names(coeff.sum.fi) <- paste("Inc", colnames(coeff.sum.fi), sep = ".")
+coeff.sum.fi$Species <- row.names(coeff.sum.fi)
+coeff.sum.nofi <- rowsum(as.data.frame(sapply(coeff.nozero.nofi[, c("Elevation.m", 
+                                                                "Elevation.m2",
+                                                                "Data.Type.nofi",
+                                                                "Data.Type.Elevation.m.nofi",
+                                                                "Data.Type.Elevation.m2.nofi")], 
+                                            as.numeric)), group = coeff.nozero.nofi$Species)
+names(coeff.sum.nofi) <- paste("Inc", colnames(coeff.sum.nofi), sep = ".")
+coeff.sum.nofi$Species <- row.names(coeff.sum.nofi)
+
+# Note: I got very carried away here
+
+# Joining to # of times coeff was +
+coeff.pos.fi <- coeff.nozero.fi[coeff.nozero.fi$Effect == "+", c(1:8)]
+names(coeff.pos.fi) <- paste("Pos", colnames(coeff.pos.fi), sep = ".")
+coeff.pos.nofi <- coeff.nozero.nofi[coeff.nozero.nofi$Effect == "+", c(1:2, 9:11)]
+names(coeff.pos.nofi) <- paste("Pos", colnames(coeff.pos.nofi), sep = ".")
+
+coeff.all.fi <- cbind(coeff.sum.fi, coeff.pos.fi)
+coeff.all.nofi <- cbind(coeff.sum.nofi, coeff.pos.nofi)
 
 
-#### STEP 4 (Optional): How did rarefaction vary between species? ####
-par(mfrow=c(1,3), mar=c(5, 1.5, 1, 0), oma=c(0,4,0,0)) # 3-paneled graph
-hist(coeff.SPEC$R.Occ, main = "RHAL", xlab = "No. resurvey occ", ylab = "Frequency")
+plot(Inc.Resurvey.Burned.fi ~ Pos.Resurvey.Burned.fi, 
+     data = coeff.all.fi)
+text(abs_losses, percent_losses, labels=namebank, cex= 0.7)
 
 
 
+
+test <- lm(Inc.Resurvey.Burned.fi ~ Pos.Resurvey.Burned.fi, data = coeff.all.fi)
+summary(test)
 
 
 
