@@ -1,8 +1,8 @@
-#TODO: Add global model to loop output
-# Created: Mar. 18, 2021
+# Created: Mar. 8, 2021
+# Updated: Mar. 19, 2021
 
 # This script will be used to undertake part 3 of the PRESENCE analyses (modeling)
-# Use this script to produce the set of best models
+# Use this script to produce the top model and global model outputs
 
 # This script accommodates the following species-specific issues:
 # --> Discard species for whom 2 or more models threw warnings
@@ -40,6 +40,7 @@ coeff.all <-c("(Intercept)",
               "Data.TypeResurvey",
               "Data.TypeResurvey:Elevation.m.poly",
               "Data.TypeResurvey:Elevation.m2.poly")
+coeff.all.P <- paste( "P", coeff.all, sep = ".")
 
 #### STEP 1: Import data #### Takes ~ 5 sec to run
 
@@ -83,14 +84,15 @@ species.without.fire <- numbered.species[!numbered.species$Species
                                          %in% species.with.fire$Species, ]
 # Exclude D loop to run for only one dataset (e.g. unrarefied data)
 
-coeff.ALLDAT <- list() # Store coefficient outputs
+coeff.ALLDAT <- list() # Store coefficient outputs from top model
 framework.ALLDAT <- list () # Store record of which decision framework was used
+global.wP.ALLDAT <- list () # Store coefficient outputs from global model
 
 for(D in 1:100) { #RUN TIME: 5 min
   
   coeff.ALLSPEC <- list()
-  avg.confint.ALLSPEC <- list() 
   framework.ALLSPEC <- list()
+  global.wP.ALLSPEC <- list()
   und.presence <- rare.ALL[[D]]
   und.presence$Elevation.m <- as.numeric(und.presence$Elevation.m)
   und.presence$New.Data.Type <- factor(und.presence$New.Data.Type)
@@ -159,13 +161,20 @@ for(D in 1:100) { #RUN TIME: 5 min
         if(levels(species.list)[S] == "VAME") { # No elev^2 * year-burn
           mod.globfi.reduced <- glm(Pres.Abs ~ (Elevation.m.poly + Elevation.m2.poly) + 
                                       New.Data.Type + Elevation.m.poly:New.Data.Type, 
-                                    data = und.presence.SPEC, family = "binomial", na.action = na.fail)
+                                data = und.presence.SPEC, family = "binomial", na.action = na.fail)
           dredge.globfi.reduced <- dredge(mod.globfi.reduced, rank = AIC, subset = 
                                             dc(Elevation.m.poly, Elevation.m2.poly))
           
           # Coefficients:
           top.mods.coeff <- as.data.frame(coef(subset(dredge.globfi.reduced, delta == 0)))
           top.mods.coeff$logLik <- dredge.globfi.reduced$logLik[dredge.globfi.reduced$delta == 0]
+          # Global coefficients:
+          global.coeff <- as.data.frame(t(coef(mod.globfi.reduced)))
+          global.coeff$logLik <- as.numeric(logLik(mod.globfi.reduced))
+          global.coeff.P <- as.data.frame(t(summary(mod.globfi.reduced)$coefficients[,4]))
+          # Attaching global.coeff.P to global.coeff
+          names(global.coeff.P) <- paste( "P", names(global.coeff.P), sep = ".")
+          global.coeff.wP <- cbind(global.coeff, global.coeff.P)
           
           framework.SPEC$Forced.Simpler.Mod <- paste("Yes") # Record
           
@@ -173,6 +182,7 @@ for(D in 1:100) { #RUN TIME: 5 min
           framework.SPEC$Discard.Later <- paste("Yes") # Record
           # Create empty DFs
           top.mods.coeff <- data.frame(logLik = rep(NA, 1))
+          global.coeff <- data.frame(logLik = rep(NA, 1))
         }
         
         
@@ -189,6 +199,13 @@ for(D in 1:100) { #RUN TIME: 5 min
         # Storing coefficients:
         top.mods.coeff <- as.data.frame(coef(subset(dredge.globfi, delta == 0)))
         top.mods.coeff$logLik <- dredge.globfi$logLik[dredge.globfi$delta == 0]
+        # Global coefficients:
+        global.coeff <- as.data.frame(t(coef(mod.globfi)))
+        global.coeff$logLik <- as.numeric(logLik(mod.globfi))
+        global.coeff.P <- as.data.frame(t(summary(mod.globfi)$coefficients[,4]))
+        # Attaching global.coeff.P to global.coeff
+        names(global.coeff.P) <- paste( "P", names(global.coeff.P), sep = ".")
+        global.coeff.wP <- cbind(global.coeff, global.coeff.P)
         
       }
     }
@@ -216,7 +233,15 @@ for(D in 1:100) { #RUN TIME: 5 min
           
           # Coefficients:
           top.mods.coeff <- as.data.frame(coef(subset(dredge.globnofi.reduced, delta == 0)))
-          top.mods.coeff$logLik <- dredge.globnofi.reduced$logLik[dredge.globnofi.reduced$delta == 0]
+          top.mods.coeff$logLik <- 
+            dredge.globnofi.reduced$logLik[dredge.globnofi.reduced$delta == 0]
+          # Global coefficients:
+          global.coeff <- as.data.frame(t(coef(mod.globnofi.reduced)))
+          global.coeff$logLik <- as.numeric(logLik(mod.globnofi.reduced))
+          global.coeff.P <- as.data.frame(t(summary(mod.globnofi.reduced)$coefficients[,4]))
+          # Attaching global.coeff.P to global.coeff
+          names(global.coeff.P) <- paste( "P", names(global.coeff.P), sep = ".")
+          global.coeff.wP <- cbind(global.coeff, global.coeff.P)
           
           framework.SPEC$Forced.Simpler.Mod <- paste("Yes") # Record
           
@@ -224,7 +249,7 @@ for(D in 1:100) { #RUN TIME: 5 min
           framework.SPEC$Discard.Later <- paste("Yes") # Record
           # Create empty DFs
           top.mods.coeff <- data.frame(logLik = rep(NA, 1))
-          
+          global.coeff <- data.frame(logLik = rep(NA, 1))
         }
         
       } else { # Run as normal
@@ -237,13 +262,20 @@ for(D in 1:100) { #RUN TIME: 5 min
         # Coefficients:
         top.mods.coeff <- as.data.frame(coef(subset(dredge.globnofi, delta == 0)))
         top.mods.coeff$logLik <- dredge.globnofi$logLik[dredge.globnofi$delta == 0]
+        # Global coefficients:
+        global.coeff <- as.data.frame(t(coef(mod.globnofi)))
+        global.coeff$logLik <- as.numeric(logLik(mod.globnofi))
+        global.coeff.P <- as.data.frame(t(summary(mod.globnofi)$coefficients[,4]))
+        # Attaching global.coeff.P to global.coeff
+        names(global.coeff.P) <- paste( "P", names(global.coeff.P), sep = ".")
+        global.coeff.wP <- cbind(global.coeff, global.coeff.P)
+        
       }
+      
     }
     
-    
-    
     #### END OF MODEL FRAMEWORK ####
-    # Output: 3 DFs named top.mods.coeff, avg.mods.coeff, avg.mods.confint
+    # Output: 3 DFs named top.mods.coeff, global.coeffwP
     
     
     # Null model (for Psuedo-R-squared calculation later)
@@ -254,6 +286,15 @@ for(D in 1:100) { #RUN TIME: 5 min
     for(C in 1:length(coeff.all)) {
       if(!coeff.all[C] %in% colnames(top.mods.coeff)) {
         top.mods.coeff[, coeff.all[C]] <- rep(NA, times = nrow(top.mods.coeff))
+      }
+    }
+    # Adding missing coeff headers for global model
+    for(C in 1:length(coeff.all)) {
+      if(!coeff.all[C] %in% colnames(global.coeff.wP)) {
+        global.coeff.wP[, coeff.all[C]] <- rep(NA, times = nrow(global.coeff.wP))
+      }
+      if(!coeff.all.P[C] %in% colnames(global.coeff.wP)) {
+        global.coeff.wP[, coeff.all.P[C]] <- rep(NA, times = nrow(global.coeff.wP))
       }
     }
     
@@ -294,6 +335,56 @@ for(D in 1:100) { #RUN TIME: 5 min
     
     coeff.ALLSPEC[[S]] <- ldply(Mods.list, data.frame)
     
+    # Storing global model output
+    
+    global.wP <- data.frame(Species = levels(species.list)[S], 
+      Dataset = D,
+      L.Occ = sum(num.burns["1", , "Legacy"]), 
+      R.Occ = sum(num.burns["1", , "Resurvey"]), 
+      Fire.Included = ifelse(levels(species.list)[S] 
+                             %in% species.with.fire$Species == TRUE, "Yes", "No"),
+      Type = "Global_unavg", 
+      Rsquared = 1 - global.coeff.wP$logLik / as.numeric(logLik(mod.NULL)),
+      Intercept = global.coeff.wP$`(Intercept)`,
+      Elevation.m = global.coeff.wP$Elevation.m.poly,
+      Elevation.m2 = global.coeff.wP$Elevation.m2.poly,
+      Data.Type.nofi = global.coeff.wP$Data.TypeResurvey,
+      Data.Type.Elevation.m.nofi = global.coeff.wP$`Data.TypeResurvey:Elevation.m.poly`,
+      Data.Type.Elevation.m2.nofi = global.coeff.wP$`Data.TypeResurvey:Elevation.m2.poly`,
+      Resurvey.Burned.fi = 
+        global.coeff.wP$New.Data.TypeResurvey.Burned,
+      Resurvey.Unburned.fi = 
+        global.coeff.wP$New.Data.TypeResurvey.Unburned,
+      Elevation.m.Res.Burn.fi = 
+        global.coeff.wP$`Elevation.m.poly:New.Data.TypeResurvey.Burned`,
+      Elevation.m.Res.Unburn.fi = 
+        global.coeff.wP$`Elevation.m.poly:New.Data.TypeResurvey.Unburned`,
+      Elevation.m2.Res.Burn.fi = 
+        global.coeff.wP$`Elevation.m2.poly:New.Data.TypeResurvey.Burned`,
+      Elevation.m2.Res.Unburn.fi = 
+        global.coeff.wP$`Elevation.m2.poly:New.Data.TypeResurvey.Unburned`,
+      P.Intercept = global.coeff.wP$`P.(Intercept)`,
+      P.Elevation.m = global.coeff.wP$P.Elevation.m.poly,
+      P.Elevation.m2 = global.coeff.wP$P.Elevation.m2.poly,
+      P.Data.Type.nofi = global.coeff.wP$P.Data.TypeResurvey,
+      P.Data.Type.Elevation.m.nofi = global.coeff.wP$`P.Data.TypeResurvey:Elevation.m.poly`,
+      P.Data.Type.Elevation.m2.nofi = global.coeff.wP$`P.Data.TypeResurvey:Elevation.m2.poly`,
+      P.Resurvey.Burned.fi = 
+        global.coeff.wP$P.New.Data.TypeResurvey.Burned,
+      P.Resurvey.Unburned.fi = 
+        global.coeff.wP$P.New.Data.TypeResurvey.Unburned,
+      P.Elevation.m.Res.Burn.fi = 
+        global.coeff.wP$`P.Elevation.m.poly:New.Data.TypeResurvey.Burned`,
+      P.Elevation.m.Res.Unburn.fi = 
+        global.coeff.wP$`P.Elevation.m.poly:New.Data.TypeResurvey.Unburned`,
+      P.Elevation.m2.Res.Burn.fi = 
+        global.coeff.wP$`P.Elevation.m2.poly:New.Data.TypeResurvey.Burned`,
+      P.Elevation.m2.Res.Unburn.fi = 
+        global.coeff.wP$`P.Elevation.m2.poly:New.Data.TypeResurvey.Unburned`,
+      row.names = NULL)
+
+      global.wP.ALLSPEC[[S]] <- global.wP
+
     ## Storing record of framework
     
     framework.ALLSPEC[[S]] <- framework.SPEC
@@ -303,6 +394,7 @@ for(D in 1:100) { #RUN TIME: 5 min
   #Collapse ALLSPEC lists into single dataframe, store that df as part of ALLDAT list
   
   coeff.ALLDAT[[D]] <- ldply(coeff.ALLSPEC, data.frame)
+  global.wP.ALLDAT[[D]] <- ldply(global.wP.ALLSPEC, data.frame)
   framework.ALLDAT[[D]] <- ldply(framework.ALLSPEC, data.frame)
   
   #### END OF SPECIES LOOP
@@ -315,10 +407,43 @@ for(D in 1:100) { #RUN TIME: 5 min
 
 # Collate ALLDAT lists into one big DF
 
-coeff.ALLDAT.finaldf <- ldply(coeff.ALLDAT, data.frame)
-framework.ALLDAT.finaldf <- ldply(framework.ALLDAT, data.frame)
+coeff.ALLDAT.allsets <- ldply(coeff.ALLDAT, data.frame)
+framework.ALLDAT.allsets <- ldply(framework.ALLDAT, data.frame)
+global.wP.ALLDAT.allsets <- ldply(global.wP.ALLDAT, data.frame)
 
-#TODO remove error-laden coeffs
+
+#### Removing error-laden datasets ####
+
+# Create new column for joining
+framework.ALLDAT.allsets$Join <- 
+  paste(framework.ALLDAT.allsets$Dataset, framework.ALLDAT.allsets$Species, sep = ".")
+discard.me <- framework.ALLDAT.allsets[ , c(6, 8)]
+coeff.ALLDAT.allsets$Join <- 
+  paste(coeff.ALLDAT.allsets$Dataset, coeff.ALLDAT.allsets$Species, sep = ".")
+global.wP.ALLDAT.allsets$Join <- 
+  paste(global.wP.ALLDAT.allsets$Dataset, global.wP.ALLDAT.allsets$Species, sep = ".")
+
+# Merge framework DF with coeff and confint DF
+coeff.ALLDAT.allsets.join <- merge(coeff.ALLDAT.allsets, discard.me, 
+                                   by = "Join")
+global.wP.ALLDAT.allsets.join <- merge(global.wP.ALLDAT.allsets, discard.me, 
+                                         by = "Join")
+
+# Remove datasets associated with errors (Discard.Later == Yes)
+coeff.ALLDAT.finaldf.big <- 
+  coeff.ALLDAT.allsets.join[!coeff.ALLDAT.allsets.join$Discard.Later == "Yes", ]
+global.wP.ALLDAT.finaldf.big <- 
+  global.wP.ALLDAT.allsets.join[!global.wP.ALLDAT.allsets.join$Discard.Later == "Yes", ]
+coeff.ALLDAT.finaldf <- coeff.ALLDAT.finaldf.big[, c(2:20)]
+global.wP.ALLDAT.finaldf <- global.wP.ALLDAT.finaldf.big[, c(2:32)]
+
+# Separate into yes / no fire (currently just for global model output)
+global.wP.ALLDAT.finaldf.fire <- 
+  global.wP.ALLDAT.finaldf[global.wP.ALLDAT.finaldf$Fire.Included == "Yes", 
+                                            c(1:10, 14:19, 20:22, 26:31)]
+global.wP.ALLDAT.finaldf.nofire <- 
+  global.wP.ALLDAT.finaldf[global.wP.ALLDAT.finaldf$Fire.Included == "No", 
+                           c(1:10, 11:13, 20:22, 23:25)]
 
 
 # Store output as CSV
@@ -326,6 +451,16 @@ framework.ALLDAT.finaldf <- ldply(framework.ALLDAT, data.frame)
 write.csv(coeff.ALLDAT.finaldf, 
           file = "data/3c_top_mod_coefficients.csv", 
           row.names = FALSE)
+
+write.csv(global.wP.ALLDAT.finaldf.fire, 
+          file = "data/3c_global_mod_coefficients_with_P_FIRE.csv", 
+          row.names = FALSE)
+
+write.csv(global.wP.ALLDAT.finaldf.nofire, 
+          file = "data/3c_global_mod_coefficients_with_P_NOFIRE.csv", 
+          row.names = FALSE)
+
+
 
 
 
