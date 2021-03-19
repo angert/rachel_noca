@@ -99,6 +99,7 @@ head(warn.SPEC[warn.SPEC$Has_warning == TRUE, ])
 #### STEP 3: Exploring coefficients ####
 
 coeff.count.LIST <- list()
+coeff.perc.LIST <- list()
 
 for(S in 1:nrow(numbered.species)) {
   #coeff.SPEC.avg <- coeff.ALLDAT[coeff.ALLDAT$Species == levels(numbered.species$Species)[S], ]
@@ -129,13 +130,55 @@ for(S in 1:nrow(numbered.species)) {
   } else(coeff.count.SPEC$Fire.Included <- "Sometimes")
   coeff.count.SPEC$Effect <- row.names(coeff.count.SPEC)
   coeff.count.LIST[[S]] <- coeff.count.SPEC
+  
+  # Converting to % of good datasets
+  good.sets.SPEC <- 
+    sum(coeff.count.SPEC$Elevation.m[!coeff.count.SPEC$Effect == "Ignore"], na.rm = TRUE)
+  coeff.perc.SPEC.A <- data.frame(Species = coeff.count.SPEC$Species,
+                                Fire.Included = coeff.count.SPEC$Fire.Included,
+                                Total.Sets = rep(good.sets.SPEC, times = nrow(coeff.count.SPEC)),
+                                Effect = coeff.count.SPEC$Effect, 
+                                Elevation.m = coeff.count.SPEC$Elevation.m / good.sets.SPEC,
+                                Elevation.m2 = coeff.count.SPEC$Elevation.m2 / good.sets.SPEC, 
+                                Resurvey.Burned.fi = 
+                                  coeff.count.SPEC$Resurvey.Burned.fi / good.sets.SPEC, 
+                                Resurvey.Unburned.fi = 
+                                  coeff.count.SPEC$Resurvey.Unburned.fi / good.sets.SPEC, 
+                                Elevation.m.Res.Burn.fi = 
+                                  coeff.count.SPEC$Elevation.m.Res.Burn.fi / good.sets.SPEC, 
+                                Elevation.m.Res.Unburn.fi = 
+                                  coeff.count.SPEC$Elevation.m.Res.Unburn.fi / good.sets.SPEC, 
+                                Elevation.m2.Res.Burn.fi = 
+                                  coeff.count.SPEC$Elevation.m2.Res.Burn.fi / good.sets.SPEC, 
+                                Elevation.m2.Res.Unburn.fi = 
+                                  coeff.count.SPEC$Elevation.m2.Res.Unburn.fi / good.sets.SPEC, 
+                                Data.Type.nofi =
+                                  coeff.count.SPEC$Data.Type.nofi / good.sets.SPEC, 
+                                Data.Type.Elevation.m.nofi =
+                                  coeff.count.SPEC$Data.Type.Elevation.m.nofi / good.sets.SPEC,  
+                                Data.Type.Elevation.m2.nofi = 
+                                  coeff.count.SPEC$Data.Type.Elevation.m2.nofi / good.sets.SPEC)
+  coeff.perc.SPEC.B <- coeff.perc.SPEC.A[!coeff.perc.SPEC.A$Effect == "Ignore", ]
+  coeff.perc.LIST[[S]] <- coeff.perc.SPEC.B
+  
 }
 
 coeff.count <- ldply(coeff.count.LIST, data.frame)
+coeff.perc <- ldply(coeff.perc.LIST, data.frame)
+
 write.csv(coeff.count, 
           file = "data/4_presence_coefficients_count.csv", 
           row.names = FALSE)
 
+# Separate into fire / no fire (currently for perc only)
+
+coeff.perc.fire <- coeff.perc[coeff.perc$Fire.Included == "Yes", 1:12]
+coeff.perc.nofire <- coeff.perc[coeff.perc$Fire.Included == "No", c(1:6, 13:15)]
+
+write.csv(coeff.perc.fire, 
+          file = "data/4_pres_coefficients_percent_fire.csv", row.names = FALSE)
+write.csv(coeff.perc.nofire, 
+          file = "data/4_pres_coefficients_percent_NOfire.csv", row.names = FALSE)
 
 
 #### Step 4: Visualizing summary output ####
