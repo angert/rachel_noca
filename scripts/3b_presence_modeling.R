@@ -1,4 +1,3 @@
-#TODO: Try without framework-switching species
 # Created: Feb. 22, 2021
 # Updated: Mar. 15, 2021
 

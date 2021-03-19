@@ -1,7 +1,7 @@
-#TODO: Try without framework-switching species
-# Created: Mar. 8, 2021
+#TODO: Add global model to loop output
+# Created: Mar. 18, 2021
 
-# This script will be used to undertake part d of the PRESENCE analyses (modeling)
+# This script will be used to undertake part 3 of the PRESENCE analyses (modeling)
 # Use this script to produce the set of best models
 
 # This script accommodates the following species-specific issues:
