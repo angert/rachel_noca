@@ -1,7 +1,7 @@
 # Created: Dec. 11, 2020
-# Updated: Mar. 15, 2021
+# Updated: Mar. 22, 2021
 
-# This script will be used to undertake part 1 of the PRESENCE analyses (modeling)
+# This script will be used to summarize results of the PRESENCE analyses - coefficients
 
 # IMPORTANT NOTE: unless otherwise indicated, always use Understory_All.csv for these analyses as it is the ONLY file with up-to-date corrections.
 
