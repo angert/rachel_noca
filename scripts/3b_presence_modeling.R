@@ -60,6 +60,11 @@ species.list <- shifts$Species.Code[!shifts$Species.Code=="MOSS" &
                                     !shifts$Species.Code=="VADE"] #removing problematic species
 species.list <- factor(species.list)
 warn.ALLDAT <- read.csv("data/3_presence_ALLDAT_ALLSPEC_warnings.csv", header = TRUE)
+# Bug correction - force VAME and HODI to run under correct framework
+warn.ALLDAT$Has_warning[warn.ALLDAT$Species == "VAME" 
+                        & warn.ALLDAT$Dataset == 36] <- paste("TRUE")
+warn.ALLDAT$Has_warning[warn.ALLDAT$Species == "HODI" 
+                        & warn.ALLDAT$Dataset == c(31, 54, 61, 87)] <- paste("TRUE")
 
 # Formula to correct erroneous burn coding. Run time 3 sec
 for(D in 1:100) {
