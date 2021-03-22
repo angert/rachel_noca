@@ -198,7 +198,7 @@ for(S in 1:nrow(species.without.fire)) {
   # Summarizing the summary
   
   P.nofi.count.SPEC <- bind_cols((lapply(names(P.nofi.count.empty), P.nofi.count.fun)))
-  P.fi.count.SPEC$Species <- levels(factor(P.fi.SPEC$Species))
+  P.nofi.count.SPEC$Species <- levels(factor(P.nofi.SPEC$Species))
   if(length(levels(factor(P.nofi.SPEC$Fire.Included))) == 1) { # Red flag if this is "sometimes"
     P.nofi.count.SPEC$Fire.Included <- levels(factor(P.nofi.SPEC$Fire.Included))
   } else(P.nofi.count.SPEC$Fire.Included <- "Sometimes")
