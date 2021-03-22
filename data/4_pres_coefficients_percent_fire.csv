@@ -17,6 +17,6 @@
 "PAMY","Yes",100,"+",NA,NA,1,NA,NA,NA,NA,NA
 "PAMY","Yes",100,"-",1,1,NA,1,NA,NA,NA,NA
 "PAMY","Yes",100,"0",NA,NA,NA,NA,1,1,1,1
-"VAME","Yes",100,"+",1,NA,NA,1,1,NA,NA,0.01
-"VAME","Yes",100,"-",NA,1,1,NA,NA,1,0.01,NA
-"VAME","Yes",100,"0",NA,NA,NA,NA,NA,NA,0.99,0.99
+"VAME","Yes",100,"+",1,NA,NA,1,1,NA,NA,NA
+"VAME","Yes",100,"-",NA,1,1,NA,NA,1,NA,NA
+"VAME","Yes",100,"0",NA,NA,NA,NA,NA,NA,1,1
