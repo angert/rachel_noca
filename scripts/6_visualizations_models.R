@@ -14,33 +14,27 @@ load("data/Species.List.Rda") #TODO this file was made in an undocumented step
 species.list <- shifts$Species.Code[!shifts$Species.Code=="MOSS"] #removing "MOSS"
 species.list <- factor(species.list)
 
-### good spp - no fire (n=24)
-#"ACCI", "ACGL", "ATFI", "CHUM", "CLUN", "COCA", "GASH", "GOOB", "GYDR", "LIBO", "MANE", "MEFE", "OPHO", "POMU", "PTAQ", "RUPA", "RUPE", "RUSP", "SOSI", "TITR", "VASE"
-#"HIAL" (based on 99 datasets without warnings)
-#"RULA" (based on 99 datasets without warnings)
-#"GAOV" (based on 99 datasets without warnings)
+### good spp - no fire (n=29)
+#"ACCI", "ACGL", "ATFI", "CHUM", "CLUN", "COCA", "GASH", "GOOB", "GYDR", "LIBO", "MANE", "MEFE", "OPHO", "POMU", "PTAQ", "RUPA", "RUPE", "RUSP", "SOSI", "TITR", "VASI"
+#"AMAL" (but based on 98 datasets without warnings)
+#"CAME" (but based on 74 datasets without warnings)
+#"GAOV" (but based on 99 datasets without warnings)
+#"HIAL" (but based on 99 datasets without warnings)
+#"HODI" (but cannot run most complex model)
+#"RULA" (but based on 99 datasets without warnings)
+#"SPBE" (but 35 datasets meet criterion for fire)
+#"TRBO" (but based on 70 datasets without warnings)
 
-### good spp - fire (n=6)
+### good spp - fire (n=7)
 #"ACMI", "CEVE", "EPAN", "PAMY"
-#"AMAL" (based on 98 datasets without warnings)
-#"ARUV" (based on 98 datasets without warnings)
+#"ARUV" (but based on 98 datasets without warnings)
+#"CARU" (but 21 datasets meet criterion for no fire)
+#"VAME" (but cannot run most complex model)
 
-### iffy spp - no fire (n=3)
-#"SPBE" (35 datasets ran with fire)
-#"CAMI" (ok if based on 74 datasets without warnings)
-#"TRBO" (ok if based on 70 datasets without warnings)
-
-### iffy spp - fire (n=1)
-#"CARU" (21 datasets ran without fire)
-
-### bad spp - no fire (n=7)
+### bad spp (n=6)
 #"COST", "LUPE", "PHEM", "RHAL", "VAAL", "VADE"
-#"HODI" (ok if remove most complex model)
 
-### bad spp - fire (n=1)
-#"VAME" (ok if remove most complex model)
-
-# for now, get rid of bad species per above
+# drop bad species per above
 problems = c("COST", "LUPE", "PHEM", "RHAL", "VAAL", "VADE") 
 species.short <- anti_join(as.data.frame(species.list), as.data.frame(problems), by=c("species.list"="problems"))
 
@@ -119,7 +113,7 @@ for (i in 1:dim(species.fire)[1]) {
   
  ggsave(paste("figures/model.preds_",sp,".pdf",sep=""), gg, width=5, height=5)
 
-}
+} # this loop returns graphs for AMAL and SPBE, too
   
 # now the species without fire
 species.nofire <- semi_join(species.short, coeffs.nofire, by=c("species.list"="Species"))
