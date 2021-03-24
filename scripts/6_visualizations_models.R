@@ -45,8 +45,11 @@ coeffs.nofire <- coeffs %>% filter(Fire.Included=="No")
 
 # focusing on species with updated fire interaction models first
 species.fire <- semi_join(species.short, coeffs.fire, by=c("species.list"="Species")) %>% 
-  droplevels() %>% 
-  filter(species.list != "AMAL" | species.list != "SPBE")
+  droplevels()
+species.fire <- species.fire %>% 
+  filter(species.list!="AMAL") %>% 
+  filter(species.list!="SPBE") %>% 
+  droplevels()
 
 elev.vec = seq(0, 2200, by=1)
 pred.leg.reps = matrix(nrow=length(elev.vec),ncol=100)
@@ -115,10 +118,17 @@ for (i in 1:dim(species.fire)[1]) {
   
  ggsave(paste("figures/model.preds_",sp,".pdf",sep=""), gg, width=5, height=5)
 
-} # this loop returns graphs for AMAL and SPBE, too
+} 
   
 # now the species without fire
-species.nofire <- semi_join(species.short, coeffs.nofire, by=c("species.list"="Species"))
+species.nofire <- semi_join(species.short, coeffs.nofire, by=c("species.list"="Species")) %>% 
+  droplevels()
+species.nofire <- species.nofire %>% 
+  filter(species.list!="CARU") %>% 
+  filter(species.list!="ARUV") %>% 
+  filter(species.list!="VAME") %>% 
+  droplevels()
+
 
 elev.vec = seq(0, 2200, by=1)
 pred.leg.reps = matrix(nrow=length(elev.vec),ncol=100)
