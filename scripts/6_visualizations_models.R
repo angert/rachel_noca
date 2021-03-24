@@ -44,7 +44,9 @@ coeffs.fire <- coeffs %>% filter(Fire.Included=="Yes")
 coeffs.nofire <- coeffs %>% filter(Fire.Included=="No")
 
 # focusing on species with updated fire interaction models first
-species.fire <- semi_join(species.short, coeffs.fire, by=c("species.list"="Species"))
+species.fire <- semi_join(species.short, coeffs.fire, by=c("species.list"="Species")) %>% 
+  droplevels() %>% 
+  filter(species.list != "AMAL" | species.list != "SPBE")
 
 elev.vec = seq(0, 2200, by=1)
 pred.leg.reps = matrix(nrow=length(elev.vec),ncol=100)
