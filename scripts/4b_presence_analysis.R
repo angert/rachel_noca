@@ -10,7 +10,7 @@ library(plyr)
 # Functions needed:
 
 # FIRE: Turning P values into S / MS / NS / Ignore
-simplify.P.fi <- function(varib) {
+simplify.P.fi <- function(varib) { # FIRE
   P.summary.SPEC <- P.fi.summary.empty[varib]
   dataset.vect <- as.vector(P.fi.SPEC$Dataset)
   for(d in dataset.vect) {
@@ -32,12 +32,11 @@ simplify.P.fi <- function(varib) {
   return(P.summary.SPEC)
 }
 
-# NO FIRE: Turning P values into S / MS / NS / Ignore
-simplify.P.nofi <- function(varib) {
+simplify.P.nofi <- function(varib) { # NO FIRE
   P.nofi.summary.SPEC <- P.nofi.summary.empty[varib]
   dataset.vect <- as.vector(P.nofi.SPEC$Dataset)
   for(d in dataset.vect) {
-    if(is.na(P.nofi.SPEC[P.fi.SPEC$Dataset == d, varib]) == FALSE) {
+    if(is.na(P.nofi.SPEC[P.nofi.SPEC$Dataset == d, varib]) == FALSE) {
       if(P.nofi.SPEC[P.nofi.SPEC$Dataset == d, varib] <= 0.05) {
         P.nofi.summary.SPEC[d, varib] <- paste("Significant")
       }
@@ -58,7 +57,7 @@ simplify.P.nofi <- function(varib) {
 
 # Summing numbers of +/-/0 for each coeff for one species
 # Empty data frame
-P.fi.count.empty <- data.frame(P.Intercept = rep(NA, times = 4), 
+P.fi.count.empty <- data.frame(P.Intercept = rep(NA, times = 4), # FIRE
                             P.Elevation.m = rep(NA, times = 4), 
                             P.Elevation.m2 = rep(NA, times = 4), 
                             P.Resurvey.Burned.fi = rep(NA, times = 4), 
@@ -68,7 +67,7 @@ P.fi.count.empty <- data.frame(P.Intercept = rep(NA, times = 4),
                             P.Elevation.m2.Res.Burn.fi = rep(NA, times = 4), 
                             P.Elevation.m2.Res.Unburn.fi = rep(NA, times = 4),
                             row.names = c("Significant", "Marginal", "NS", "Ignore"))
-P.nofi.count.empty <- data.frame(P.Intercept = rep(NA, times = 4), 
+P.nofi.count.empty <- data.frame(P.Intercept = rep(NA, times = 4), # NO FIRE
                                  P.Elevation.m = rep(NA, times = 4), 
                                  P.Elevation.m2 = rep(NA, times = 4), 
                                  P.Data.Type.nofi = rep(NA, times = 4), 
@@ -77,7 +76,7 @@ P.nofi.count.empty <- data.frame(P.Intercept = rep(NA, times = 4),
                                  row.names = c("Significant", "Marginal", "NS", "Ignore"))
 
 # Collapsing 100 rows into summary
-P.fi.count.fun <- function(varib) {
+P.fi.count.fun <- function(varib) { # FIRE
   df.count <- P.fi.count.empty[varib]
   if(is.na(table(simple.P.fi.SPEC[varib])["Significant"]) == FALSE) {
     df.count["Significant", varib] <- table(simple.P.fi.SPEC[varib])["Significant"]
@@ -94,7 +93,7 @@ P.fi.count.fun <- function(varib) {
   return(df.count)
 }
 
-P.nofi.count.fun <- function(varib) {
+P.nofi.count.fun <- function(varib) { #NO FIRE
   df.count <- P.nofi.count.empty[varib]
   if(is.na(table(simple.P.nofi.SPEC[varib])["Significant"]) == FALSE) {
     df.count["Significant", varib] <- table(simple.P.nofi.SPEC[varib])["Significant"]
