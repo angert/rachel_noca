@@ -230,7 +230,7 @@ for(D in 1:100) { #RUN TIME: 5 min
                                                             == levels(species.list)[S]]))) {
         if(levels(species.list)[S] == "HODI") { # No elev^2 * year
           mod.globnofi.reduced <- glm(Pres.Abs ~ Elevation.m.poly + Elevation.m2.poly + 
-                                        Data.Type + Elevation.m.poly:Data.Type, 
+                                        Data.Type + Data.Type:Elevation.m.poly, 
                                       data = und.presence.SPEC, family = "binomial", 
                                       na.action = na.fail)
           dredge.globnofi.reduced <- dredge(mod.globnofi.reduced, rank = AIC, subset = 
@@ -247,6 +247,11 @@ for(D in 1:100) { #RUN TIME: 5 min
           # Attaching global.coeff.P to global.coeff
           names(global.coeff.P) <- paste( "P", names(global.coeff.P), sep = ".")
           global.coeff.wP <- cbind(global.coeff, global.coeff.P)
+          # Correcting a naming bug
+          global.coeff.wP$`Data.TypeResurvey:Elevation.m.poly` <- 
+            global.coeff.wP$`Elevation.m.poly:Data.TypeResurvey`
+          global.coeff.wP$`P.Data.TypeResurvey:Elevation.m.poly` <- 
+            global.coeff.wP$`P.Elevation.m.poly:Data.TypeResurvey`
           
           framework.SPEC$Forced.Simpler.Mod <- paste("Yes") # Record
           
