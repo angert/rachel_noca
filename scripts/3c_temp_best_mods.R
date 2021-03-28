@@ -178,6 +178,7 @@ for(D in 1:100) { #RUN TIME: 4 min
           global.coeff <- as.data.frame(t(coef(mod.globfi.reduced)))
           global.coeff$logLik <- as.numeric(logLik(mod.globfi.reduced))
           global.coeff.P <- as.data.frame(t(summary(mod.globfi.reduced)$coefficients[,4]))
+          global.confint <- as.data.frame(t(confint(mod.globfi.reduced)))
           # Attaching global.coeff.P to global.coeff
           names(global.coeff.P) <- paste( "P", names(global.coeff.P), sep = ".")
           global.coeff.wP <- cbind(global.coeff, global.coeff.P)
@@ -189,6 +190,8 @@ for(D in 1:100) { #RUN TIME: 4 min
           # Create empty DFs
           top.mods.coeff <- data.frame(logLik = rep(NA, 1))
           global.coeff <- data.frame(logLik = rep(NA, 1))
+          global.confint <- data.frame(Elevation.m = rep(NA, 2), 
+                                       row.names = c("2.5 %", "97.5 %"))
         }
         
         
@@ -209,6 +212,7 @@ for(D in 1:100) { #RUN TIME: 4 min
         global.coeff <- as.data.frame(t(coef(mod.globfi)))
         global.coeff$logLik <- as.numeric(logLik(mod.globfi))
         global.coeff.P <- as.data.frame(t(summary(mod.globfi)$coefficients[,4]))
+        global.confint <- as.data.frame(t(confint(mod.globfi)))
         # Attaching global.coeff.P to global.coeff
         names(global.coeff.P) <- paste( "P", names(global.coeff.P), sep = ".")
         global.coeff.wP <- cbind(global.coeff, global.coeff.P)
@@ -245,6 +249,7 @@ for(D in 1:100) { #RUN TIME: 4 min
           global.coeff <- as.data.frame(t(coef(mod.globnofi.reduced)))
           global.coeff$logLik <- as.numeric(logLik(mod.globnofi.reduced))
           global.coeff.P <- as.data.frame(t(summary(mod.globnofi.reduced)$coefficients[,4]))
+          global.confint <- as.data.frame(t(confint(mod.globnofi.reduced)))
           # Attaching global.coeff.P to global.coeff
           names(global.coeff.P) <- paste( "P", names(global.coeff.P), sep = ".")
           global.coeff.wP <- cbind(global.coeff, global.coeff.P)
@@ -261,6 +266,8 @@ for(D in 1:100) { #RUN TIME: 4 min
           # Create empty DFs
           top.mods.coeff <- data.frame(logLik = rep(NA, 1))
           global.coeff <- data.frame(logLik = rep(NA, 1))
+          global.confint <- data.frame(Elevation.m = rep(NA, 2), 
+                                       row.names = c("2.5 %", "97.5 %"))
         }
         
       } else { # Run as normal
@@ -277,6 +284,7 @@ for(D in 1:100) { #RUN TIME: 4 min
         global.coeff <- as.data.frame(t(coef(mod.globnofi)))
         global.coeff$logLik <- as.numeric(logLik(mod.globnofi))
         global.coeff.P <- as.data.frame(t(summary(mod.globnofi)$coefficients[,4]))
+        global.confint <- as.data.frame(t(confint(mod.globnofi)))
         # Attaching global.coeff.P to global.coeff
         names(global.coeff.P) <- paste( "P", names(global.coeff.P), sep = ".")
         global.coeff.wP <- cbind(global.coeff, global.coeff.P)
@@ -306,6 +314,9 @@ for(D in 1:100) { #RUN TIME: 4 min
       }
       if(!coeff.all.P[C] %in% colnames(global.coeff.wP)) {
         global.coeff.wP[, coeff.all.P[C]] <- rep(NA, times = nrow(global.coeff.wP))
+      }
+      if(!coeff.all[C] %in% colnames(global.confint)) {
+        global.confint[, coeff.all[C]] <- rep(NA, times = nrow(global.confint))
       }
     }
     
@@ -346,9 +357,10 @@ for(D in 1:100) { #RUN TIME: 4 min
     
     coeff.ALLSPEC[[S]] <- ldply(Mods.list, data.frame)
     
-    # Storing global model output
+    # Storing global model output - GIANT DATA FRAME!!
     
     global.wP <- data.frame(Species = levels(species.list)[S], 
+      # The basics:
       Dataset = D,
       L.Occ = sum(num.burns["1", , "Legacy"]), 
       R.Occ = sum(num.burns["1", , "Resurvey"]), 
@@ -356,6 +368,7 @@ for(D in 1:100) { #RUN TIME: 4 min
                              %in% species.with.fire$Species == TRUE, "Yes", "No"),
       Type = "Global_unavg", 
       Rsquared = 1 - global.coeff.wP$logLik / as.numeric(logLik(mod.NULL)),
+      # Coefficients:
       Intercept = global.coeff.wP$`(Intercept)`,
       Elevation.m = global.coeff.wP$Elevation.m,
       Elevation.m2 = global.coeff.wP$Elevation.m2,
@@ -374,6 +387,7 @@ for(D in 1:100) { #RUN TIME: 4 min
         global.coeff.wP$`Elevation.m2:New.Data.TypeResurvey.Burned`,
       Elevation.m2.Res.Unburn.fi = 
         global.coeff.wP$`Elevation.m2:New.Data.TypeResurvey.Unburned`,
+      # P-values:
       P.Intercept = global.coeff.wP$`P.(Intercept)`,
       P.Elevation.m = global.coeff.wP$P.Elevation.m,
       P.Elevation.m2 = global.coeff.wP$P.Elevation.m2,
@@ -392,6 +406,48 @@ for(D in 1:100) { #RUN TIME: 4 min
         global.coeff.wP$`P.Elevation.m2:New.Data.TypeResurvey.Burned`,
       P.Elevation.m2.Res.Unburn.fi = 
         global.coeff.wP$`P.Elevation.m2:New.Data.TypeResurvey.Unburned`,
+      # Lower CIs:
+      Intercept.CI.Lower = global.confint$`(Intercept)`[1],
+      Elevation.m.CI.Lower = global.confint$Elevation.m[1],
+      Elevation.m2.CI.Lower = global.confint$Elevation.m2[1],
+      Data.Type.nofi.CI.Lower = global.confint$Data.TypeResurvey[1],
+      Data.Type.Elevation.m.nofi.CI.Lower = 
+        global.confint$`Data.TypeResurvey:Elevation.m`[1],
+      Data.Type.Elevation.m2.nofi.CI.Lower = 
+        global.confint$`Data.TypeResurvey:Elevation.m2`[1],
+      Resurvey.Burned.fi.CI.Lower = 
+        global.confint$New.Data.TypeResurvey.Burned[1],
+      Resurvey.Unburned.fi.CI.Lower = 
+        global.confint$New.Data.TypeResurvey.Unburned[1],
+      Elevation.m.Res.Burn.fi.CI.Lower = 
+        global.confint$`Elevation.m:New.Data.TypeResurvey.Burned`[1],
+      Elevation.m.Res.Unburn.fi.CI.Lower = 
+        global.confint$`Elevation.m:New.Data.TypeResurvey.Unburned`[1],
+      Elevation.m2.Res.Burn.fi.CI.Lower = 
+        global.confint$`Elevation.m2:New.Data.TypeResurvey.Burned`[1],
+      Elevation.m2.Res.Unburn.fi.CI.Lower = 
+        global.confint$`Elevation.m2:New.Data.TypeResurvey.Unburned`[1],
+      # Upper CIs:
+      Intercept.CI.Upper = global.confint$`(Intercept)`[2],
+      Elevation.m.CI.Upper = global.confint$Elevation.m[2],
+      Elevation.m2.CI.Upper = global.confint$Elevation.m2[2],
+      Data.Type.nofi.CI.Upper = global.confint$Data.TypeResurvey[2],
+      Data.Type.Elevation.m.nofi.CI.Upper = 
+        global.confint$`Data.TypeResurvey:Elevation.m`[2],
+      Data.Type.Elevation.m2.nofi.CI.Upper = 
+        global.confint$`Data.TypeResurvey:Elevation.m2`[2],
+      Resurvey.Burned.fi.CI.Upper = 
+        global.confint$New.Data.TypeResurvey.Burned[2],
+      Resurvey.Unburned.fi.CI.Upper = 
+        global.confint$New.Data.TypeResurvey.Unburned[2],
+      Elevation.m.Res.Burn.fi.CI.Upper = 
+        global.confint$`Elevation.m:New.Data.TypeResurvey.Burned`[2],
+      Elevation.m.Res.Unburn.fi.CI.Upper = 
+        global.confint$`Elevation.m:New.Data.TypeResurvey.Unburned`[2],
+      Elevation.m2.Res.Burn.fi.CI.Upper = 
+        global.confint$`Elevation.m2:New.Data.TypeResurvey.Burned`[2],
+      Elevation.m2.Res.Unburn.fi.CI.Upper = 
+        global.confint$`Elevation.m2:New.Data.TypeResurvey.Unburned`[2],
       row.names = NULL)
 
       global.wP.ALLSPEC[[S]] <- global.wP
@@ -446,15 +502,15 @@ coeff.ALLDAT.finaldf.big <-
 global.wP.ALLDAT.finaldf.big <- 
   global.wP.ALLDAT.allsets.join[!global.wP.ALLDAT.allsets.join$Discard.Later == "Yes", ]
 coeff.ALLDAT.finaldf <- coeff.ALLDAT.finaldf.big[, c(2:20)]
-global.wP.ALLDAT.finaldf <- global.wP.ALLDAT.finaldf.big[, c(2:32)]
+global.wP.ALLDAT.finaldf <- global.wP.ALLDAT.finaldf.big[, c(2:56)]
 
 # Separate into yes / no fire (currently just for global model output)
 global.wP.ALLDAT.finaldf.fire <- 
   global.wP.ALLDAT.finaldf[global.wP.ALLDAT.finaldf$Fire.Included == "Yes", 
-                                            c(1:10, 14:19, 20:22, 26:31)]
+                            c(1:10, 14:19, 20:22, 26:31, 32:34, 38:43, 44:46, 50:55)]
 global.wP.ALLDAT.finaldf.nofire <- 
   global.wP.ALLDAT.finaldf[global.wP.ALLDAT.finaldf$Fire.Included == "No", 
-                           c(1:10, 11:13, 20:22, 23:25)]
+                           c(1:10, 11:13, 20:22, 23:25, 32:34, 35:37, 44:46, 47:49)]
 
 
 # Store output as CSV
