@@ -92,7 +92,7 @@ table(table(warn.SPEC$Has_warning, warn.SPEC$Dataset))
 head(warn.SPEC[warn.SPEC$Has_warning == TRUE, ])
 
 # (Optional): How did rarefaction vary between species? #
-#par(mfrow=c(1,1), mar=c(5, 1.5, 1, 0), oma=c(0,4,0,0)) # 3-paneled graph
+#par(mar=c(5, 1.5, 1, 0), oma=c(0,4,0,0)) # 3-paneled graph
 #hist(coeff.SPEC$R.Occ, main = "RHAL", xlab = "No. resurvey occ", ylab = "Frequency")
 
 
