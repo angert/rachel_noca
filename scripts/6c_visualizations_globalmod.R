@@ -19,6 +19,12 @@ elev.vec = as.numeric(seq(0, 2200, by=1))
 pred.leg.reps = matrix(nrow=length(elev.vec),ncol=100)
 pred.res.unburn.reps = matrix(nrow=length(elev.vec),ncol=100)
 pred.res.burn.reps = matrix(nrow=length(elev.vec),ncol=100)
+pred.leg.reps.low = matrix(nrow=length(elev.vec),ncol=100)
+pred.res.unburn.reps.low = matrix(nrow=length(elev.vec),ncol=100)
+pred.res.burn.reps.low = matrix(nrow=length(elev.vec),ncol=100)
+pred.leg.reps.high = matrix(nrow=length(elev.vec),ncol=100)
+pred.res.unburn.reps.high = matrix(nrow=length(elev.vec),ncol=100)
+pred.res.burn.reps.high = matrix(nrow=length(elev.vec),ncol=100)
 
 col.pal <- c("turquoise4", "red3", "goldenrod1")
 
@@ -34,49 +40,114 @@ for (i in 1:dim(species.fire)[1]) {
            ResurvBurnxElev = Elevation.m.Res.Burn.fi,
            ResurvBurnxElev2 = Elevation.m2.Res.Burn.fi,
            ResurvUnburnxElev = Elevation.m2.Res.Unburn.fi,
-           ResurvUnburnXElev2 = Elevation.m2.Res.Unburn.fi
+           ResurvUnburnXElev2 = Elevation.m2.Res.Unburn.fi,
+           Int.Low=Intercept.CI.Lower, 
+           Elev.Low=Elevation.m.CI.Lower, 
+           Elev2.Low=Elevation.m2.CI.Lower, 
+           ResurvBurn.Low = Resurvey.Burned.fi.CI.Lower,
+           ResurvUnburn.Low = Resurvey.Unburned.fi.CI.Lower,
+           ResurvBurnxElev.Low = Elevation.m.Res.Burn.fi.CI.Lower,
+           ResurvBurnxElev2.Low = Elevation.m2.Res.Burn.fi.CI.Lower,
+           ResurvUnburnxElev.Low = Elevation.m2.Res.Unburn.fi.CI.Lower,
+           ResurvUnburnXElev2.Low = Elevation.m2.Res.Unburn.fi.CI.Lower,
+           Int.High=Intercept.CI.Upper, 
+           Elev.High=Elevation.m.CI.Upper, 
+           Elev2.High=Elevation.m2.CI.Upper, 
+           ResurvBurn.High = Resurvey.Burned.fi.CI.Upper,
+           ResurvUnburn.High = Resurvey.Unburned.fi.CI.Upper,
+           ResurvBurnxElev.High = Elevation.m.Res.Burn.fi.CI.Upper,
+           ResurvBurnxElev2.High = Elevation.m2.Res.Burn.fi.CI.Upper,
+           ResurvUnburnxElev.High = Elevation.m2.Res.Unburn.fi.CI.Upper,
+           ResurvUnburnXElev2.High = Elevation.m2.Res.Unburn.fi.CI.Upper
     )
   for (j in 1:dim(mods)[1]) {
     pred.leg.reps[,j] = mods$Int[j] + mods$Elev[j]*elev.vec + mods$Elev2[j]*elev.vec*elev.vec
-    pred.res.unburn.reps[,j] = mods$Int[j]  + mods$Elev[j]*elev.vec + mods$Elev2[j]*elev.vec*elev.vec +
+    pred.res.unburn.reps[,j] = mods$Int[j] + mods$Elev[j]*elev.vec + mods$Elev2[j]*elev.vec*elev.vec +
       mods$ResurvUnburn[j] + mods$ResurvUnburnxElev[j]*elev.vec + 
       mods$ResurvUnburnXElev2[j]*elev.vec*elev.vec
     pred.res.burn.reps[,j] = mods$Int[j] + mods$Elev[j]*elev.vec + mods$Elev2[j]*elev.vec*elev.vec +
       mods$ResurvBurn[j] + mods$ResurvBurnxElev[j]*elev.vec + 
       mods$ResurvBurnxElev2[j]*elev.vec*elev.vec
-    }
+    pred.leg.reps.low[,j] = mods$Int.Low[j] + mods$Elev.Low[j]*elev.vec + mods$Elev2.Low[j]*elev.vec*elev.vec
+    pred.res.unburn.reps.low[,j] = mods$Int.Low[j] + mods$Elev.Low[j]*elev.vec + mods$Elev2.Low[j]*elev.vec*elev.vec +
+      mods$ResurvUnburn.Low[j] + mods$ResurvUnburnxElev.Low[j]*elev.vec + 
+      mods$ResurvUnburnXElev2.Low[j]*elev.vec*elev.vec
+    pred.res.burn.reps.low[,j] = mods$Int.Low[j] + mods$Elev.Low[j]*elev.vec + mods$Elev2.Low[j]*elev.vec*elev.vec +
+      mods$ResurvBurn.Low[j] + mods$ResurvBurnxElev.Low[j]*elev.vec + 
+      mods$ResurvBurnxElev2.Low[j]*elev.vec*elev.vec
+    pred.leg.reps.high[,j] = mods$Int[j] + mods$Elev[j]*elev.vec + mods$Elev2[j]*elev.vec*elev.vec
+    pred.res.unburn.reps.high[,j] = mods$Int[j] + mods$Elev[j]*elev.vec + mods$Elev2[j]*elev.vec*elev.vec +
+      mods$ResurvUnburn[j] + mods$ResurvUnburnxElev[j]*elev.vec + 
+      mods$ResurvUnburnXElev2[j]*elev.vec*elev.vec
+    pred.res.burn.reps.high[,j] = mods$Int.High[j] + mods$Elev.High[j]*elev.vec + mods$Elev2.High[j]*elev.vec*elev.vec +
+      mods$ResurvBurn.High[j] + mods$ResurvBurnxElev.High[j]*elev.vec + 
+      mods$ResurvBurnxElev2.High[j]*elev.vec*elev.vec
+  }
   t1.unburn.reps <- as.data.frame(cbind(elev.vec, 'legacy', pred.leg.reps))
   t1.unburn.reps.tall <- gather(t1.unburn.reps, "rep", "preds", 3:102)
   t1.unburn.summary <- t1.unburn.reps.tall %>% 
     mutate(resp = exp(as.numeric(preds))/(1+exp(as.numeric(preds)))) %>% 
     group_by(V2, elev.vec) %>% 
-    summarise(mean.resp = mean(resp, na.rm=TRUE),
-              lower.resp = unname(quantile(resp, c(0.05), na.rm=TRUE)),
-              upper.resp = unname(quantile(resp, c(0.95), na.rm=TRUE)))
+    summarise(mean.resp = mean(resp, na.rm=TRUE))
+  t1.unburn.reps.low <- as.data.frame(cbind(elev.vec, 'legacy', pred.leg.reps.low))
+  t1.unburn.reps.low.tall <- gather(t1.unburn.reps.low, "rep", "preds", 3:102)
+  t1.unburn.low.summary <- t1.unburn.reps.low.tall %>% 
+    mutate(lower = exp(as.numeric(preds))/(1+exp(as.numeric(preds)))) %>% 
+    group_by(V2, elev.vec) %>% 
+    summarise(mean.lower = mean(lower, na.rm=TRUE))
+  t1.unburn.reps.high <- as.data.frame(cbind(elev.vec, 'legacy', pred.leg.reps.high))
+  t1.unburn.reps.high.tall <- gather(t1.unburn.reps.high, "rep", "preds", 3:102)
+  t1.unburn.high.summary <- t1.unburn.reps.high.tall %>% 
+    mutate(upper = exp(as.numeric(preds))/(1+exp(as.numeric(preds)))) %>% 
+    group_by(V2, elev.vec) %>% 
+    summarise(mean.upper = mean(upper, na.rm=TRUE))
   t2.unburn.reps <- as.data.frame(cbind(elev.vec, 'res.unburn', pred.res.unburn.reps))
   t2.unburn.reps.tall <- gather(t2.unburn.reps, "rep", "preds", 3:102)
   t2.unburn.summary <- t2.unburn.reps.tall %>% 
     mutate(resp = exp(as.numeric(preds))/(1+exp(as.numeric(preds)))) %>% 
     group_by(V2, elev.vec) %>% 
-    summarise(mean.resp = mean(resp, na.rm=TRUE),
-              lower.resp = unname(quantile(resp, c(0.05), na.rm=TRUE)),
-              upper.resp = unname(quantile(resp, c(0.95), na.rm=TRUE)))
+    summarise(mean.resp = mean(resp, na.rm=TRUE))
+  t2.unburn.reps.low <- as.data.frame(cbind(elev.vec, 'res.unburn', pred.res.unburn.reps.low))
+  t2.unburn.reps.low.tall <- gather(t2.unburn.reps, "rep", "preds", 3:102)
+  t2.unburn.low.summary <- t2.unburn.reps.low.tall %>% 
+    mutate(lower = exp(as.numeric(preds))/(1+exp(as.numeric(preds)))) %>% 
+    group_by(V2, elev.vec) %>% 
+    summarise(mean.lower = mean(lower, na.rm=TRUE))
+  t2.unburn.reps.high <- as.data.frame(cbind(elev.vec, 'res.unburn', pred.res.unburn.reps.high))
+  t2.unburn.reps.high.tall <- gather(t2.unburn.reps.high, "rep", "preds", 3:102)
+  t2.unburn.high.summary <- t2.unburn.reps.high.tall %>% 
+    mutate(upper = exp(as.numeric(preds))/(1+exp(as.numeric(preds)))) %>% 
+    group_by(V2, elev.vec) %>% 
+    summarise(mean.upper = mean(upper, na.rm=TRUE))
   t2.burn.reps <- as.data.frame(cbind(elev.vec, 'res.burn', pred.res.burn.reps))
   t2.burn.reps.tall <- gather(t2.burn.reps, "rep", "preds", 3:102)
   t2.burn.summary <- t2.burn.reps.tall %>% 
     mutate(resp = exp(as.numeric(preds))/(1+exp(as.numeric(preds)))) %>% 
     group_by(V2, elev.vec) %>% 
-    summarise(mean.resp = mean(resp, na.rm=TRUE),
-              lower.resp = unname(quantile(resp, c(0.05), na.rm=TRUE)),
-              upper.resp = unname(quantile(resp, c(0.95), na.rm=TRUE)))
-  graph.dat <- bind_rows(t1.unburn.summary, t2.unburn.summary, t2.burn.summary)
+    summarise(mean.resp = mean(resp, na.rm=TRUE))
+  t2.burn.reps.low <- as.data.frame(cbind(elev.vec, 'res.burn', pred.res.burn.reps.low))
+  t2.burn.reps.low.tall <- gather(t2.burn.reps.low, "rep", "preds", 3:102)
+  t2.burn.low.summary <- t2.burn.reps.low.tall %>% 
+    mutate(lower = exp(as.numeric(preds))/(1+exp(as.numeric(preds)))) %>% 
+    group_by(V2, elev.vec) %>% 
+    summarise(mean.lower = mean(lower, na.rm=TRUE))
+  t2.burn.reps.high <- as.data.frame(cbind(elev.vec, 'res.burn', pred.res.burn.reps.high))
+  t2.burn.reps.high.tall <- gather(t2.burn.reps.high, "rep", "preds", 3:102)
+  t2.burn.high.summary <- t2.burn.reps.high.tall %>% 
+    mutate(upper = exp(as.numeric(preds))/(1+exp(as.numeric(preds)))) %>% 
+    group_by(V2, elev.vec) %>% 
+    summarise(mean.upper = mean(upper, na.rm=TRUE))
+  graph.dat.means <- bind_rows(t1.unburn.summary, t2.unburn.summary, t2.burn.summary)
+  graph.dat.lowers <- bind_rows(t1.unburn.low.summary, t2.unburn.low.summary, t2.burn.low.summary)
+  graph.dat.uppers <- bind_rows(t1.unburn.high.summary, t2.unburn.high.summary, t2.burn.high.summary)
+  graph.dat <- left_join(graph.dat.means, left_join(graph.dat.lowers, graph.dat.uppers))
   graph.dat$elev.vec <- as.numeric(graph.dat$elev.vec)
   
  gg <- ggplot(graph.dat, aes(x=elev.vec, y=mean.resp, color=V2)) +
     theme_classic() +
     xlab("Elevation (m)") +
     ylab("Probability of presence") +
-    #geom_errorbar(aes(ymin=lower.resp, ymax=upper.resp), alpha=0.05) +
+    geom_errorbar(aes(ymin=mean.lower, ymax=mean.upper), alpha=0.05) +
     geom_line() +
     scale_color_manual(values=col.pal)
   
