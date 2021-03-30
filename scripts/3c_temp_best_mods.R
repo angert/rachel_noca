@@ -3,7 +3,7 @@
 
 # This script will be used to undertake part 3 of the PRESENCE analyses (modeling)
 # Use this script to produce the top model and global model outputs
-# NOTE: This script has been modified to use RAW polynomials
+# NOTE: This script has been modified to use ORTHO polynomials
 
 # This script accommodates the following species-specific issues:
 # --> Discard species for whom 2 or more models threw warnings
@@ -30,17 +30,17 @@ library(plyr)
 # List of coefficients between fire and non-fire model framework
 #TODO: confusing
 coeff.all <-c("(Intercept)",
-              "Elevation.m", 
-              "Elevation.m2", 
+              "Elevation.m.poly", 
+              "Elevation.m2.poly", 
               "New.Data.TypeResurvey.Burned", 
               "New.Data.TypeResurvey.Unburned", 
-              "Elevation.m:New.Data.TypeResurvey.Burned", 
-              "Elevation.m:New.Data.TypeResurvey.Unburned", 
-              "Elevation.m2:New.Data.TypeResurvey.Burned", 
-              "Elevation.m2:New.Data.TypeResurvey.Unburned",
+              "Elevation.m.poly:New.Data.TypeResurvey.Burned", 
+              "Elevation.m.poly:New.Data.TypeResurvey.Unburned", 
+              "Elevation.m2.poly:New.Data.TypeResurvey.Burned", 
+              "Elevation.m2.poly:New.Data.TypeResurvey.Unburned",
               "Data.TypeResurvey",
-              "Data.TypeResurvey:Elevation.m",
-              "Data.TypeResurvey:Elevation.m2")
+              "Data.TypeResurvey:Elevation.m.poly",
+              "Data.TypeResurvey:Elevation.m2.poly")
 coeff.all.P <- paste( "P", coeff.all, sep = ".")
 
 #### STEP 1: Import data #### Takes ~ 5 sec to run
@@ -91,14 +91,15 @@ species.without.fire <- numbered.species[!numbered.species$Species
 # Exclude D loop to run for only one dataset (e.g. unrarefied data)
 
 coeff.ALLDAT <- list() # Store coefficient outputs from top model
-framework.ALLDAT <- list () # Store record of which decision framework was used
-global.wP.ALLDAT <- list () # Store coefficient outputs from global model
+framework.ALLDAT <- list() # Store record of which decision framework was used
+global.wP.ALLDAT <- list() # Store coefficient outputs from global model
 
 for(D in 1:100) { #RUN TIME: 4 min
   
   coeff.ALLSPEC <- list()
   framework.ALLSPEC <- list()
   global.wP.ALLSPEC <- list()
+  mods.ALLSPEC <- list()
   und.presence <- rare.ALL[[D]]
   und.presence$Elevation.m <- as.numeric(und.presence$Elevation.m)
   und.presence$New.Data.Type <- factor(und.presence$New.Data.Type)
@@ -117,8 +118,8 @@ for(D in 1:100) { #RUN TIME: 4 min
                                                ref="Legacy.Unburned")
     und.presence.SPEC$Fires <- relevel(und.presence.SPEC$Fires, ref="Unburned")
     und.presence.SPEC$Data.Type <- relevel(und.presence.SPEC$Data.Type, ref="Legacy")
-    und.presence.SPEC$Elevation.m2 <- und.presence.SPEC$Elevation.m^2
-    # Updated Mar. 27: Replace use old Elevation.m instead of poly()
+    # und.presence.SPEC$Elevation.m2 <- und.presence.SPEC$Elevation.m^2
+    # Updated Mar. 27: Replace Elevation.m w/ poly()
     und.presence.SPEC$Elevation.m.poly <- poly(und.presence.SPEC$Elevation.m, 2)[ , 1]
     und.presence.SPEC$Elevation.m2.poly <- poly(und.presence.SPEC$Elevation.m, 2)[ , 2]
     und.presence.SPEC <- und.presence.SPEC[complete.cases(und.presence.SPEC), ] #Just in case
@@ -167,11 +168,12 @@ for(D in 1:100) { #RUN TIME: 4 min
                                                             == levels(species.list)[S]]))) {
         
         if(levels(species.list)[S] == "VAME") { # No elev^2 * year-burn
-          mod.globfi.reduced <- glm(Pres.Abs ~ (Elevation.m + Elevation.m2) + 
-                                      New.Data.Type + Elevation.m:New.Data.Type, 
+          mod.globfi.reduced <- glm(Pres.Abs ~ (Elevation.m.poly + Elevation.m2.poly) + 
+                                      New.Data.Type + Elevation.m.poly:New.Data.Type, 
                                 data = und.presence.SPEC, family = "binomial", na.action = na.fail)
+          mods.ALLSPEC[[levels(species.list)[S]]] <- mod.globfi.reduced
           dredge.globfi.reduced <- dredge(mod.globfi.reduced, rank = AIC, subset = 
-                                            dc(Elevation.m, Elevation.m2))
+                                            dc(Elevation.m.poly, Elevation.m2.poly))
           
           # Coefficients:
           top.mods.coeff <- as.data.frame(coef(subset(dredge.globfi.reduced, delta == 0)))
@@ -180,6 +182,7 @@ for(D in 1:100) { #RUN TIME: 4 min
           global.coeff <- as.data.frame(t(coef(mod.globfi.reduced)))
           global.coeff$logLik <- as.numeric(logLik(mod.globfi.reduced))
           global.coeff.P <- as.data.frame(t(summary(mod.globfi.reduced)$coefficients[,4]))
+          #TODO - fix confint issue!
           global.confint <- as.data.frame(t(confint(mod.globfi.reduced)))
           # Attaching global.coeff.P to global.coeff
           names(global.coeff.P) <- paste( "P", names(global.coeff.P), sep = ".")
@@ -191,21 +194,22 @@ for(D in 1:100) { #RUN TIME: 4 min
           framework.SPEC$Discard.Later <- paste("Yes") # Record
           # Create empty DFs
           top.mods.coeff <- data.frame(logLik = rep(NA, 1))
-          global.coeff <- data.frame(logLik = rep(NA, 1))
-          global.confint <- data.frame(Elevation.m = rep(NA, 2), 
+          global.coeff.wP <- data.frame(logLik = rep(NA, 1))
+          global.confint <- data.frame(Elevation.m.poly = rep(NA, 2), 
                                        row.names = c("2.5 %", "97.5 %"))
         }
         
         
       } else { # Run as normal
-        mod.globfi <- glm(Pres.Abs ~ (Elevation.m + Elevation.m2) * New.Data.Type, 
+        mod.globfi <- glm(Pres.Abs ~ (Elevation.m.poly + Elevation.m2.poly) * New.Data.Type, 
                           data = und.presence.SPEC, family = "binomial", na.action = na.fail)
+        mods.ALLSPEC[[levels(species.list)[S]]] <- mod.globfi
         dredge.globfi <- dredge(mod.globfi, rank = AIC, subset = 
-                                  dc(Elevation.m, Elevation.m2) &&
-                                  dc(New.Data.Type:Elevation.m, 
-                                     New.Data.Type:Elevation.m2) &&
-                                  dc(Elevation.m:New.Data.Type, 
-                                     Elevation.m2:New.Data.Type))
+                                  dc(Elevation.m.poly, Elevation.m2.poly) &&
+                                  dc(New.Data.Type:Elevation.m.poly, 
+                                     New.Data.Type:Elevation.m2.poly) &&
+                                  dc(Elevation.m.poly:New.Data.Type, 
+                                     Elevation.m2.poly:New.Data.Type))
         
         # Storing coefficients:
         top.mods.coeff <- as.data.frame(coef(subset(dredge.globfi, delta == 0)))
@@ -214,6 +218,7 @@ for(D in 1:100) { #RUN TIME: 4 min
         global.coeff <- as.data.frame(t(coef(mod.globfi)))
         global.coeff$logLik <- as.numeric(logLik(mod.globfi))
         global.coeff.P <- as.data.frame(t(summary(mod.globfi)$coefficients[,4]))
+        #TODO - fix confint issue!
         global.confint <- as.data.frame(t(confint(mod.globfi)))
         # Attaching global.coeff.P to global.coeff
         names(global.coeff.P) <- paste( "P", names(global.coeff.P), sep = ".")
@@ -236,12 +241,13 @@ for(D in 1:100) { #RUN TIME: 4 min
       if("TRUE" %in% levels(factor(warn.dataset$Has_warning[warn.dataset$Species 
                                                             == levels(species.list)[S]]))) {
         if(levels(species.list)[S] == "HODI") { # No elev^2 * year
-          mod.globnofi.reduced <- glm(Pres.Abs ~ Elevation.m + Elevation.m2 + 
-                                        Data.Type + Data.Type:Elevation.m, 
+          mod.globnofi.reduced <- glm(Pres.Abs ~ Elevation.m.poly + Elevation.m2.poly + 
+                                        Data.Type + Data.Type:Elevation.m.poly, 
                                       data = und.presence.SPEC, family = "binomial", 
                                       na.action = na.fail)
+          mods.ALLSPEC[[levels(species.list)[S]]] <- mod.globnofi.reduced
           dredge.globnofi.reduced <- dredge(mod.globnofi.reduced, rank = AIC, subset = 
-                                              dc(Elevation.m, Elevation.m2))
+                                              dc(Elevation.m.poly, Elevation.m2.poly))
           
           # Coefficients:
           top.mods.coeff <- as.data.frame(coef(subset(dredge.globnofi.reduced, delta == 0)))
@@ -251,15 +257,16 @@ for(D in 1:100) { #RUN TIME: 4 min
           global.coeff <- as.data.frame(t(coef(mod.globnofi.reduced)))
           global.coeff$logLik <- as.numeric(logLik(mod.globnofi.reduced))
           global.coeff.P <- as.data.frame(t(summary(mod.globnofi.reduced)$coefficients[,4]))
+          #TODO - fix confint issue!
           global.confint <- as.data.frame(t(confint(mod.globnofi.reduced)))
           # Attaching global.coeff.P to global.coeff
           names(global.coeff.P) <- paste( "P", names(global.coeff.P), sep = ".")
           global.coeff.wP <- cbind(global.coeff, global.coeff.P)
           # Correcting a naming bug - appears for poly() only
-          # global.coeff.wP$`Data.TypeResurvey:Elevation.m.poly` <- 
-          #  global.coeff.wP$`Elevation.m.poly:Data.TypeResurvey`
-          # global.coeff.wP$`P.Data.TypeResurvey:Elevation.m.poly` <- 
-          #  global.coeff.wP$`P.Elevation.m.poly:Data.TypeResurvey`
+          global.coeff.wP$`Data.TypeResurvey:Elevation.m.poly` <- 
+             global.coeff.wP$`Elevation.m.poly:Data.TypeResurvey`
+          global.coeff.wP$`P.Data.TypeResurvey:Elevation.m.poly` <- 
+             global.coeff.wP$`P.Elevation.m.poly:Data.TypeResurvey`
           
           framework.SPEC$Forced.Simpler.Mod <- paste("Yes") # Record
           
@@ -267,17 +274,18 @@ for(D in 1:100) { #RUN TIME: 4 min
           framework.SPEC$Discard.Later <- paste("Yes") # Record
           # Create empty DFs
           top.mods.coeff <- data.frame(logLik = rep(NA, 1))
-          global.coeff <- data.frame(logLik = rep(NA, 1))
-          global.confint <- data.frame(Elevation.m = rep(NA, 2), 
+          global.coeff.wP <- data.frame(logLik = rep(NA, 1))
+          global.confint <- data.frame(Elevation.m.poly = rep(NA, 2), 
                                        row.names = c("2.5 %", "97.5 %"))
         }
         
       } else { # Run as normal
-        mod.globnofi <- glm(Pres.Abs ~ Data.Type * (Elevation.m.poly + Elevation.m2.poly), 
+        mod.globnofi <- glm(Pres.Abs ~ Data.Type * (Elevation.m + I(Elevation.m^2)), 
                             data = und.presence.SPEC, family = "binomial", na.action = na.fail) 
+        mods.ALLSPEC[[levels(species.list)[S]]] <- mod.globnofi
         dredge.globnofi <- dredge(mod.globnofi, rank = AIC, subset = 
-                                    dc(Elevation.m, Elevation.m2) &&
-                                    dc(Data.Type:Elevation.m, Data.Type:Elevation.m2))
+                                    dc(Elevation.m.poly, Elevation.m2.poly) &&
+                                    dc(Data.Type:Elevation.m.poly, Data.Type:Elevation.m2.poly))
         
         # Coefficients:
         top.mods.coeff <- as.data.frame(coef(subset(dredge.globnofi, delta == 0)))
@@ -286,6 +294,7 @@ for(D in 1:100) { #RUN TIME: 4 min
         global.coeff <- as.data.frame(t(coef(mod.globnofi)))
         global.coeff$logLik <- as.numeric(logLik(mod.globnofi))
         global.coeff.P <- as.data.frame(t(summary(mod.globnofi)$coefficients[,4]))
+        #TODO - fix confint issue!
         global.confint <- as.data.frame(t(confint(mod.globnofi)))
         # Attaching global.coeff.P to global.coeff
         names(global.coeff.P) <- paste( "P", names(global.coeff.P), sep = ".")
@@ -337,23 +346,23 @@ for(D in 1:100) { #RUN TIME: 4 min
         Type = "Unavg", 
         Rsquared = 1 - top.mods.coeff$logLik[i] / as.numeric(logLik(mod.NULL)),
         Intercept = top.mods.coeff$`(Intercept)`[i],
-        Elevation.m = top.mods.coeff$Elevation.m[i],
-        Elevation.m2 = top.mods.coeff$Elevation.m2[i],
+        Elevation.m = top.mods.coeff$Elevation.m.poly[i],
+        Elevation.m2 = top.mods.coeff$Elevation.m2.poly[i],
         Data.Type.nofi = top.mods.coeff$Data.TypeResurvey[i],
-        Data.Type.Elevation.m.nofi = top.mods.coeff$`Data.TypeResurvey:Elevation.m`[i],
-        Data.Type.Elevation.m2.nofi = top.mods.coeff$`Data.TypeResurvey:Elevation.m2`[i],
+        Data.Type.Elevation.m.nofi = top.mods.coeff$`Data.TypeResurvey:Elevation.m.poly`[i],
+        Data.Type.Elevation.m2.nofi = top.mods.coeff$`Data.TypeResurvey:Elevation.m2.poly`[i],
         Resurvey.Burned.fi = 
           top.mods.coeff$New.Data.TypeResurvey.Burned[i],
         Resurvey.Unburned.fi = 
           top.mods.coeff$New.Data.TypeResurvey.Unburned[i],
         Elevation.m.Res.Burn.fi = 
-          top.mods.coeff$`Elevation.m:New.Data.TypeResurvey.Burned`[i],
+          top.mods.coeff$`Elevation.m.poly:New.Data.TypeResurvey.Burned`[i],
         Elevation.m.Res.Unburn.fi = 
-          top.mods.coeff$`Elevation.m:New.Data.TypeResurvey.Unburned`[i],
+          top.mods.coeff$`Elevation.m.poly:New.Data.TypeResurvey.Unburned`[i],
         Elevation.m2.Res.Burn.fi = 
-          top.mods.coeff$`Elevation.m2:New.Data.TypeResurvey.Burned`[i],
+          top.mods.coeff$`Elevation.m2.poly:New.Data.TypeResurvey.Burned`[i],
         Elevation.m2.Res.Unburn.fi = 
-          top.mods.coeff$`Elevation.m2:New.Data.TypeResurvey.Unburned`[i],
+          top.mods.coeff$`Elevation.m2.poly:New.Data.TypeResurvey.Unburned`[i],
         row.names = NULL)
     }
     
@@ -372,84 +381,84 @@ for(D in 1:100) { #RUN TIME: 4 min
       Rsquared = 1 - global.coeff.wP$logLik / as.numeric(logLik(mod.NULL)),
       # Coefficients:
       Intercept = global.coeff.wP$`(Intercept)`,
-      Elevation.m = global.coeff.wP$Elevation.m,
-      Elevation.m2 = global.coeff.wP$Elevation.m2,
+      Elevation.m = global.coeff.wP$Elevation.m.poly,
+      Elevation.m2 = global.coeff.wP$Elevation.m2.poly,
       Data.Type.nofi = global.coeff.wP$Data.TypeResurvey,
-      Data.Type.Elevation.m.nofi = global.coeff.wP$`Data.TypeResurvey:Elevation.m`,
-      Data.Type.Elevation.m2.nofi = global.coeff.wP$`Data.TypeResurvey:Elevation.m2`,
+      Data.Type.Elevation.m.nofi = global.coeff.wP$`Data.TypeResurvey:Elevation.m.poly`,
+      Data.Type.Elevation.m2.nofi = global.coeff.wP$`Data.TypeResurvey:Elevation.m2.poly`,
       Resurvey.Burned.fi = 
         global.coeff.wP$New.Data.TypeResurvey.Burned,
       Resurvey.Unburned.fi = 
         global.coeff.wP$New.Data.TypeResurvey.Unburned,
       Elevation.m.Res.Burn.fi = 
-        global.coeff.wP$`Elevation.m:New.Data.TypeResurvey.Burned`,
+        global.coeff.wP$`Elevation.m.poly:New.Data.TypeResurvey.Burned`,
       Elevation.m.Res.Unburn.fi = 
-        global.coeff.wP$`Elevation.m:New.Data.TypeResurvey.Unburned`,
+        global.coeff.wP$`Elevation.m.poly:New.Data.TypeResurvey.Unburned`,
       Elevation.m2.Res.Burn.fi = 
-        global.coeff.wP$`Elevation.m2:New.Data.TypeResurvey.Burned`,
+        global.coeff.wP$`Elevation.m2.poly:New.Data.TypeResurvey.Burned`,
       Elevation.m2.Res.Unburn.fi = 
-        global.coeff.wP$`Elevation.m2:New.Data.TypeResurvey.Unburned`,
+        global.coeff.wP$`Elevation.m2.poly:New.Data.TypeResurvey.Unburned`,
       # P-values:
       P.Intercept = global.coeff.wP$`P.(Intercept)`,
-      P.Elevation.m = global.coeff.wP$P.Elevation.m,
-      P.Elevation.m2 = global.coeff.wP$P.Elevation.m2,
+      P.Elevation.m = global.coeff.wP$P.Elevation.m.poly,
+      P.Elevation.m2 = global.coeff.wP$P.Elevation.m2.poly,
       P.Data.Type.nofi = global.coeff.wP$P.Data.TypeResurvey,
-      P.Data.Type.Elevation.m.nofi = global.coeff.wP$`P.Data.TypeResurvey:Elevation.m`,
-      P.Data.Type.Elevation.m2.nofi = global.coeff.wP$`P.Data.TypeResurvey:Elevation.m2`,
+      P.Data.Type.Elevation.m.nofi = global.coeff.wP$`P.Data.TypeResurvey:Elevation.m.poly`,
+      P.Data.Type.Elevation.m2.nofi = global.coeff.wP$`P.Data.TypeResurvey:Elevation.m2.poly`,
       P.Resurvey.Burned.fi = 
         global.coeff.wP$P.New.Data.TypeResurvey.Burned,
       P.Resurvey.Unburned.fi = 
         global.coeff.wP$P.New.Data.TypeResurvey.Unburned,
       P.Elevation.m.Res.Burn.fi = 
-        global.coeff.wP$`P.Elevation.m:New.Data.TypeResurvey.Burned`,
+        global.coeff.wP$`P.Elevation.m.poly:New.Data.TypeResurvey.Burned`,
       P.Elevation.m.Res.Unburn.fi = 
-        global.coeff.wP$`P.Elevation.m:New.Data.TypeResurvey.Unburned`,
+        global.coeff.wP$`P.Elevation.m.poly:New.Data.TypeResurvey.Unburned`,
       P.Elevation.m2.Res.Burn.fi = 
-        global.coeff.wP$`P.Elevation.m2:New.Data.TypeResurvey.Burned`,
+        global.coeff.wP$`P.Elevation.m2.poly:New.Data.TypeResurvey.Burned`,
       P.Elevation.m2.Res.Unburn.fi = 
-        global.coeff.wP$`P.Elevation.m2:New.Data.TypeResurvey.Unburned`,
+        global.coeff.wP$`P.Elevation.m2.poly:New.Data.TypeResurvey.Unburned`,
       # Lower CIs:
       Intercept.CI.Lower = global.confint$`(Intercept)`[1],
-      Elevation.m.CI.Lower = global.confint$Elevation.m[1],
-      Elevation.m2.CI.Lower = global.confint$Elevation.m2[1],
+      Elevation.m.CI.Lower = global.confint$Elevation.m.poly[1],
+      Elevation.m2.CI.Lower = global.confint$Elevation.m2.poly[1],
       Data.Type.nofi.CI.Lower = global.confint$Data.TypeResurvey[1],
       Data.Type.Elevation.m.nofi.CI.Lower = 
-        global.confint$`Data.TypeResurvey:Elevation.m`[1],
+        global.confint$`Data.TypeResurvey:Elevation.m.poly`[1],
       Data.Type.Elevation.m2.nofi.CI.Lower = 
-        global.confint$`Data.TypeResurvey:Elevation.m2`[1],
+        global.confint$`Data.TypeResurvey:Elevation.m2.poly`[1],
       Resurvey.Burned.fi.CI.Lower = 
         global.confint$New.Data.TypeResurvey.Burned[1],
       Resurvey.Unburned.fi.CI.Lower = 
         global.confint$New.Data.TypeResurvey.Unburned[1],
       Elevation.m.Res.Burn.fi.CI.Lower = 
-        global.confint$`Elevation.m:New.Data.TypeResurvey.Burned`[1],
+        global.confint$`Elevation.m.poly:New.Data.TypeResurvey.Burned`[1],
       Elevation.m.Res.Unburn.fi.CI.Lower = 
-        global.confint$`Elevation.m:New.Data.TypeResurvey.Unburned`[1],
+        global.confint$`Elevation.m.poly:New.Data.TypeResurvey.Unburned`[1],
       Elevation.m2.Res.Burn.fi.CI.Lower = 
-        global.confint$`Elevation.m2:New.Data.TypeResurvey.Burned`[1],
+        global.confint$`Elevation.m2.poly:New.Data.TypeResurvey.Burned`[1],
       Elevation.m2.Res.Unburn.fi.CI.Lower = 
-        global.confint$`Elevation.m2:New.Data.TypeResurvey.Unburned`[1],
+        global.confint$`Elevation.m2.poly:New.Data.TypeResurvey.Unburned`[1],
       # Upper CIs:
       Intercept.CI.Upper = global.confint$`(Intercept)`[2],
-      Elevation.m.CI.Upper = global.confint$Elevation.m[2],
-      Elevation.m2.CI.Upper = global.confint$Elevation.m2[2],
+      Elevation.m.CI.Upper = global.confint$Elevation.m.poly[2],
+      Elevation.m2.CI.Upper = global.confint$Elevation.m2.poly[2],
       Data.Type.nofi.CI.Upper = global.confint$Data.TypeResurvey[2],
       Data.Type.Elevation.m.nofi.CI.Upper = 
-        global.confint$`Data.TypeResurvey:Elevation.m`[2],
+        global.confint$`Data.TypeResurvey:Elevation.m.poly`[2],
       Data.Type.Elevation.m2.nofi.CI.Upper = 
-        global.confint$`Data.TypeResurvey:Elevation.m2`[2],
+        global.confint$`Data.TypeResurvey:Elevation.m2.poly`[2],
       Resurvey.Burned.fi.CI.Upper = 
         global.confint$New.Data.TypeResurvey.Burned[2],
       Resurvey.Unburned.fi.CI.Upper = 
         global.confint$New.Data.TypeResurvey.Unburned[2],
       Elevation.m.Res.Burn.fi.CI.Upper = 
-        global.confint$`Elevation.m:New.Data.TypeResurvey.Burned`[2],
+        global.confint$`Elevation.m.poly:New.Data.TypeResurvey.Burned`[2],
       Elevation.m.Res.Unburn.fi.CI.Upper = 
-        global.confint$`Elevation.m:New.Data.TypeResurvey.Unburned`[2],
+        global.confint$`Elevation.m.poly:New.Data.TypeResurvey.Unburned`[2],
       Elevation.m2.Res.Burn.fi.CI.Upper = 
-        global.confint$`Elevation.m2:New.Data.TypeResurvey.Burned`[2],
+        global.confint$`Elevation.m2.poly:New.Data.TypeResurvey.Burned`[2],
       Elevation.m2.Res.Unburn.fi.CI.Upper = 
-        global.confint$`Elevation.m2:New.Data.TypeResurvey.Unburned`[2],
+        global.confint$`Elevation.m2.poly:New.Data.TypeResurvey.Unburned`[2],
       row.names = NULL)
 
       global.wP.ALLSPEC[[S]] <- global.wP
@@ -465,6 +474,7 @@ for(D in 1:100) { #RUN TIME: 4 min
   coeff.ALLDAT[[D]] <- ldply(coeff.ALLSPEC, data.frame)
   global.wP.ALLDAT[[D]] <- ldply(global.wP.ALLSPEC, data.frame)
   framework.ALLDAT[[D]] <- ldply(framework.ALLSPEC, data.frame)
+  save(mods.ALLSPEC, file = paste("Model.Lists", D, "Rda", sep = "."))
   
   #### END OF SPECIES LOOP
   
@@ -522,11 +532,11 @@ write.csv(coeff.ALLDAT.finaldf,
           row.names = FALSE)
 
 write.csv(global.wP.ALLDAT.finaldf.fire, 
-          file = "data/3c_global_mod_coefficients_with_P_FIRE.csv", 
+          file = "data/3c_ORTHO_global_mod_coefficients_with_P_FIRE.csv", 
           row.names = FALSE)
 
 write.csv(global.wP.ALLDAT.finaldf.nofire, 
-          file = "data/3c_global_mod_coefficients_with_P_NOFIRE.csv", 
+          file = "data/3c_ORTHO_global_mod_coefficients_with_P_NOFIRE.csv", 
           row.names = FALSE)
 
 # Adding CSV of transformed vs untransformed variables - should be the same between species
