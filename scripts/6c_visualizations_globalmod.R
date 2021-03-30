@@ -223,13 +223,13 @@ for (i in 1:dim(species.nofire)[1]) {
     mutate(resp = exp(as.numeric(preds))/(1+exp(as.numeric(preds)))) %>% 
     group_by(V2, elev.vec) %>% 
     summarise(mean.resp = mean(resp))
-  t1.reps.low <- as.data.frame(cbind(elev.vec, 'legacy', pred.leg.reps))
+  t1.reps.low <- as.data.frame(cbind(elev.vec, 'legacy', pred.leg.reps.low))
   t1.reps.low.tall <- gather(t1.reps.low, "rep", "preds", 3:102)
   t1.summary.low <- t1.reps.low.tall %>% 
     mutate(lower = exp(as.numeric(preds))/(1+exp(as.numeric(preds)))) %>% 
     group_by(V2, elev.vec) %>% 
     summarise(mean.lower = mean(lower))
-  t1.reps.high <- as.data.frame(cbind(elev.vec, 'legacy', pred.leg.reps))
+  t1.reps.high <- as.data.frame(cbind(elev.vec, 'legacy', pred.leg.reps.high))
   t1.reps.high.tall <- gather(t1.reps.high, "rep", "preds", 3:102)
   t1.summary.high <- t1.reps.high.tall %>% 
     mutate(upper = exp(as.numeric(preds))/(1+exp(as.numeric(preds)))) %>% 
@@ -241,13 +241,13 @@ for (i in 1:dim(species.nofire)[1]) {
     mutate(resp = exp(as.numeric(preds))/(1+exp(as.numeric(preds)))) %>% 
     group_by(V2, elev.vec) %>% 
     summarise(mean.resp = mean(resp))
-  t2.reps.low <- as.data.frame(cbind(elev.vec, 'resurvey', pred.res.reps))
+  t2.reps.low <- as.data.frame(cbind(elev.vec, 'resurvey', pred.res.reps.low))
   t2.reps.low.tall <- gather(t2.reps.low, "rep", "preds", 3:102)
   t2.summary.low <- t2.reps.low.tall %>% 
     mutate(lower = exp(as.numeric(preds))/(1+exp(as.numeric(preds)))) %>% 
     group_by(V2, elev.vec) %>% 
     summarise(mean.lower = mean(lower))
-  t2.reps.high <- as.data.frame(cbind(elev.vec, 'resurvey', pred.res.reps))
+  t2.reps.high <- as.data.frame(cbind(elev.vec, 'resurvey', pred.res.reps.high))
   t2.reps.high.tall <- gather(t2.reps.high, "rep", "preds", 3:102)
   t2.summary.high <- t2.reps.high.tall %>% 
     mutate(upper = exp(as.numeric(preds))/(1+exp(as.numeric(preds)))) %>% 
@@ -267,6 +267,6 @@ for (i in 1:dim(species.nofire)[1]) {
     geom_line() +
     scale_color_manual(values=col.pal)
   
-  ggsave(paste("figures/model.preds_",sp,".pdf",sep=""), gg, width=5, height=5)
+  ggsave(paste("figures/global.model.preds_",sp,".pdf",sep=""), gg, width=5, height=5)
   
 }
