@@ -119,8 +119,8 @@ for(D in 1:100) { #RUN TIME: 4 min
     und.presence.SPEC$Data.Type <- relevel(und.presence.SPEC$Data.Type, ref="Legacy")
     und.presence.SPEC$Elevation.m2 <- und.presence.SPEC$Elevation.m^2
     # Updated Mar. 27: Replace use old Elevation.m instead of poly()
-    #und.presence.SPEC$Elevation.m.poly <- poly(und.presence.SPEC$Elevation.m, 2)[ , 1]
-    #und.presence.SPEC$Elevation.m2.poly <- poly(und.presence.SPEC$Elevation.m, 2)[ , 2]
+    und.presence.SPEC$Elevation.m.poly <- poly(und.presence.SPEC$Elevation.m, 2)[ , 1]
+    und.presence.SPEC$Elevation.m2.poly <- poly(und.presence.SPEC$Elevation.m, 2)[ , 2]
     und.presence.SPEC <- und.presence.SPEC[complete.cases(und.presence.SPEC), ] #Just in case
     
     # Create subset of warnings for species of interest S
@@ -143,6 +143,8 @@ for(D in 1:100) { #RUN TIME: 4 min
     dredge.globfi <- NULL
     dredge.globnofi <- NULL
     top.mods.coeff <- NULL
+    global.coeff.wP <- NULL
+    global.confint <- NULL
     
     # Did the species occur in burned plots 5+ times?
     num.burns <- 
@@ -271,7 +273,7 @@ for(D in 1:100) { #RUN TIME: 4 min
         }
         
       } else { # Run as normal
-        mod.globnofi <- glm(Pres.Abs ~ Data.Type * (Elevation.m + Elevation.m2), 
+        mod.globnofi <- glm(Pres.Abs ~ Data.Type * (Elevation.m.poly + Elevation.m2.poly), 
                             data = und.presence.SPEC, family = "binomial", na.action = na.fail) 
         dredge.globnofi <- dredge(mod.globnofi, rank = AIC, subset = 
                                     dc(Elevation.m, Elevation.m2) &&
@@ -527,6 +529,16 @@ write.csv(global.wP.ALLDAT.finaldf.nofire,
           file = "data/3c_global_mod_coefficients_with_P_NOFIRE.csv", 
           row.names = FALSE)
 
+# Adding CSV of transformed vs untransformed variables - should be the same between species
+transformed.df <- data.frame(Elevation.m = und.presence.SPEC$Elevation.m, 
+                             Elevation.m.poly = und.presence.SPEC$Elevation.m.poly,
+                             Elevation.m2 = und.presence.SPEC$Elevation.m2,
+                             Elevation.m2.poly = und.presence.SPEC$Elevation.m2.poly,
+                             row.names = NULL)
+
+write.csv(transformed.df, 
+          file = "data/3c_transformed_polynomials.csv",
+          row.names = FALSE)
 
 
 
