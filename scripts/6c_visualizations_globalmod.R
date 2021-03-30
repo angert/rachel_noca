@@ -15,7 +15,7 @@ species.nofire <- coeff.glob.nofire %>%
   summarise(Species = first(Species))
 
 # graphs for fire species
-elev.vec = as.numeric(seq(0, 2200, by=1))
+elev.vec = as.numeric(seq(0, 2200, by=100))
 pred.leg.reps = matrix(nrow=length(elev.vec),ncol=100)
 pred.res.unburn.reps = matrix(nrow=length(elev.vec),ncol=100)
 pred.res.burn.reps = matrix(nrow=length(elev.vec),ncol=100)
@@ -171,16 +171,20 @@ for (i in 1:dim(species.fire)[1]) {
 
 } 
   
-
+# graphs for no-fire species
 elev.vec = seq(0, 2200, by=1)
 pred.leg.reps = matrix(nrow=length(elev.vec),ncol=100)
 pred.res.reps = matrix(nrow=length(elev.vec),ncol=100)
+pred.leg.reps.low = matrix(nrow=length(elev.vec),ncol=100)
+pred.res.reps.low = matrix(nrow=length(elev.vec),ncol=100)
+pred.leg.reps.high = matrix(nrow=length(elev.vec),ncol=100)
+pred.res.reps.high = matrix(nrow=length(elev.vec),ncol=100)
 
 col.pal <- c("turquoise4", "goldenrod1")
 
 for (i in 1:dim(species.nofire)[1]) {
-  sp = species.nofire[i,]
-  mods <- coeffs %>% 
+  sp = as.list(species.nofire[i,1], drop=TRUE)
+  mods <- coeff.glob.nofire %>% 
     filter(Species==sp) %>% 
     select(Int=Intercept, 
            Elev=Elevation.m, 
@@ -188,36 +192,78 @@ for (i in 1:dim(species.nofire)[1]) {
            Year = Data.Type.nofi,
            YearxElev = Data.Type.Elevation.m.nofi,
            YearxElev2 = Data.Type.Elevation.m2.nofi,
-    )
+           Int.Low=Intercept.CI.Lower, 
+           Elev.Low=Elevation.m.CI.Lower, 
+           Elev2.Low=Elevation.m2.CI.Lower, 
+           Year.Low = Data.Type.nofi.CI.Lower,
+           YearxElev.Low = Data.Type.Elevation.m.nofi.CI.Lower,
+           YearxElev2.Low = Data.Type.Elevation.m2.nofi.CI.Lower,
+           Int.High=Intercept.CI.Upper, 
+           Elev.High=Elevation.m.CI.Upper, 
+           Elev2.High=Elevation.m2.CI.Upper, 
+           Year.High = Data.Type.nofi.CI.Upper,
+           YearxElev.High = Data.Type.Elevation.m.nofi.CI.Upper,
+           YearxElev2.High = Data.Type.Elevation.m2.nofi.CI.Upper) %>% 
+        droplevels()
+    
   for (j in 1:dim(mods)[1]) {
     pred.leg.reps[,j] = mods$Int[j] + mods$Elev[j]*elev.vec + mods$Elev2[j]*elev.vec*elev.vec
+    pred.leg.reps.low[,j] = mods$Int.Low[j] + mods$Elev.Low[j]*elev.vec + mods$Elev2.Low[j]*elev.vec*elev.vec
+    pred.leg.reps.high[,j] = mods$Int.High[j] + mods$Elev.High[j]*elev.vec + mods$Elev2.High[j]*elev.vec*elev.vec
     pred.res.reps[,j] = mods$Int[j]  + mods$Elev[j]*elev.vec + mods$Elev2[j]*elev.vec*elev.vec +
       mods$Year[j] + mods$YearxElev[j]*elev.vec + mods$YearxElev2[j]*elev.vec^2
+    pred.res.reps.low[,j] = mods$Int.Low[j]  + mods$Elev.Low[j]*elev.vec + mods$Elev2.Low[j]*elev.vec*elev.vec +
+      mods$Year.Low[j] + mods$YearxElev.Low[j]*elev.vec + mods$YearxElev2.Low[j]*elev.vec^2
+    pred.res.reps.high[,j] = mods$Int.High[j]  + mods$Elev.High[j]*elev.vec + mods$Elev2.High[j]*elev.vec*elev.vec +
+      mods$Year.High[j] + mods$YearxElev.High[j]*elev.vec + mods$YearxElev2.High[j]*elev.vec^2
   }
   t1.reps <- as.data.frame(cbind(elev.vec, 'legacy', pred.leg.reps))
   t1.reps.tall <- gather(t1.reps, "rep", "preds", 3:102)
   t1.summary <- t1.reps.tall %>% 
     mutate(resp = exp(as.numeric(preds))/(1+exp(as.numeric(preds)))) %>% 
     group_by(V2, elev.vec) %>% 
-    summarise(mean.resp = mean(resp),
-              lower.resp = unname(quantile(resp, c(0.05))),
-              upper.resp = unname(quantile(resp, c(0.95))))
+    summarise(mean.resp = mean(resp))
+  t1.reps.low <- as.data.frame(cbind(elev.vec, 'legacy', pred.leg.reps))
+  t1.reps.low.tall <- gather(t1.reps.low, "rep", "preds", 3:102)
+  t1.summary.low <- t1.reps.low.tall %>% 
+    mutate(lower = exp(as.numeric(preds))/(1+exp(as.numeric(preds)))) %>% 
+    group_by(V2, elev.vec) %>% 
+    summarise(mean.lower = mean(lower))
+  t1.reps.high <- as.data.frame(cbind(elev.vec, 'legacy', pred.leg.reps))
+  t1.reps.high.tall <- gather(t1.reps.high, "rep", "preds", 3:102)
+  t1.summary.high <- t1.reps.high.tall %>% 
+    mutate(upper = exp(as.numeric(preds))/(1+exp(as.numeric(preds)))) %>% 
+    group_by(V2, elev.vec) %>% 
+    summarise(mean.upper = mean(upper))
   t2.reps <- as.data.frame(cbind(elev.vec, 'resurvey', pred.res.reps))
   t2.reps.tall <- gather(t2.reps, "rep", "preds", 3:102)
   t2.summary <- t2.reps.tall %>% 
     mutate(resp = exp(as.numeric(preds))/(1+exp(as.numeric(preds)))) %>% 
     group_by(V2, elev.vec) %>% 
-    summarise(mean.resp = mean(resp),
-              lower.resp = unname(quantile(resp, c(0.05))),
-              upper.resp = unname(quantile(resp, c(0.95))))
-  graph.dat <- bind_rows(t1.summary, t2.summary)
+    summarise(mean.resp = mean(resp))
+  t2.reps.low <- as.data.frame(cbind(elev.vec, 'resurvey', pred.res.reps))
+  t2.reps.low.tall <- gather(t2.reps.low, "rep", "preds", 3:102)
+  t2.summary.low <- t2.reps.low.tall %>% 
+    mutate(lower = exp(as.numeric(preds))/(1+exp(as.numeric(preds)))) %>% 
+    group_by(V2, elev.vec) %>% 
+    summarise(mean.lower = mean(lower))
+  t2.reps.high <- as.data.frame(cbind(elev.vec, 'resurvey', pred.res.reps))
+  t2.reps.high.tall <- gather(t2.reps.high, "rep", "preds", 3:102)
+  t2.summary.high <- t2.reps.high.tall %>% 
+    mutate(upper = exp(as.numeric(preds))/(1+exp(as.numeric(preds)))) %>% 
+    group_by(V2, elev.vec) %>% 
+    summarise(mean.upper = mean(upper))
+  graph.dat.means <- bind_rows(t1.summary, t2.summary)
+  graph.dat.lowers <- bind_rows(t1.summary.low, t2.summary.low)
+  graph.dat.uppers <- bind_rows(t1.summary.high, t2.summary.high)
+  graph.dat <- left_join(graph.dat.means, left_join(graph.dat.lowers, graph.dat.uppers))
   graph.dat$elev.vec <- as.numeric(graph.dat$elev.vec)
   
   gg <- ggplot(graph.dat, aes(x=elev.vec, y=mean.resp, color=V2)) +
     theme_classic() +
     xlab("Elevation (m)") +
     ylab("Probability of presence") +
-    geom_errorbar(aes(ymin=lower.resp, ymax=upper.resp), alpha=0.05) +
+    geom_errorbar(aes(ymin=mean.lower, ymax=mean.upper), alpha=0.05) +
     geom_line() +
     scale_color_manual(values=col.pal)
   
