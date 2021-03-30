@@ -143,22 +143,6 @@ for (i in 1:dim(species.fire)[1]) {
   graph.dat <- left_join(graph.dat.means, left_join(graph.dat.lowers, graph.dat.uppers))
   graph.dat$elev.vec <- as.numeric(graph.dat$elev.vec)
 
-# temporary code to inspect predictions from individual rarefied datasets  
-  t1.unburn.V3 <- t1.unburn.reps.tall %>% filter(rep=="V14") %>% mutate(mean.resp = exp(as.numeric(preds))/(1+exp(as.numeric(preds)))) %>% select(-preds)
-  t1.unburn.low.V3 <- t1.unburn.reps.low.tall %>% filter(rep=="V14") %>% mutate(mean.lower = exp(as.numeric(preds))/(1+exp(as.numeric(preds)))) %>% select(-preds)
-  t1.unburn.high.V3 <- t1.unburn.reps.high.tall %>% filter(rep=="V14") %>% mutate(mean.upper = exp(as.numeric(preds))/(1+exp(as.numeric(preds)))) %>% select(-preds)
-  t2.unburn.V3 <- t2.unburn.reps.tall %>% filter(rep=="V14") %>% mutate(mean.resp = exp(as.numeric(preds))/(1+exp(as.numeric(preds)))) %>% select(-preds)
-  t2.unburn.low.V3 <- t2.unburn.reps.low.tall %>% filter(rep=="V14") %>% mutate(mean.lower = exp(as.numeric(preds))/(1+exp(as.numeric(preds)))) %>% select(-preds)
-  t2.unburn.high.V3 <- t2.unburn.reps.high.tall %>% filter(rep=="V14") %>% mutate(mean.upper = exp(as.numeric(preds))/(1+exp(as.numeric(preds)))) %>% select(-preds)
-  t2.burn.V3 <- t2.burn.reps.tall %>% filter(rep=="V14") %>% mutate(mean.resp = exp(as.numeric(preds))/(1+exp(as.numeric(preds)))) %>% select(-preds)
-  t2.burn.low.V3 <- t2.burn.reps.low.tall %>% filter(rep=="V14") %>% mutate(mean.lower = exp(as.numeric(preds))/(1+exp(as.numeric(preds)))) %>% select(-preds)
-  t2.burn.high.V3 <- t2.burn.reps.high.tall %>% filter(rep=="V14") %>% mutate(mean.upper = exp(as.numeric(preds))/(1+exp(as.numeric(preds)))) %>% select(-preds)
-  graph.dat.V3 <- bind_rows(t1.unburn.V3, t2.unburn.V3, t2.burn.V3)
-  graph.dat.V3.lowers <- bind_rows(t1.unburn.low.V3, t2.unburn.low.V3, t2.burn.low.V3)
-  graph.dat.V3.uppers <- bind_rows(t1.unburn.high.V3, t2.unburn.high.V3, t2.burn.high.V3)
-  graph.dat.V3.all <- left_join(graph.dat.V3, left_join(graph.dat.V3.lowers, graph.dat.V3.uppers))
-  graph.dat.V3.all$elev.vec <- as.numeric(graph.dat.V3.all$elev.vec)
-  
  gg <- ggplot(graph.dat, aes(x=elev.vec, y=mean.resp, color=V2)) +
     theme_classic() +
     xlab("Elevation (m)") +
@@ -170,7 +154,23 @@ for (i in 1:dim(species.fire)[1]) {
  ggsave(paste("figures/global.model.preds_",sp,".pdf",sep=""), gg, width=5, height=5)
 
 } 
-  
+
+# temporary code to inspect predictions from individual rarefied datasets  
+t1.unburn.V3 <- t1.unburn.reps.tall %>% filter(rep=="V14") %>% mutate(mean.resp = exp(as.numeric(preds))/(1+exp(as.numeric(preds)))) %>% select(-preds)
+t1.unburn.low.V3 <- t1.unburn.reps.low.tall %>% filter(rep=="V14") %>% mutate(mean.lower = exp(as.numeric(preds))/(1+exp(as.numeric(preds)))) %>% select(-preds)
+t1.unburn.high.V3 <- t1.unburn.reps.high.tall %>% filter(rep=="V14") %>% mutate(mean.upper = exp(as.numeric(preds))/(1+exp(as.numeric(preds)))) %>% select(-preds)
+t2.unburn.V3 <- t2.unburn.reps.tall %>% filter(rep=="V14") %>% mutate(mean.resp = exp(as.numeric(preds))/(1+exp(as.numeric(preds)))) %>% select(-preds)
+t2.unburn.low.V3 <- t2.unburn.reps.low.tall %>% filter(rep=="V14") %>% mutate(mean.lower = exp(as.numeric(preds))/(1+exp(as.numeric(preds)))) %>% select(-preds)
+t2.unburn.high.V3 <- t2.unburn.reps.high.tall %>% filter(rep=="V14") %>% mutate(mean.upper = exp(as.numeric(preds))/(1+exp(as.numeric(preds)))) %>% select(-preds)
+t2.burn.V3 <- t2.burn.reps.tall %>% filter(rep=="V14") %>% mutate(mean.resp = exp(as.numeric(preds))/(1+exp(as.numeric(preds)))) %>% select(-preds)
+t2.burn.low.V3 <- t2.burn.reps.low.tall %>% filter(rep=="V14") %>% mutate(mean.lower = exp(as.numeric(preds))/(1+exp(as.numeric(preds)))) %>% select(-preds)
+t2.burn.high.V3 <- t2.burn.reps.high.tall %>% filter(rep=="V14") %>% mutate(mean.upper = exp(as.numeric(preds))/(1+exp(as.numeric(preds)))) %>% select(-preds)
+graph.dat.V3 <- bind_rows(t1.unburn.V3, t2.unburn.V3, t2.burn.V3)
+graph.dat.V3.lowers <- bind_rows(t1.unburn.low.V3, t2.unburn.low.V3, t2.burn.low.V3)
+graph.dat.V3.uppers <- bind_rows(t1.unburn.high.V3, t2.unburn.high.V3, t2.burn.high.V3)
+graph.dat.V3.all <- left_join(graph.dat.V3, left_join(graph.dat.V3.lowers, graph.dat.V3.uppers))
+graph.dat.V3.all$elev.vec <- as.numeric(graph.dat.V3.all$elev.vec)
+
 # graphs for no-fire species
 elev.vec = seq(0, 2200, by=1)
 pred.leg.reps = matrix(nrow=length(elev.vec),ncol=100)
