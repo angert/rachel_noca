@@ -30,9 +30,9 @@ projection(plots) <- CRS('+proj=longlat') #define projection
 plots.lcc <- spTransform(plots, CRS=CRS(prj.lcc)) #transform projection so points layer matches SDM projections
 
 
-## State polygons for pretty maps
+## State polygons 
 # All of USA
-sta = readOGR("data/gz_2010_us_040_00_500k/gz_2010_us_040_00_500k.shp")
+sta = readOGR("data/shapefiles/states/gz_2010_us_040_00_500k.shp")
 projection(sta) = CRS(prj.wgs)
 # Define extent of study area
 ext <- extent(min(plots$Longitude)-0.5, max(plots$Longitude)+0.5, min(plots$Latitude)-0.5, max(plots$Latitude)+0.5)
@@ -40,6 +40,9 @@ bbox = as(ext, "SpatialPolygons") #convert coordinates to a bounding box
 # Crop state lines to study area
 sta.crop <- crop(sta, bbox)
 sta.lcc = spTransform(sta.crop, CRS=CRS(prj.lcc))
+
+## Park boundary
+park <- readOGR("data/shapefiles/NOCA_Park_boundary.shp")
 
 ################################################################################
 
