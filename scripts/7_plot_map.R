@@ -1,8 +1,8 @@
 #################################################################################
-### SCRIPT PURPOSE: calculate, plot, and save ensemble average of SDMs 
+### SCRIPT PURPOSE: plot map of NOCA plots with fire history overlain
 # Modified from Angert et al. 2018, American Naturalist
 # Author: Amy Angert
-# last update:  28 Dec 2020
+# last update:  12 Apr 2021
 
 ##################################################################################### LOAD LIBRARIES AND PREPARE INPUTS
 
@@ -16,33 +16,13 @@ library(maptools)
 library(rgdal)
 library(rgeos)
 
-## SDM models 
-GLM.mod <- get(load("SDM/Output/GLM.mod2.Rda"))
-GAM.mod <- get(load("SDM/Output/GAM.mod2.Rda"))
-RF.mod <- get(load("SDM/Output/RF.mod2.Rda"))
-BRT.mod <- get(load("SDM/Output/BRT.mod3.Rda"))
-MAX.mod <- get(load("SDM/Output/MAX.mod.Rda"))
-
 ## Projections
 prj.wgs = "+proj=longlat + type=crs"
 prj.lcc <- "+proj=lcc +lon_0=-95 +lat_1=49 +lat_2=77 +type=crs"
 
-## Bioclim grids
-preds.lcc <- stack("SDM/data_files/bio2.grd", # These are in LCC projection
-                   "SDM/data_files/bio3.grd", 
-                   "SDM/data_files/bio10.grd", 
-                   "SDM/data_files/bio11.grd", 
-                   "SDM/data_files/bio12.grd", #for some reason these last 3 
-                   "SDM/data_files/bio15.grd", #layers lose their names
-                   "SDM/data_files/bio17.grd") #upon import
-#so rename here; variable names must match models
-names(preds.lcc) <- c("bio2", "bio3", "bio10", "bio11", "bio12", "bio15", "bio17")
-proj4string(preds.lcc) <- CRS(prj.lcc) #define current lcc projection of rasters
-preds = projectRaster(preds.lcc, crs=CRS(prj.wgs)) #transform raster projection to match pres/abs models
-
 ## State polygons for pretty maps
 # All of USA
-sta = readOGR("SDM/data_files/gz_2010_us_040_00_500k/gz_2010_us_040_00_500k.shp")
+sta = readOGR("data/gz_2010_us_040_00_500k/gz_2010_us_040_00_500k.shp")
 projection(sta) = CRS(prj.wgs)
 # Define extent of study area
 clim <- read_csv("SDM/data_files/points_Normal_1961_1990MSY.csv")
