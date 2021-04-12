@@ -1,5 +1,5 @@
 # Created: Mar. 8, 2021
-# Updated: Mar. 27, 2021
+# Updated: Apr. 12, 2021
 
 # This script will be used to undertake part 3 of the PRESENCE analyses (modeling)
 # Use this script to produce the top model and global model outputs
@@ -474,7 +474,7 @@ for(D in 1:100) { #RUN TIME: 4 min
   coeff.ALLDAT[[D]] <- ldply(coeff.ALLSPEC, data.frame)
   global.wP.ALLDAT[[D]] <- ldply(global.wP.ALLSPEC, data.frame)
   framework.ALLDAT[[D]] <- ldply(framework.ALLSPEC, data.frame)
-  save(mods.ALLSPEC, file = paste("Model.Lists", D, "Rda", sep = "."))
+  save(mods.ALLSPEC, file = paste("Model_data/Model.Lists", D, "Rda", sep = "."))
   
   #### END OF SPECIES LOOP
   
