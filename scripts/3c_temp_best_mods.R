@@ -280,7 +280,7 @@ for(D in 1:100) { #RUN TIME: 4 min
         }
         
       } else { # Run as normal
-        mod.globnofi <- glm(Pres.Abs ~ Data.Type * (Elevation.m + I(Elevation.m^2)), 
+        mod.globnofi <- glm(Pres.Abs ~ Data.Type * (Elevation.m.poly + Elevation.m2.poly), 
                             data = und.presence.SPEC, family = "binomial", na.action = na.fail) 
         mods.ALLSPEC[[levels(species.list)[S]]] <- mod.globnofi
         dredge.globnofi <- dredge(mod.globnofi, rank = AIC, subset = 
@@ -546,9 +546,9 @@ transformed.df <- data.frame(Elevation.m = und.presence.SPEC$Elevation.m,
                              Elevation.m2.poly = und.presence.SPEC$Elevation.m2.poly,
                              row.names = NULL)
 
-write.csv(transformed.df, 
-          file = "data/3c_transformed_polynomials.csv",
-          row.names = FALSE)
+#write.csv(transformed.df, 
+ #         file = "data/3c_transformed_polynomials.csv",
+  #        row.names = FALSE)
 
 
 
