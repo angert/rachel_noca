@@ -220,7 +220,7 @@ for (i in 1:dim(species.nofire)[1]) {
   sp = as.list(species.nofire[i,1], drop=TRUE)
   mods <- coeff.glob.nofire %>% 
     filter(Species==sp) %>% 
-    select(Int=Intercept, 
+    dplyr::select(Int=Intercept, 
            Elev=Elevation.m, 
            Elev2=Elevation.m2, 
            Year = Data.Type.nofi,
