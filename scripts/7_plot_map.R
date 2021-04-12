@@ -20,157 +20,31 @@ library(rgeos)
 prj.wgs = "+proj=longlat + type=crs"
 prj.lcc <- "+proj=lcc +lon_0=-95 +lat_1=49 +lat_2=77 +type=crs"
 
+
+## Plot locations
+plots <- read_csv("data/Lat.Long.csv") %>% 
+  drop_na() %>% 
+  mutate(Longitude=ifelse(Longitude>0, -Longitude, Longitude)) #input file accidentally has some longitudes in E instead of W
+coordinates(plots) <- ~Longitude+Latitude #convert to spatial data
+projection(plots) <- CRS('+proj=longlat') #define projection
+plots.lcc <- spTransform(plots, CRS=CRS(prj.lcc)) #transform projection so points layer matches SDM projections
+
+
 ## State polygons for pretty maps
 # All of USA
 sta = readOGR("data/gz_2010_us_040_00_500k/gz_2010_us_040_00_500k.shp")
 projection(sta) = CRS(prj.wgs)
 # Define extent of study area
-clim <- read_csv("SDM/data_files/points_Normal_1961_1990MSY.csv")
-ext <- extent(min(clim$Longitude)-1, max(clim$Longitude)+1, min(clim$Latitude)-1, max(clim$Latitude)+1)
+ext <- extent(min(plots$Longitude)-0.5, max(plots$Longitude)+0.5, min(plots$Latitude)-0.5, max(plots$Latitude)+0.5)
 bbox = as(ext, "SpatialPolygons") #convert coordinates to a bounding box
 # Crop state lines to study area
 sta.crop <- crop(sta, bbox)
 sta.lcc = spTransform(sta.crop, CRS=CRS(prj.lcc))
 
-## Presence/absence points for pretty maps
-presences <- clim %>% filter(ID2==1)
-absences <- clim %>% filter(ID2==0)
-coordinates(presences) <- ~Longitude+Latitude #convert to spatial data
-projection(presences) <- CRS('+proj=longlat') #define projection
-presences.lcc <- spTransform(presences, CRS=CRS(prj.lcc)) #transform projection so points layer matches SDM projections
-coordinates(absences) <- ~Longitude+Latitude #convert to spatial data
-projection(absences) <- CRS('+proj=longlat') #define projection
-absences.lcc <- spTransform(absences, CRS=CRS(prj.lcc)) #transform projection so points layer matches SDM projections
-
 ################################################################################
 
 
-################################################################################
-### Project SDM model predictions across study area
 
-## GLM
-pred.glm <- raster::predict(preds, GLM.mod, type="response")
-plot(pred.glm) #this is a really shitty model... does not match cardinalis distribution
-
-## GAM
-library(gam) #must load library for correct predict algorithm
-pred.gam <- raster::predict(preds, GAM.mod, type="response")
-plot(pred.gam) #also a shitty model... does not match cardinalis distribution
-
-## RF
-library(randomForest) #must load library for correct predict algorithm
-pred.rf <- raster::predict(preds, RF.mod, type="response")
-plot(pred.rf) #not sure why this looks binary
-
-## BRT
-library(gbm) #must load library for correct predict algorithm
-pred.brt <- raster::predict(preds, BRT.mod, type="response")
-plot(pred.brt)
-
-## MAX
-library(dismo)
-pred.max <- raster::predict(preds, MAX.mod, type="response")
-plot(pred.max)
-
-################################################################################
-
-
-################################################################################
-### Calculate ensemble average of model predictions
-
-## Stack predictions from each model
-pred.all <- stack(pred.glm, pred.gam, pred.brt, pred.max) #pred.rf <- this is odd
-
-## Calculate simple ensemble based on arithmetic average
-sim.ensem <- mean(pred.all) #unprojected
-plot(sim.ensem)
-writeRaster(sim.ensem, file="SDM/Output/UnweightedEnsemble_Unprojected.grd", overwrite=TRUE)
-sim.ensem.lcc <- projectRaster(sim.ensem, crs=CRS(prj.lcc)) #convert to Lambers conic projection
-plot(sim.ensem.lcc)
-writeRaster(sim.ensem.lcc, file="SDM/Output/UnweightedEnsemble_LCCProjection.grd", overwrite=TRUE)
-
-## Calculate weighted ensemble based on AUC score of each model
-# (This gives more weight to more accurate models)
-
-# Read in saved AUC scores for each model
-glm.accs <- get(load("SDM/Output/GLM.mod2.cvaccs.Rda")) 
-glm.auc <- glm.accs$AUC[1]
-
-gam.accs <- get(load("SDM/Output/GAM.mod2.cvaccs.Rda")) 
-gam.auc <- gam.accs$AUC[1]
-
-rf.accs <- get(load("SDM/Output/RF.mod2.accs.Rda")) 
-rf.auc <- rf.accs$AUC[1]
-
-brt.accs <- get(load("SDM/Output/BRT.mod3.accs.Rda")) 
-brt.auc <- brt.accs$AUC[1]
-
-max.accs <- get(load("SDM/Output/MAX.mod.accs.Rda")) 
-max.auc <- max.accs$V1[5]
-
-# Compile AUCs into a vector of weights
-weights <- c(glm.auc, gam.auc, brt.auc, max.auc) #rf.auc
-
-# Calculate weighted  average
-wtd.ensem <- weighted.mean(pred.all, weights)
-plot(wtd.ensem) #unprojected
-writeRaster(wtd.ensem, file="SDM/Output/WeightedEnsemble_Unprojected.grd", overwrite=TRUE)
-wtd.ensem.lcc <- projectRaster(wtd.ensem, crs=CRS(prj.lcc)) #convert to Lambers conic projection
-plot(wtd.ensem.lcc)
-writeRaster(wtd.ensem.lcc, file="SDM/Output/WeightedEnsemble_LCCProjection.grd", overwrite=TRUE)
-
-################################################################################
-
-
-################################################################################
-### Calculate binary maps based on sensitivity-specificity thresholds
-## (uses accs files and prediction rasters loaded in prior sections)
-
-# Get thresholds from accuracy files
-glm.cut <- glm.accs[glm.accs$thresh=="SensSpec", "threshold"]
-gam.cut <- gam.accs[gam.accs$thresh=="SensSpec", "threshold"]
-#rf.cut <- rf.accs[rf.accs$thresh=="SensSpec", "threshold"]
-brt.cut <- brt.accs[brt.accs$thresh=="SensSpec", "threshold"]
-max.cut <- max.accs$V1[44]
-
-# Reclassify rasters
-bin.glm <- reclassify(pred.glm,(c(0,glm.cut,0, glm.cut,1,1)),overwrite=T)
-plot(bin.glm)
-
-bin.gam <- reclassify(pred.gam,(c(0,gam.cut,0, gam.cut,1,1)),overwrite=T)
-plot(bin.gam)
-
-#bin.rf <- reclassify(pred.rf,(c(0,rf.cut,0, rf.cut,1,1)),overwrite=T)
-#plot(bin.rf)
-
-bin.brt <- reclassify(pred.brt,(c(0,brt.cut,0, brt.cut,1,1)),overwrite=T)
-plot(bin.brt)
-
-bin.max <- reclassify(pred.max,(c(0,max.cut,0, max.cut,1,1)),overwrite=T)
-plot(bin.max)
-
-## Stack thresholded projects
-bin.all <- stack(bin.glm, bin.gam, bin.brt, bin.max) #bin.rf
-bin.sum <- sum(bin.all) # sum of models by cell
-plot(bin.sum)
-bin.sum1 <- bin.sum>0 # predicted by at least 1 thresholded model 
-plot(bin.sum1) #too permissive
-bin.sum2 <- bin.sum>1 # predicted by at least 2 thresholded models
-plot(bin.sum2) #too permissive
-bin.sum3 <- bin.sum>2 # predicted by at least 3 thresholded models
-plot(bin.sum3) #**use this one**
-bin.sum4 <- bin.sum>3 # predicted by at least 4 thresholded models
-plot(bin.sum4) #too restrictive
-#bin.sum5 <- bin.sum>4 # predicted by all 5 thresholded models 
-#plot(bin.sum5) #too restrictive
-m=c(0,NA,1,1)
-rclmat = matrix(m, ncol=2, byrow=T)
-bin.bin <- reclassify(bin.sum3, rclmat)
-plot(bin.bin)
-writeRaster(bin.bin, file="SDM/Output/ThresholdedEnsemble_Unprojected.grd", overwrite=TRUE)
-bin.ensem.lcc <- projectRaster(bin.bin, crs=CRS(prj.lcc)) #convert to Lambers conic projection
-plot(bin.ensem.lcc)
-writeRaster(bin.ensem.lcc, file="SDM/Output/ThresholdedEnsemble_LCCProjection.grd", overwrite=TRUE)
 
 ################################################################################
 ### Pretty map of quantitative ensemble
@@ -186,15 +60,25 @@ library(colorspace)
 rbPal <- diverge_hcl(10)
 
 ## Save plot
-pdf(file="SDM/figures/MAP_EnsemProb.pdf", width=11, height=8.5)
-plot(wtd.ensem.lcc, box=FALSE, axes=FALSE, legend=FALSE, col=rbPal) #the ensemble layer
-plot(presences.lcc, pch=1, cex=0.8, add=TRUE) #add presence points
-plot(absences.lcc, pch=4, col="grey40", cex=0.5, add=TRUE) #add pseudoabsence points
+#LCC projection
+pdf(file="figures/map_lcc.pdf", width=15, height=8)
+plot(plots.lcc, pch=1, cex=0.8) #add presence points
 plot(sta.lcc, add=T) #add state lines
 plot(frame.grd.lcc, add=TRUE, lty="dashed", col="darkgrey", lwd=1) #add gridlines
 text(coordinates(gridat.lcc), labels=parse(text=as.character(gridat.lcc$labels)), pos=gridat.lcc$pos, offset=0.5, col="black", cex=0.7) #add lat-long labels to gridlines
-legend("bottomleft", legend="Weighted Ensemble", bty="n", cex=1.5) #add title
-plot(wtd.ensem.lcc, legend.only=TRUE, legend.width=1, legend.shrink=0.75, col=rbPal, axis.args=list(at=seq(0, 1, by=0.1), labels=seq(0, 1, by=0.1), cex.axis=0.8)) #add legend for color ramp
+#legend("bottomleft", legend="Weighted Ensemble", bty="n", cex=1.5) #add title
+#plot(wtd.ensem.lcc, legend.only=TRUE, legend.width=1, legend.shrink=0.75, col=rbPal, axis.args=list(at=seq(0, 1, by=0.1), labels=seq(0, 1, by=0.1), cex.axis=0.8)) #add legend for color ramp
 dev.off()
+
+#unprojected
+pdf(file="figures/map_unprj.pdf", width=15, height=8)
+plot(plots, pch=1, cex=0.8) #add presence points
+plot(sta, add=T) #add state lines
+plot(frame.grd, add=TRUE, lty="dashed", col="darkgrey", lwd=1) #add gridlines
+text(coordinates(gridat), labels=parse(text=as.character(gridat$labels)), pos=gridat$pos, offset=0.5, col="black", cex=0.7) #add lat-long labels to gridlines
+#legend("bottomleft", legend="Weighted Ensemble", bty="n", cex=1.5) #add title
+#plot(wtd.ensem.lcc, legend.only=TRUE, legend.width=1, legend.shrink=0.75, col=rbPal, axis.args=list(at=seq(0, 1, by=0.1), labels=seq(0, 1, by=0.1), cex.axis=0.8)) #add legend for color ramp
+dev.off()
+
 
 ################################################################################
