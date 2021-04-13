@@ -28,14 +28,22 @@ plots <- read_csv("data/Lat.Long.csv") %>%
 
 ## Plot fire history
 fire.points <- read_csv("data/All_Plots_Wildfire_Join.csv") %>% 
-  mutate(FireHistory = ifelse(CAL_YEAR>1980, "Burned", "Unburned")) %>% 
+  mutate(FireHistory = ifelse(CAL_YEAR>=1983, "Burned", "Unburned")) %>% 
   mutate(FireHistory = replace_na(FireHistory, "Unburned"))
            
 ## Master plot data frame
 fire.plots <- left_join(plots, fire.points, by=c("2015.Plot.Name"="Name"))
-coordinates(fire.plots) <- ~Longitude+Latitude #convert to spatial data
-projection(fire.plots) <- CRS('+proj=longlat') #define projection
-fire.plots.lcc <- spTransform(fire.plots, CRS=CRS(prj.lcc)) #transform projection so points layer matches SDM projections
+burned.plots <- fire.plots %>% filter(FireHistory=="Burned")
+unburned.plots <- fire.plots %>% filter(FireHistory=="Unburned")
+
+coordinates(burned.plots) <- ~Longitude+Latitude #convert to spatial data
+projection(burned.plots) <- CRS('+proj=longlat') #define projection
+burned.plots.lcc <- spTransform(burned.plots, CRS=CRS(prj.lcc)) #transform projection so points layer matches SDM projections
+
+coordinates(unburned.plots) <- ~Longitude+Latitude #convert to spatial data
+projection(unburned.plots) <- CRS('+proj=longlat') #define projection
+unburned.plots.lcc <- spTransform(unburned.plots, CRS=CRS(prj.lcc)) #transform projection so points layer matches SDM projections
+
 
 ## State polygons 
 # All of USA
@@ -49,7 +57,18 @@ sta.crop <- crop(sta, bbox)
 sta.lcc = spTransform(sta.crop, CRS=CRS(prj.lcc))
 
 ## Park boundary
-park <- readOGR("data/shapefiles/NOCA_Park_boundary.shp")
+park <- readOGR("data/shapefiles/park/NOCA_Park_boundary.shp")
+park.lcc <- spTransform(park, CRS=CRS(prj.lcc))
+
+## Fire polygons
+fires <- readOGR("data/shapefiles/fires/NOCA_Wildfire_History.shp")
+fires.lcc <- spTransform(fires, CRS=CRS(prj.lcc))
+
+burns <- readOGR("data/shapefiles/fires/Prescribed_burn_history.shp")
+burns.lcc <- spTransform(burns, CRS=CRS(prj.lcc))
+
+trtmts <- readOGR("data/shapefiles/fires/Fire_treatment_history.shp")
+trtmts.lcc <- spTransform(trtmts, CRS=CRS(prj.lcc))
 
 ################################################################################
 
@@ -72,8 +91,13 @@ rbPal <- diverge_hcl(10)
 ## Save plot
 #LCC projection
 pdf(file="figures/map_lcc.pdf", width=15, height=8)
-plot(plots.lcc, pch=1, cex=0.8) #add presence points
+plot(fires.lcc, box=FALSE, axes=FALSE, legend=FALSE) #wildfires layer (FIX COLORS, col=rbPal)
+plot(burns.lcc, box=FALSE, axes=FALSE, legend=FALSE, col="blue", add=T) #prescribed burns layer (FIX COLORS, col=rbPal)
+plot(trtmts.lcc, box=FALSE, axes=FALSE, legend=FALSE, col="green", add=T) #prescribed burns layer (FIX COLORS, col=rbPal)
+plot(unburned.plots.lcc, pch=1, cex=0.8, col="black") #add plots that didn't burn between surveys
+plot(burned.plots.lcc, pch=1, cex=0.8, col="red", add=T) #add plots that burned between surveys
 plot(sta.lcc, add=T) #add state lines
+plot(park.lcc, add=T) #add park boundary
 plot(frame.grd.lcc, add=TRUE, lty="dashed", col="darkgrey", lwd=1) #add gridlines
 text(coordinates(gridat.lcc), labels=parse(text=as.character(gridat.lcc$labels)), pos=gridat.lcc$pos, offset=0.5, col="black", cex=0.7) #add lat-long labels to gridlines
 #legend("bottomleft", legend="Weighted Ensemble", bty="n", cex=1.5) #add title
