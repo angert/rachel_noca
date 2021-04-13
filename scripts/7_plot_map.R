@@ -25,17 +25,24 @@ prj.lcc <- "+proj=lcc +lon_0=-95 +lat_1=49 +lat_2=77 +type=crs"
 plots <- read_csv("data/Lat.Long.csv") %>% 
   drop_na() %>% 
   mutate(Longitude=ifelse(Longitude>0, -Longitude, Longitude)) #input file accidentally has some longitudes in E instead of W
-coordinates(plots) <- ~Longitude+Latitude #convert to spatial data
-projection(plots) <- CRS('+proj=longlat') #define projection
-plots.lcc <- spTransform(plots, CRS=CRS(prj.lcc)) #transform projection so points layer matches SDM projections
 
+## Plot fire history
+fire.points <- read_csv("data/All_Plots_Wildfire_Join.csv") %>% 
+  mutate(FireHistory = ifelse(CAL_YEAR>1980, "Burned", "Unburned")) %>% 
+  mutate(FireHistory = replace_na(FireHistory, "Unburned"))
+           
+## Master plot data frame
+fire.plots <- left_join(plots, fire.points, by=c("2015.Plot.Name"="Name"))
+coordinates(fire.plots) <- ~Longitude+Latitude #convert to spatial data
+projection(fire.plots) <- CRS('+proj=longlat') #define projection
+fire.plots.lcc <- spTransform(fire.plots, CRS=CRS(prj.lcc)) #transform projection so points layer matches SDM projections
 
 ## State polygons 
 # All of USA
 sta = readOGR("data/shapefiles/states/gz_2010_us_040_00_500k.shp")
 projection(sta) = CRS(prj.wgs)
 # Define extent of study area
-ext <- extent(min(plots$Longitude)-0.5, max(plots$Longitude)+0.5, min(plots$Latitude)-0.5, max(plots$Latitude)+0.5)
+ext <- extent(min(fire.plots$Longitude)-0.5, max(fire.plots$Longitude)+0.5, min(fire.plots$Latitude)-0.5, max(fire.plots$Latitude)+0.5)
 bbox = as(ext, "SpatialPolygons") #convert coordinates to a bounding box
 # Crop state lines to study area
 sta.crop <- crop(sta, bbox)
