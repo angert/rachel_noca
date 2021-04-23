@@ -17,15 +17,14 @@ coeffs.fire <- coeff.avgs %>% filter(Fire.Included=="Yes")
 coeffs.nofire <- coeff.avgs %>% filter(Fire.Included=="No")
 
 #### species lists
-species.fire <- coeffs.fire %>% 
-  group_by(Species) %>% 
-  summarise(species.fire=first(Species))
 
-load("data/Species.List.Rda") #TODO this file was made in an undocumented step
-species.list <- shifts$Species.Code[!shifts$Species.Code=="MOSS"] #removing "MOSS"
-species.list <- factor(species.list)
+## good spp - fire (n=7)
+#"ACMI", "CEVE", "EPAN", "PAMY"
+#"ARUV" (but based on 98 datasets without warnings)
+#"CARU" (but 21 datasets meet criterion for no fire)
+#"VAME" (but cannot run most complex model)species.list.fire <- coeffs.fire %>% 
 
-### good spp - no fire (n=29)
+## good spp - no fire (n=29)
 #"ACCI", "ACGL", "ATFI", "CHUM", "CLUN", "COCA", "GASH", "GOOB", "GYDR", "LIBO", "MANE", "MEFE", "OPHO", "POMU", "PTAQ", "RUPA", "RUPE", "RUSP", "SOSI", "TITR", "VASI"
 #"AMAL" (but based on 98 datasets without warnings)
 #"CAME" (but based on 74 datasets without warnings)
@@ -36,32 +35,19 @@ species.list <- factor(species.list)
 #"SPBE" (but 35 datasets meet criterion for fire)
 #"TRBO" (but based on 70 datasets without warnings)
 
-### good spp - fire (n=7)
-#"ACMI", "CEVE", "EPAN", "PAMY"
-#"ARUV" (but based on 98 datasets without warnings)
-#"CARU" (but 21 datasets meet criterion for no fire)
-#"VAME" (but cannot run most complex model)
-
-### bad spp (n=6)
+## bad spp (n=6)
 #"COST", "LUPE", "PHEM", "RHAL", "VAAL", "VADE"
 
-# drop bad species per above
-problems = c("COST", "LUPE", "PHEM", "RHAL", "VAAL", "VADE") 
-species.short <- anti_join(as.data.frame(species.list), as.data.frame(problems), by=c("species.list"="problems"))
+species.list.fire <- coeffs.fire %>% 
+  group_by(Species) %>% 
+  summarise(Species=first(Species))
 
-coeffs <- semi_join(coeff.avgs, species.short, by=c("Species"="species.list")) #should be length 100*n less than coeff.avgs; where n=# problematic species
+species.list.nofire <- coeffs.nofire %>% 
+  group_by(Species) %>% 
+  summarise(Species=first(Species))
 
 
-# focusing on species with updated fire interaction models first
-species.fire <- coeffs.fire %>% mutate()
-species.fire <- semi_join(species.short, coeffs.fire, by=c("species.list"="Species")) %>% 
-  droplevels()
-species.fire <- species.fire %>% 
-  filter(species.list!="AMAL") %>% 
-  filter(species.list!="SPBE") %>% 
-  droplevels()
-
-### elevation vector for multiplying by coefficients
+#### elevation vector for multiplying by coefficients
 # needs to be in poly-transformed units
 
 # exploring to determine what poly-tranformed values should be
@@ -78,6 +64,7 @@ poly.mod <- lm(Elevation.m2.poly ~ Elevation.m.poly + I(Elevation.m.poly^2), dat
 # linear vector
 # range based on min/max values in dat$Elevation.m.poly
 elev.vec.lin = as.numeric(seq(min(dat$Elevation.m.poly), max(dat$Elevation.m.poly), by=0.0001)) 
+
 # quadratic vector
 elev.vec.quad = poly.mod$coefficients[1] + 
   elev.vec.lin*poly.mod$coefficients[2] + 
@@ -85,15 +72,24 @@ elev.vec.quad = poly.mod$coefficients[1] +
 plot(elev.vec.quad ~ elev.vec.lin) + 
   points(dat$Elevation.m.poly, dat$Elevation.m2.poly, col="red") #ok! we have linear and quadratic elevation vectors that match what the models are using
 
-### empty matrices for writing best-fit lines into
+
+#### other prep work
+#empty matrices for writing best-fit lines into
 pred.leg.reps = matrix(nrow=length(elev.vec.lin),ncol=100)
 pred.res.unburn.reps = matrix(nrow=length(elev.vec.lin),ncol=100)
 pred.res.burn.reps = matrix(nrow=length(elev.vec.lin),ncol=100)
 
+# color palette for graphs
 col.pal <- c("turquoise4", "red3", "goldenrod1")
 
+# function for converting predictions to 0-1 response scale
+response = function(y) {
+  exp(as.numeric(y))/(1+exp(as.numeric(y)))
+  }
+  
+#### big loop to calculate predicted values across each rarefaction for each species
 for (i in 1:dim(species.fire)[1]) {
-  sp = species.fire[i,1]
+  sp = as.list(species.list.fire[i,1])
   mods <- coeffs.fire %>% 
     filter(Species==sp) %>% 
     select(Int=Intercept, 
@@ -104,45 +100,66 @@ for (i in 1:dim(species.fire)[1]) {
            ResurvBurnxElev = Elevation.m.Res.Burn.fi,
            ResurvBurnxElev2 = Elevation.m2.Res.Burn.fi,
            ResurvUnburnxElev = Elevation.m2.Res.Unburn.fi,
-           ResurvUnburnXElev2 = Elevation.m2.Res.Unburn.fi
-    )
+           ResurvUnburnXElev2 = Elevation.m2.Res.Unburn.fi) %>% 
+    mutate_if(is.numeric, ~replace(., is.na(.), 0))
+  
   for (j in 1:dim(mods)[1]) {
-    pred.leg.reps[,j] = mods$Int[j] + mods$Elev[j]*elev.vec + mods$Elev2[j]*elev.vec*elev.vec
-    pred.res.unburn.reps[,j] = mods$Int[j]  + mods$Elev[j]*elev.vec + mods$Elev2[j]*elev.vec*elev.vec +
-      mods$ResurvUnburn[j] + mods$ResurvUnburnxElev[j]*elev.vec + 
-      mods$ResurvUnburnXElev2[j]*elev.vec*elev.vec
-    pred.res.burn.reps[,j] = mods$Int[j] + mods$Elev[j]*elev.vec + mods$Elev2[j]*elev.vec*elev.vec +
-      mods$ResurvBurn[j] + mods$ResurvBurnxElev[j]*elev.vec + 
-      mods$ResurvBurnxElev2[j]*elev.vec*elev.vec
+    pred.leg.reps[,j] = mods$Int[j] 
+    + mods$Elev[j]*elev.vec.lin 
+    + mods$Elev2[j]*elev.vec.quad
+    
+    pred.res.unburn.reps[,j] = mods$Int[j]  
+    + mods$Elev[j]*elev.vec.lin 
+    + mods$Elev2[j]*elev.vec.quad 
+    + mods$ResurvUnburn[j] 
+    + mods$ResurvUnburnxElev[j]*elev.vec.lin 
+    + mods$ResurvUnburnXElev2[j]*elev.vec.quad
+    
+    pred.res.burn.reps[,j] = mods$Int[j] 
+    + mods$Elev[j]*elev.vec.lin 
+    + mods$Elev2[j]*elev.vec.quad 
+    + mods$ResurvBurn[j] 
+    + mods$ResurvBurnxElev[j]*elev.vec.lin 
+    + mods$ResurvBurnxElev2[j]*elev.vec.quad
     }
-  t1.unburn.reps <- as.data.frame(cbind(elev.vec, 'legacy', pred.leg.reps))
+  
+  t1.unburn.reps <- as.data.frame(cbind(elev.vec.lin, 'legacy', pred.leg.reps)) %>% 
+    mutate(across(c(3:102), response))
   t1.unburn.reps.tall <- gather(t1.unburn.reps, "rep", "preds", 3:102)
   t1.unburn.summary <- t1.unburn.reps.tall %>% 
-    mutate(resp = exp(as.numeric(preds))/(1+exp(as.numeric(preds)))) %>% 
-    group_by(V2, elev.vec) %>% 
+    mutate(resp = response(preds)) %>% 
+    group_by(V2, elev.vec.lin) %>% 
     summarise(mean.resp = mean(resp),
               lower.resp = unname(quantile(resp, c(0.05))),
               upper.resp = unname(quantile(resp, c(0.95))))
-  t2.unburn.reps <- as.data.frame(cbind(elev.vec, 'res.unburn', pred.res.unburn.reps))
+  t1.unburn.all <-left_join(t1.unburn.summary, t1.unburn.reps) 
+  
+  t2.unburn.reps <- as.data.frame(cbind(elev.vec.lin, 'res.unburn', pred.res.unburn.reps)) %>% 
+    mutate(across(c(3:102), response))
   t2.unburn.reps.tall <- gather(t2.unburn.reps, "rep", "preds", 3:102)
   t2.unburn.summary <- t2.unburn.reps.tall %>% 
-    mutate(resp = exp(as.numeric(preds))/(1+exp(as.numeric(preds)))) %>% 
-    group_by(V2, elev.vec) %>% 
+    mutate(resp = response(preds)) %>% 
+    group_by(V2, elev.vec.lin) %>% 
     summarise(mean.resp = mean(resp),
               lower.resp = unname(quantile(resp, c(0.05))),
               upper.resp = unname(quantile(resp, c(0.95))))
-  t2.burn.reps <- as.data.frame(cbind(elev.vec, 'res.burn', pred.res.burn.reps))
+  t2.unburn.all <-left_join(t2.unburn.summary, t2.unburn.reps) 
+  
+  t2.burn.reps <- as.data.frame(cbind(elev.vec.lin, 'res.burn', pred.res.burn.reps)) %>% 
+    mutate(across(c(3:102), response))
   t2.burn.reps.tall <- gather(t2.burn.reps, "rep", "preds", 3:102)
   t2.burn.summary <- t2.burn.reps.tall %>% 
-    mutate(resp = exp(as.numeric(preds))/(1+exp(as.numeric(preds)))) %>% 
-    group_by(V2, elev.vec) %>% 
+    mutate(resp = response(preds)) %>% 
+    group_by(V2, elev.vec.lin) %>% 
     summarise(mean.resp = mean(resp),
               lower.resp = unname(quantile(resp, c(0.05))),
               upper.resp = unname(quantile(resp, c(0.95))))
-  graph.dat <- bind_rows(t1.unburn.summary, t2.unburn.summary, t2.burn.summary)
-  graph.dat$elev.vec <- as.numeric(graph.dat$elev.vec)
+  t2.burn.all <-left_join(t2.burn.summary, t2.burn.reps) 
   
- gg <- ggplot(graph.dat, aes(x=elev.vec, y=mean.resp, color=V2)) +
+  graph.dat <- bind_rows(t1.unburn.all, t2.unburn.all, t2.burn.all)
+  graph.dat$elev.vec.lin <- as.numeric(graph.dat$elev.vec.lin)
+  
+ gg <- ggplot(graph.dat, aes(x=elev.vec.lin, y=mean.resp, color=V2)) +
     theme_classic() +
     xlab("Elevation (m)") +
     ylab("Probability of presence") +
