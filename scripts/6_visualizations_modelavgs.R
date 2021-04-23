@@ -1,15 +1,26 @@
-# Created: Feb. 16, 2020
+# Created: Feb. 16, 2021
+# Mofigirf: Apr. 23, 2021
 # This script is Amy's first attempt at visualizing model outputs
 
 library(tidyverse)
 
+#### read in and prepare tables of coefficients
+
 # coefficients from all top models for each rarefied dataset that ran without warnings
-coeff.ALLDAT <- read.csv("data/3_presence_ALLDAT_ALLSPEC_coefficients.csv", header = TRUE)
+coeff.ALLDAT <- read.csv("data/3b_new_coefficients.csv", header = TRUE)
 
 # filter to just model average for each rarefied dataset
 coeff.avgs <- coeff.ALLDAT %>% filter(Type=="Avg") # now we have 100 model averages per species (but shouldn't this be <100 for the species for which some rarefied datasets threw warnings?)
 
-# species list
+# split into species modeled with fire vs without
+coeffs.fire <- coeff.avgs %>% filter(Fire.Included=="Yes")
+coeffs.nofire <- coeff.avgs %>% filter(Fire.Included=="No")
+
+#### species lists
+species.fire <- coeffs.fire %>% 
+  group_by(Species) %>% 
+  summarise(species.fire=first(Species))
+
 load("data/Species.List.Rda") #TODO this file was made in an undocumented step
 species.list <- shifts$Species.Code[!shifts$Species.Code=="MOSS"] #removing "MOSS"
 species.list <- factor(species.list)
@@ -40,10 +51,9 @@ species.short <- anti_join(as.data.frame(species.list), as.data.frame(problems),
 
 coeffs <- semi_join(coeff.avgs, species.short, by=c("Species"="species.list")) #should be length 100*n less than coeff.avgs; where n=# problematic species
 
-coeffs.fire <- coeffs %>% filter(Fire.Included=="Yes")
-coeffs.nofire <- coeffs %>% filter(Fire.Included=="No")
 
 # focusing on species with updated fire interaction models first
+species.fire <- coeffs.fire %>% mutate()
 species.fire <- semi_join(species.short, coeffs.fire, by=c("species.list"="Species")) %>% 
   droplevels()
 species.fire <- species.fire %>% 
@@ -51,16 +61,40 @@ species.fire <- species.fire %>%
   filter(species.list!="SPBE") %>% 
   droplevels()
 
-elev.vec = seq(0, 2200, by=1)
-pred.leg.reps = matrix(nrow=length(elev.vec),ncol=100)
-pred.res.unburn.reps = matrix(nrow=length(elev.vec),ncol=100)
-pred.res.burn.reps = matrix(nrow=length(elev.vec),ncol=100)
+### elevation vector for multiplying by coefficients
+# needs to be in poly-transformed units
+
+# exploring to determine what poly-tranformed values should be
+dat <- read_csv("data/3c_transformed_polynomials.csv")
+
+# relationship between quadratic and linear terms in poly-transformed units is a perfect quadratic
+ggplot(data=dat, aes(x=Elevation.m.poly, y=Elevation.m2.poly)) +
+  geom_point() +
+  geom_smooth(method="lm", formula= y~poly(x,2))
+
+# quadratic function is given by this model
+poly.mod <- lm(Elevation.m2.poly ~ Elevation.m.poly + I(Elevation.m.poly^2), data=dat)
+
+# linear vector
+# range based on min/max values in dat$Elevation.m.poly
+elev.vec.lin = as.numeric(seq(min(dat$Elevation.m.poly), max(dat$Elevation.m.poly), by=0.0001)) 
+# quadratic vector
+elev.vec.quad = poly.mod$coefficients[1] + 
+  elev.vec.lin*poly.mod$coefficients[2] + 
+  elev.vec.lin*elev.vec.lin*poly.mod$coefficients[3]
+plot(elev.vec.quad ~ elev.vec.lin) + 
+  points(dat$Elevation.m.poly, dat$Elevation.m2.poly, col="red") #ok! we have linear and quadratic elevation vectors that match what the models are using
+
+### empty matrices for writing best-fit lines into
+pred.leg.reps = matrix(nrow=length(elev.vec.lin),ncol=100)
+pred.res.unburn.reps = matrix(nrow=length(elev.vec.lin),ncol=100)
+pred.res.burn.reps = matrix(nrow=length(elev.vec.lin),ncol=100)
 
 col.pal <- c("turquoise4", "red3", "goldenrod1")
 
 for (i in 1:dim(species.fire)[1]) {
-  sp = species.fire[i,]
-  mods <- coeffs %>% 
+  sp = species.fire[i,1]
+  mods <- coeffs.fire %>% 
     filter(Species==sp) %>% 
     select(Int=Intercept, 
            Elev=Elevation.m, 
@@ -116,7 +150,7 @@ for (i in 1:dim(species.fire)[1]) {
     geom_line() +
     scale_color_manual(values=col.pal)
   
- ggsave(paste("figures/model.preds_",sp,".pdf",sep=""), gg, width=5, height=5)
+ ggsave(paste("figures/model.preds_ortho_",sp,".pdf",sep=""), gg, width=5, height=5)
 
 } 
   
