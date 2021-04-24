@@ -145,7 +145,8 @@ for (i in 1:dim(species.list.fire)[1]) {
 
   graph.dat.tall <- bind_rows(t1.unburn.reps.tall, t2.unburn.reps.tall, t2.burn.reps.tall)  
 
-  graph.dat.means <- bind_rows(t1.unburn.summary, t2.unburn.summary, t2.burn.summary)
+  graph.dat.means <- bind_rows(t1.unburn.summary, t2.unburn.summary, t2.burn.summary) %>% 
+    mutate(preds = mean.resp)
 
   gg <- ggplot(graph.dat.means, aes(x = elev.vec.lin, y = preds, color = V2)) + 
     geom_line(size=2) +
@@ -220,7 +221,8 @@ for (i in 1:dim(species.list.nofire)[1]) {
 
   graph.dat.tall <- bind_rows(t1.reps.tall, t2.reps.tall)  
   
-  graph.dat.means <- bind_rows(t1.summary, t2.summary)
+  graph.dat.means <- bind_rows(t1.summary, t2.summary) %>% 
+    mutate(preds=mean.resp)
 
   gg <- ggplot(graph.dat.means, aes(x = elev.vec.lin, y = preds, color = V2)) + 
     geom_line(size=2) +
