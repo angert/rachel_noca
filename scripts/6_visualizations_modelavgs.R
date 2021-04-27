@@ -74,6 +74,20 @@ plot(elev.vec.quad ~ elev.vec.lin) +
   points(dat$Elevation.m.poly, dat$Elevation.m2.poly, col="red") #ok! we have linear and quadratic elevation vectors that match what the models are using
 
 
+#### elevation list for back-transformed axis labels
+# needs to be in raw units (m)
+ggplot(data=dat, aes(x=Elevation.m.poly, y=Elevation.m)) +
+  geom_point() +
+  geom_smooth(method="lm")
+
+poly.ticks.default = seq(-0.08, 0.08, by=0.04)
+back.mod.default <- lm(Elevation.m ~ Elevation.m.poly, data=dat)
+raw.ticks.default = back.mod.default$coefficients[1] + poly.ticks.default*back.mod.default$coefficients[2]
+
+back.mod.custom <- lm(Elevation.m.poly ~ Elevation.m, data=dat)
+raw.ticks.custom = c(100, 600, 1100, 1600, 2100)
+poly.ticks.custom = back.mod.custom$coefficients[1] + raw.ticks.custom*back.mod.custom$coefficients[2]
+
 #### other prep work
 # empty matrices for writing best-fit lines into
 pred.leg.reps = matrix(nrow=length(elev.vec.lin),ncol=100)
@@ -149,10 +163,11 @@ for (i in 1:dim(species.list.fire)[1]) {
     mutate(preds = mean.resp)
 
   gg <- ggplot(graph.dat.means, aes(x = elev.vec.lin, y = preds, color = V2)) + 
-    geom_line(size=2) +
-    geom_line(data=graph.dat.tall, aes(group=interaction(V2, rep), color=V2), alpha=0.2) +
+    geom_line(data=graph.dat.tall, aes(group=interaction(V2, rep), color=V2), alpha=0.15) +
+    geom_line(size=2, linetype="dotted") +
     theme_classic() +
     scale_color_manual("Time x fire", values=col.pal, labels=c("legacy", "resurvey, burned", "resurvey, unburned")) +
+    scale_x_continuous(breaks=poly.ticks.custom, labels=raw.ticks.custom) +
     xlab("Elevation (m)") +
     ylab("Probability of presence")
   
@@ -225,10 +240,11 @@ for (i in 1:dim(species.list.nofire)[1]) {
     mutate(preds=mean.resp)
 
   gg <- ggplot(graph.dat.means, aes(x = elev.vec.lin, y = preds, color = V2)) + 
-    geom_line(size=2) +
-    geom_line(data=graph.dat.tall, aes(group=interaction(V2, rep), color=V2), alpha=0.2) +
+    geom_line(data=graph.dat.tall, aes(group=interaction(V2, rep), color=V2), alpha=0.15) +
+    geom_line(size=2, linetype="dotted") +
     theme_classic() +
     scale_color_manual("Time", values=col.pal, labels=c("legacy", "resurvey")) +
+    scale_x_continuous(breaks=poly.ticks.custom, labels=raw.ticks.custom) +
     xlab("Elevation (m)") +
     ylab("Probability of presence")
   
