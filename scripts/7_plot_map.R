@@ -107,18 +107,19 @@ gridat.lcc = spTransform(gridatt, CRS=CRS(prj.lcc))
 
 ## Zoomed out of state
 #LCC projection
-#pdf(file="figures/map_lcc.pdf", width=15, height=8)
+pdf(file="figures/map_wa_inset.pdf", width=5, height=5)
 plot(sta.lcc, border="darkgrey")
 plot(park.lcc, border="black", add=T) # park boundary
 plot(fires.lcc, col=rgb(1,0,0,0.7), border="red4", add=T) 
 plot(burns.lcc, col=rgb(1,0,0,0.7), border="red4", add=T) #prescribed burns layer 
 plot(trtmts.lcc, col=rgb(1,0,0,0.7), border="red4", add=T) #prescribed burns layer
-#dev.off()
+legend("topleft", legend="B", bty="n") 
+dev.off()
 
 
 ## Zoomed in of plots
 #LCC projection
-#pdf(file="figures/map_lcc.pdf", width=15, height=8)
+pdf(file="figures/map_fire_plots.pdf", width=10, height=8)
 plot(park.lcc, border="darkgrey") # park boundary
 plot(fires.lcc, col=rgb(1,0,0,0.7), border="red4", add=T) 
 plot(burns.lcc, col=rgb(1,0,0,0.7), border="red4", add=T) #prescribed burns layer 
@@ -128,10 +129,9 @@ plot(burned.plots.lcc, pch=1, col="black", add=T) #add plots that burned between
 #plot(sta.lcc, add=T) #add state lines
 plot(frame.grd.lcc, add=TRUE, lty="dashed", col="grey", lwd=1) #add gridlines
 text(coordinates(gridat.lcc), labels=parse(text=as.character(gridat.lcc$labels)), pos=gridat.lcc$pos, offset=0.5, col="black", cex=0.7) #add lat-long labels to gridlines
-#legend("bottomleft", legend="Weighted Ensemble", bty="n", cex=1.5) #add title
-#plot(wtd.ensem.lcc, legend.only=TRUE, legend.width=1, legend.shrink=0.75, col=rbPal, axis.args=list(at=seq(0, 1, by=0.1), labels=seq(0, 1, by=0.1), cex.axis=0.8)) #add legend for color ramp
-#dev.off()
-
+legend("topleft", legend=c("A", "unburned","burned","fire"), pch=c(1,4,1,22), col=c("white","black","black","red4"), pt.bg=c("white","white","white",rgb(1,0,0,0.7)), bg="white", box.col="white") #add title
+dev.off()
+ 
 
 #unprojected
 #pdf(file="figures/map_lcc.pdf", width=15, height=8)
