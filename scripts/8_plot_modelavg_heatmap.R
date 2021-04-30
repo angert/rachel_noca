@@ -9,6 +9,7 @@
 
 library(tidyr)
 library(RColorBrewer)
+library(pheatmap)
 
 # Loading and tidying average coefficient data
 
@@ -50,20 +51,61 @@ mat.percfire.large <- t(subset(perc.fire, select = -c(Species, Fire.Included, To
 colnames(mat.percfire.large) <- paste(perc.fire$Species, perc.fire$Effect)
 mat.percfire.sm <- mat.percfire.large[, !grepl(0, colnames(mat.percfire.large))]
 mat.percfire.sm[, grepl("-", colnames(mat.percfire.sm))] <- mat.percfire.sm[, grepl("-", colnames(mat.percfire.sm))] * -1
-mat.percfire.PLOT <- mat.percfire.sm[nrow(mat.percfire.sm):1,]
+mat.percfire.sm[is.na(mat.percfire.sm)] <- 0
+mat.percfire.sm[c("Elevation.m2.Res.Burn.fi", "Elevation.m2.Res.Unburn.fi"), grepl("VAME", colnames(mat.percfire.sm))] <- NA
 
-# Fire visualization - try better heatmaps
+# If you need the order reversed
+mat.percfire.rev <- mat.percfire.sm[nrow(mat.percfire.sm):1,]
+
+# Setting visualization parameters
 
 col.pallette <- rev(brewer.pal(9, "RdBu"))
-y.vector <- c(expression("Elevation" ^ 2 * " * Unburned ca. 1983"), 
-              expression("Elevation" ^ 2 * " * Burned ca. 1983"), 
-              "Elevation * Unburned ca. 1983",
-              "Elevation * Burned ca. 1983",
-              "Unburned ca. 1983",
-              "Burned ca. 1983",
+col.vector <- c("      ACMI", "", "      ARUV", "", 
+                "      CARU", "", "      CEVE", "", 
+                "      EPAN", "", "      PAMY", "", "      VAME", "")
+row.vector <- c("Elevation", 
               expression("Elevation" ^ 2), 
-              "Elevation")
-x.vector <- c("ACMI", "ARUV", "CARU", "CEVE", "EPAN", "PAMY", "VAME")
+              "Burned",
+              "Unburned",
+              "Elevation * Burned",
+              "Elevation * Unburned",
+              expression("Elevation" ^ 2 * " * Burned"), 
+              expression("Elevation" ^ 2 * " * Unburned")
+              )
+leg.label.breaks <- c(-1, -0.5, 0, 0.5, 1)
+leg.label.vector <- c("100% Negative", "50% Negative", "0%", "50% Positive", "100% Positive")
+
+col.breaks <- c(2, 4, 6, 8, 10, 12, 14)
+
+# Visualization with pheatmap()
+
+col.pallette <- rev(brewer.pal(9, "RdBu"))
+pheatmap(mat.percfire.sm,
+         color = col.pallette,
+         cellwidth = 30,
+         cellheight = 30,
+         cluster_rows = FALSE,
+         cluster_cols = FALSE,
+         legend = TRUE,
+         legend_breaks = leg.label.breaks,
+         legend_labels = leg.label.vector, #doesn't work
+         # display_numbers = TRUE,
+         number_color = "black",
+         na_col = "grey",
+         gaps_col = col.breaks,
+         labels_row = row.vector,
+         labels_col = col.vector,
+         fontsize_row = 12,
+         fontsize_col = 15,
+         angle_col = 0
+         )
+
+
+
+
+
+
+# Visualization with heatmap() - base R
 
 heatmap(mat.percfire.PLOT, 
         Rowv = NA, Colv = NA, scale = "none", col = col.pallette,
