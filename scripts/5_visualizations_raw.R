@@ -188,7 +188,7 @@ violin.plot.nofire <- ggplot(rarefied.change.tall.nofire, aes(x=edge, y=change))
   #scale_fill_manual(values=alpha(col.pal, 0.3)) +
   geom_hline(yintercept=0, lty="dashed") +
   xlab("") +
-  scale_x_discrete(labels=c("Low\nedge", "Range\ncenter", "Upper\nedge")) +#, "Range\nsize")) +
+  scale_x_discrete(labels=c("Upper\nedge", "Range\ncenter", "Low\nedge")) +#, "Range\nsize")) +
   ylim(-600,700) +
   ylab(c("Elevational change (m)\n1983-2015")) +
   theme(legend.position="none")
@@ -202,7 +202,7 @@ violin.plot.fire <- ggplot(rarefied.change.tall.fire, aes(x=edge, y=change)) +#,
   #scale_fill_manual(values=alpha(col.pal, 0.3)) +
   geom_hline(yintercept=0, lty="dashed") +
   xlab("") +
-  scale_x_discrete(labels=c("Low\nedge", "Range\ncenter", "Upper\nedge")) +#, "Range\nsize")) +
+  scale_x_discrete(labels=c("Upper\nedge", "Low\nedge", "Range\ncenter")) +#, "Range\nsize")) +
   ylim(-600,700) +
   ylab(c("Elevational change (m)\n1983-2015")) +
   theme(legend.position="none")
