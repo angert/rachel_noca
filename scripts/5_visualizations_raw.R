@@ -177,38 +177,31 @@ rarefied.change.tall.fire <- rarefied.change.fire %>%
   select(rear.change, med.change, lead.change) %>% #, span.change) %>% 
   #gather("edge", "change", 1:4) 
   gather("edge", "change", 1:3) 
-# approximate colors from Rumpf et al. 2018 PNAS (doi: 10.1073/pnas.1713936115)
-#col.pal <- c("lightcoral", "goldenrod1", "slategray2", "bisque4")
 
-violin.plot.nofire <- ggplot(rarefied.change.tall.nofire, aes(x=edge, y=change)) +#, color=edge, fill=edge)) + 
+level_order = c("rear.change", "med.change", "lead.change")
+
+violin.plot.nofire <- ggplot(rarefied.change.tall.nofire, aes(x=factor(edge, level=level_order), y=change)) +#, color=edge, fill=edge)) + 
   geom_violin() +
   stat_summary(fun=mean, geom="point", cex=2)  +
   theme_classic() +
-  #scale_color_manual(values=col.pal) +
-  #scale_fill_manual(values=alpha(col.pal, 0.3)) +
   geom_hline(yintercept=0, lty="dashed") +
   xlab("") +
-  scale_x_discrete(labels=c("Upper\nedge", "Range\ncenter", "Low\nedge")) +#, "Range\nsize")) +
+  scale_x_discrete(labels=c("Lower\nedge", "Range\ncenter", "Upper\nedge")) +
   ylim(-600,700) +
   ylab(c("Elevational change (m)\n1983-2015")) +
   theme(legend.position="none")
-  #stat_summary(fun.data=mean_sdl, geom="pointrange")
 
-violin.plot.fire <- ggplot(rarefied.change.tall.fire, aes(x=edge, y=change)) +#, color=edge, fill=edge)) + 
+violin.plot.fire <- ggplot(rarefied.change.tall.fire, aes(x=factor(edge, level=level_order), y=change)) +#, color=edge, fill=edge)) + 
   geom_violin() +
   stat_summary(fun=mean, geom="point", cex=2)  +
   theme_classic() +
-  #scale_color_manual(values=col.pal) +
-  #scale_fill_manual(values=alpha(col.pal, 0.3)) +
   geom_hline(yintercept=0, lty="dashed") +
   xlab("") +
-  scale_x_discrete(labels=c("Upper\nedge", "Low\nedge", "Range\ncenter")) +#, "Range\nsize")) +
+  scale_x_discrete(labels=c("Low\nedge", "Range\ncenter", "Upper\nedge")) +
   ylim(-600,700) +
   ylab(c("Elevational change (m)\n1983-2015")) +
   theme(legend.position="none")
-#stat_summary(fun.data=mean_sdl, geom="pointrange")
 
 violin.fig <- plot_grid(violin.plot.nofire, violin.plot.fire, labels=c("A", "B"))
-
 
 ggsave("figures/violin_2panel.pdf", violin.fig, device="pdf", width=8, height=5)
