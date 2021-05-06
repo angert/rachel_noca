@@ -1,7 +1,9 @@
 # Created: Apr. 15, 2020
 # Updated: Apr. 15, 2021
 
-# This script will be used to create a heatmap of the model-averaged coefficients
+# This script will be used to create 4 heatmaps:
+# --> PART 1: The model-averaged coefficients
+# --> PART 2: Percent +/- out of total datasets
 
 # IMPORTANT NOTE: unless otherwise indicated, always use Understory_All.csv for these analyses as it is the ONLY file with up-to-date corrections.
 
@@ -11,14 +13,22 @@ library(tidyr)
 library(RColorBrewer)
 library(pheatmap)
 
-# Loading and tidying average coefficient data
+####### PART 1: AVERAGE AVERAGED COEFFICIENTS #########
+
+## Step 1: Loading and tidying average coefficient data
 
 coeff.ALLDAT <- read.csv("data/3b_new_coefficients.csv", header = TRUE)
-coeff.fire <- coeff.ALLDAT[coeff.ALLDAT$Fire.Included == "Yes" & coeff.ALLDAT$Type == "Avg",
+coeff.fire <- 
+  coeff.ALLDAT[coeff.ALLDAT$Fire.Included == "Yes" & coeff.ALLDAT$Type == "Avg",
                                c(1:12, 16:21)]
 coeff.nofire <- coeff.ALLDAT[coeff.ALLDAT$Fire.Included == "No" & coeff.ALLDAT$Type == "Avg",
                                c(1:12, 13:15)]
-#TODO - should we code NA values as 0? Remember that some species will actually be NA
+
+## Step 2: Look at FIRE data
+
+# Step 2a: Tidy data
+
+coeff.fire[is.na(coeff.fire)] <- 0 # Hard code absent coeffs as 0 before averaging
 coeff.avg.fire <- aggregate(coeff.fire[c("Intercept", 
                                              "Elevation.m", 
                                              "Elevation.m2", 
@@ -28,42 +38,152 @@ coeff.avg.fire <- aggregate(coeff.fire[c("Intercept",
                                              "Elevation.m.Res.Unburn.fi",
                                              "Elevation.m2.Res.Burn.fi",
                                              "Elevation.m2.Res.Unburn.fi")], 
-                            by = c(coeff.fire["Species"]), mean, na.rm = TRUE)
+                            by = c(coeff.fire["Species"]), mean)
 
+mat.fire <- as.matrix(t(subset(coeff.avg.fire, select = -Species)))
+colnames(mat.fire) <- coeff.avg.fire$Species
+mat.fire[c("Elevation.m2.Res.Burn.fi", "Elevation.m2.Res.Unburn.fi"), 
+                grepl("VAME", colnames(mat.fire))] <- NA
+
+# Step 2b: Creating FIRE vectors for visualization
+
+col.pallette <- rev(brewer.pal(9, "RdBu"))
+col.vector.fire <- c("      ACMI", "", "      ARUV", "", 
+                     "      CARU", "", "      CEVE", "", 
+                     "      EPAN", "", "      PAMY", "", "      VAME", "")
+row.vector.fire <- c("Intercept", "Elevation", 
+                     expression("Elevation" ^ 2), 
+                     "Burned",
+                     "Unburned",
+                     "Elevation * Burned",
+                     "Elevation * Unburned",
+                     expression("Elevation" ^ 2 * " * Burned"), 
+                     expression("Elevation" ^ 2 * " * Unburned")
+)
+col.breaks.fire <- c(1:ncol(mat.fire))
+
+# Step 2c: Visualization of FIRE data
+
+pheatmap(mat.fire,
+         color = col.pallette,
+         cellwidth = 30,
+         cellheight = 30,
+         cluster_rows = FALSE,
+         cluster_cols = FALSE,
+         legend = TRUE,
+         #legend_breaks = leg.label.breaks.fire,
+         #legend_labels = leg.label.vector.fire,
+         display_numbers = TRUE,
+         number_color = "black",
+         na_col = "grey",
+         #gaps_row = c(1:nrow(mat.fire)),
+         gaps_col = col.breaks.fire,
+         labels_row = row.vector.fire,
+         #labels_col = col.vector.fire,
+         fontsize_row = 11,
+         fontsize_col = 11,
+         angle_col = 0
+)
+
+## Step 3: Look at NO FIRE data
+
+# Step 3a: Tidy data
+
+coeff.nofire[is.na(coeff.nofire)] <- 0 # Hard code absent coeffs as 0 before averaging
 coeff.avg.nofire <- aggregate(coeff.nofire[c("Intercept", 
                                          "Elevation.m", 
                                          "Elevation.m2", 
                                          "Data.Type.nofi", 
                                          "Data.Type.Elevation.m.nofi", 
                                          "Data.Type.Elevation.m2.nofi")], 
-                            by = c(coeff.nofire["Species"]), mean, na.rm = TRUE)
+                            by = c(coeff.nofire["Species"]), mean)
 
-mat <- as.matrix(t(subset(coeff.avg.fire, select = -Species)))
-colnames(mat) <- coeff.avg.fire$Species
-rownames(mat) <- c("Intercept", "Elevation", "Elevation^2", "Burn After 1983", "Unburned After 1983", "Elevation * Burned", "Elevation * Unburned", "Elevation^2 * Burned", "Elevation^2 * Unburned")
+mat.nofire <- as.matrix(t(subset(coeff.avg.nofire, select = -Species)))
+colnames(mat.nofire) <- coeff.avg.nofire$Species
+mat.nofire["Data.Type.Elevation.m2.nofi", 
+           grepl("HODI", colnames(mat.nofire))] <- NA
 
-# Loading and tidying vote count data
+# Step 3b: Creating NO FIRE vectors for visualization
+
+col.pallette <- rev(brewer.pal(9, "RdBu"))
+col.vector.nofire <- c("      ACCI", "", "      ACGL", "", 
+                       "      AMAL", "", "      ATFI", "", 
+                       "      CAME", "", "      CHUM", "", 
+                       "      CLUN", "", "      COCA", "",
+                       "      GAOV", "", "      GASH", "",
+                       "      GOOB", "", "      GYDR", "",
+                       "      HIAL", "", "      HODI", "",
+                       "      LIBO", "", "      MANE", "",
+                       "      MEFE", "", "      OPHO", "",
+                       "      POMU", "", "      PTAQ", "",
+                       "      RULA", "", "      RUPA", "",
+                       "      RUPE", "", "      RUSP", "",
+                       "      SOSI", "", "      SPBE", "",
+                       "      TITR", "", "      TRBO", "",
+                       "      VASI", "")
+row.vector.nofire <- c("Intercept", "Elevation", 
+                       expression("Elevation" ^ 2), 
+                       "Year",
+                       "Elevation * Year",
+                       expression("Elevation" ^ 2 * " * Year"))
+col.breaks.nofire <- rep(1:ncol(mat.nofire))
+
+# Step 3c: Visualization of NO FIRE data
+
+pheatmap(mat.nofire,
+         color = col.pallette,
+         cellwidth = 27,
+         cellheight = 27,
+         cluster_rows = FALSE,
+         cluster_cols = FALSE,
+         legend = TRUE,
+         #legend_breaks = leg.label.breaks.fire,
+         #legend_labels = leg.label.vector.fire,
+         display_numbers = TRUE,
+         number_color = "black",
+         na_col = "grey",
+         #gaps_row = c(1:nrow(mat.fire)),
+         gaps_col = col.breaks.nofire,
+         labels_row = row.vector.nofire,
+         #labels_col = col.vector.fire,
+         fontsize_row = 11,
+         fontsize_col = 9,
+         angle_col = 0
+)
+
+
+
+######### PART 2: Percentage of + vs - coefficients out of total datasets #########
+
+## Step 1: Loading data
 
 perc.fire <- read.csv("data/4_pres_coefficients_percent_fire.csv", header = TRUE)
 perc.nofire <- read.csv("data/4_pres_coefficients_percent_NOfire.csv", header = TRUE)
 
-mat.percfire.large <- t(subset(perc.fire, select = -c(Species, Fire.Included, Total.Sets, Effect)))
+## Step 2: Look at FIRE data
+
+# Step 2a: Tidying FIRE data
+
+mat.percfire.large <- t(subset(perc.fire, 
+                               select = -c(Species, Fire.Included, Total.Sets, Effect)))
 colnames(mat.percfire.large) <- paste(perc.fire$Species, perc.fire$Effect)
 mat.percfire.sm <- mat.percfire.large[, !grepl(0, colnames(mat.percfire.large))]
-mat.percfire.sm[, grepl("-", colnames(mat.percfire.sm))] <- mat.percfire.sm[, grepl("-", colnames(mat.percfire.sm))] * -1
+mat.percfire.sm[, grepl("-", colnames(mat.percfire.sm))] <- 
+  mat.percfire.sm[, grepl("-", colnames(mat.percfire.sm))] * -1
 mat.percfire.sm[is.na(mat.percfire.sm)] <- 0
-mat.percfire.sm[c("Elevation.m2.Res.Burn.fi", "Elevation.m2.Res.Unburn.fi"), grepl("VAME", colnames(mat.percfire.sm))] <- NA
+mat.percfire.sm[c("Elevation.m2.Res.Burn.fi", "Elevation.m2.Res.Unburn.fi"), 
+                grepl("VAME", colnames(mat.percfire.sm))] <- NA
 
 # If you need the order reversed
-mat.percfire.rev <- mat.percfire.sm[nrow(mat.percfire.sm):1,]
+# mat.percfire.rev <- mat.percfire.sm[nrow(mat.percfire.sm):1,]
 
-# Setting visualization parameters
+# Step 2b: Creating FIRE vectors for visualization
 
 col.pallette <- rev(brewer.pal(9, "RdBu"))
-col.vector <- c("      ACMI", "", "      ARUV", "", 
+col.vector.fire <- c("      ACMI", "", "      ARUV", "", 
                 "      CARU", "", "      CEVE", "", 
                 "      EPAN", "", "      PAMY", "", "      VAME", "")
-row.vector <- c("Elevation", 
+row.vector.fire <- c("Elevation", 
               expression("Elevation" ^ 2), 
               "Burned",
               "Unburned",
@@ -72,14 +192,13 @@ row.vector <- c("Elevation",
               expression("Elevation" ^ 2 * " * Burned"), 
               expression("Elevation" ^ 2 * " * Unburned")
               )
-leg.label.breaks <- c(-1, -0.5, 0, 0.5, 1)
-leg.label.vector <- c("100% Negative", "50% Negative", "0%", "50% Positive", "100% Positive")
+leg.label.breaks.fire <- c(-1, -0.5, 0, 0.5, 1)
+leg.label.vector.fire <- c("100% Negative", "50% Negative", 
+                           "0%", "50% Positive", "100% Positive")
+col.breaks.fire <- c(2, 4, 6, 8, 10, 12, 14)
 
-col.breaks <- c(2, 4, 6, 8, 10, 12, 14)
+# Step 2c: Visualization of FIRE data
 
-# Visualization with pheatmap()
-
-col.pallette <- rev(brewer.pal(9, "RdBu"))
 pheatmap(mat.percfire.sm,
          color = col.pallette,
          cellwidth = 30,
@@ -87,40 +206,107 @@ pheatmap(mat.percfire.sm,
          cluster_rows = FALSE,
          cluster_cols = FALSE,
          legend = TRUE,
-         legend_breaks = leg.label.breaks,
-         legend_labels = leg.label.vector, #doesn't work
+         legend_breaks = leg.label.breaks.fire,
+         legend_labels = leg.label.vector.fire,
          # display_numbers = TRUE,
          number_color = "black",
          na_col = "grey",
-         gaps_col = col.breaks,
-         labels_row = row.vector,
-         labels_col = col.vector,
+         gaps_col = col.breaks.fire,
+         labels_row = row.vector.fire,
+         labels_col = col.vector.fire,
          fontsize_row = 12,
          fontsize_col = 15,
          angle_col = 0
          )
 
+## Step 3: Look at NO FIRE data
+
+# Step 3a: Tidying NO FIRE data
+
+mat.percnofire.large <- t(subset(perc.nofire, 
+                                 select = -c(Species, Fire.Included, Total.Sets, Effect)))
+colnames(mat.percnofire.large) <- paste(perc.nofire$Species, perc.nofire$Effect)
+mat.percnofire.sm <- mat.percnofire.large[, !grepl(0, colnames(mat.percnofire.large))]
+mat.percnofire.sm[, grepl("-", colnames(mat.percnofire.sm))] <- 
+  mat.percnofire.sm[, grepl("-", colnames(mat.percnofire.sm))] * -1
+mat.percnofire.sm[is.na(mat.percnofire.sm)] <- 0
+mat.percnofire.sm["Data.Type.Elevation.m2.nofi", 
+                  grepl("HODI", colnames(mat.percnofire.sm))] <- NA
+
+# Step 3b: Creating NO FIRE vectors for visualization
+
+col.pallette <- rev(brewer.pal(9, "RdBu"))
+col.vector.nofire <- c("      ACCI", "", "      ACGL", "", 
+                "      AMAL", "", "      ATFI", "", 
+                "      CAME", "", "      CHUM", "", 
+                "      CLUN", "", "      COCA", "",
+                "      GAOV", "", "      GASH", "",
+                "      GOOB", "", "      GYDR", "",
+                "      HIAL", "", "      HODI", "",
+                "      LIBO", "", "      MANE", "",
+                "      MEFE", "", "      OPHO", "",
+                "      POMU", "", "      PTAQ", "",
+                "      RULA", "", "      RUPA", "",
+                "      RUPE", "", "      RUSP", "",
+                "      SOSI", "", "      SPBE", "",
+                "      TITR", "", "      TRBO", "",
+                "      VASI", "")
+row.vector.nofire <- c("Elevation", 
+                expression("Elevation" ^ 2), 
+                "Year",
+                "Elevation * Year",
+                expression("Elevation" ^ 2 * " * Year"))
+leg.label.breaks.nofire <- c(-1, -0.5, 0, 0.5, 1)
+leg.label.vector.nofire <- c("100% Negative", "50% Negative", 
+                             "0%", "50% Positive", "100% Positive")
+col.breaks.nofire <- seq(2, ncol(mat.percnofire.sm), 2)
+
+# Step 3c: Visualization of NO FIRE data
+
+pheatmap(mat.percnofire.sm,
+         color = col.pallette,
+         cellwidth = 12,
+         cellheight = 12,
+         cluster_rows = FALSE,
+         cluster_cols = FALSE,
+         legend = TRUE,
+         legend_breaks = leg.label.breaks.nofire,
+         legend_labels = leg.label.vector.nofire,
+         # display_numbers = TRUE,
+         number_color = "black",
+         na_col = "grey",
+         gaps_col = col.breaks.nofire,
+         labels_row = row.vector.nofire,
+         labels_col = col.vector.nofire,
+         fontsize_row = 11,
+         fontsize_col = 9,
+         angle_col = 0
+)
 
 
 
 
 
-# Visualization with heatmap() - base R
-
-heatmap(mat.percfire.PLOT, 
-        Rowv = NA, Colv = NA, scale = "none", col = col.pallette,
-        labRow = y.vector, labCol = "")
-legend(x = 0, y = 2, legend = c("+ 100%", "", "+ 50%", "", "0%", "", "- 50%", "", "- 100%"), 
-       fill = colorRampPalette(brewer.pal(9, "RdBu"))(9), 
-       border = "white", bty = "n", pt.cex = 3, y.intersp= 0.5)
 
 
-pos2 <- structure(list(x = c(0.17, 0.635), 
-                       y = c(-1.4, -1.4)),
-                  .Names = c("x", "y"))
-text(x = seq(pos2$x[1], pos2$x[2], len=7), y=rep(pos2$y[1], 7),
-     xpd=TRUE, adj = 0,
-     labels = x.vector, cex = 1.2)
+
+
+
+
+# OLD: Visualization with heatmap() - base R
+
+#heatmap(mat.percfire.PLOT, 
+#        Rowv = NA, Colv = NA, scale = "none", col = col.pallette,
+#        labRow = y.vector, labCol = "")
+#legend(x = 0, y = 2, legend = c("+ 100%", "", "+ 50%", "", "0%", "", "- 50%", "", "- 100%"), 
+#       fill = colorRampPalette(brewer.pal(9, "RdBu"))(9), 
+#       border = "white", bty = "n", pt.cex = 3, y.intersp= 0.5)
+#pos2 <- structure(list(x = c(0.17, 0.635), 
+#                       y = c(-1.4, -1.4)),
+#                  .Names = c("x", "y"))
+#text(x = seq(pos2$x[1], pos2$x[2], len=7), y=rep(pos2$y[1], 7),
+#    xpd=TRUE, adj = 0,
+#     labels = x.vector, cex = 1.2)
 
 
 
