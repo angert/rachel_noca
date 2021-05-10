@@ -61,15 +61,18 @@ row.vector.fire <- c("Intercept", "Elevation",
                      expression("Elevation" ^ 2 * " * Unburned")
 )
 col.breaks.fire <- c(1:ncol(mat.fire))
+range <- max(abs(mat.fire), na.rm = TRUE)
+my.breaks <- seq(-range, range, length.out = 10)
 
 # Step 2c: Visualization of FIRE data
 
 pheatmap(mat.fire,
          color = col.pallette,
-         cellwidth = 30,
-         cellheight = 30,
+         cellwidth = 32,
+         cellheight = 32,
          cluster_rows = FALSE,
          cluster_cols = FALSE,
+         border_color = "lightgrey",
          legend = TRUE,
          #legend_breaks = leg.label.breaks.fire,
          #legend_labels = leg.label.vector.fire,
@@ -81,8 +84,9 @@ pheatmap(mat.fire,
          labels_row = row.vector.fire,
          #labels_col = col.vector.fire,
          fontsize_row = 11,
-         fontsize_col = 11,
-         angle_col = 0
+         fontsize_col = 10,
+         angle_col = 0,
+         breaks = my.breaks
 )
 
 ## Step 3: Look at NO FIRE data
