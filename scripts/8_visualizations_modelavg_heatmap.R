@@ -1,5 +1,5 @@
 # Created: Apr. 15, 2020
-# Updated: Apr. 15, 2021
+# Updated: May 10, 2021
 
 # This script will be used to create 4 heatmaps:
 # --> PART 1: The model-averaged coefficients
@@ -131,6 +131,8 @@ row.vector.nofire <- c("Intercept", "Elevation",
                        "Elevation * Year",
                        expression("Elevation" ^ 2 * " * Year"))
 col.breaks.nofire <- rep(1:ncol(mat.nofire))
+range.nof <- max(abs(mat.nofire), na.rm = TRUE)
+my.breaks <- seq(-range.nof, range.nof, length.out = 10)
 
 # Step 3c: Visualization of NO FIRE data
 
@@ -152,7 +154,8 @@ pheatmap(mat.nofire,
          #labels_col = col.vector.fire,
          fontsize_row = 11,
          fontsize_col = 9,
-         angle_col = 0
+         angle_col = 0,
+         breaks = my.breaks
 )
 
 
