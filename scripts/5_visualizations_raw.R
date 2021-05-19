@@ -139,6 +139,7 @@ el.meds.res.tall.nofire <- gather(el.meds.res.means.nofire, "species", "med.res"
 
 rarefied.change.nofire <- left_join(left_join(left_join(left_join(left_join(el.mins.leg.tall.nofire, el.mins.res.tall.nofire),el.maxs.leg.tall.nofire), el.maxs.res.tall.nofire), el.meds.leg.tall.nofire), el.meds.res.tall.nofire)
 
+rarefied.change.nofire <- cbind(rarefied.change.nofire, species.list.nofire)
 # fire species
 el.mins.leg.tall.fire <- gather(el.mins.leg.means.fire, "species", "min.leg", 1:dim(species.list.fire)[1])
 el.mins.res.tall.fire <- gather(el.mins.res.means.fire, "species", "min.res", 1:dim(species.list.fire)[1])
@@ -148,6 +149,8 @@ el.meds.leg.tall.fire <- gather(el.meds.leg.means.fire, "species", "med.leg", 1:
 el.meds.res.tall.fire <- gather(el.meds.res.means.fire, "species", "med.res", 1:dim(species.list.fire)[1])
 
 rarefied.change.fire <- left_join(left_join(left_join(left_join(left_join(el.mins.leg.tall.fire, el.mins.res.tall.fire),el.maxs.leg.tall.fire), el.maxs.res.tall.fire), el.meds.leg.tall.fire), el.meds.res.tall.fire)
+
+rarefied.change.fire <- cbind(rarefied.change.fire, species.list.fire)
 
 ## calculate range changes
 # no-fires species
