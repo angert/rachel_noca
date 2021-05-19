@@ -9,16 +9,19 @@
 ## Clear workspace
 rm(list = ls(all.names = TRUE))
 
-## Libraries needed for spatial stuff (others for predict functions called as needed below)
+## Libraries needed for spatial stuff 
 library(tidyverse)
 library(raster)
 library(maptools)
 library(rgdal)
 library(rgeos)
 library(sf)
+library(maps)
+library(mapdata)
+library(mapproj)
 
 ## Projections
-prj.wgs = "+proj=longlat + type=crs"
+prj.wgs <- "+proj=longlat + type=crs"
 prj.lcc <- "+proj=lcc +lon_0=-95 +lat_1=49 +lat_2=77 +type=crs"
 
 
@@ -49,20 +52,23 @@ unburned.plots.lcc <- spTransform(unburned.plots, CRS=CRS(prj.lcc)) #transform p
 
 
 ## State polygons 
-# All of USA
-sta = readOGR("data/shapefiles/states/gz_2010_us_040_00_500k.shp")
-projection(sta) = CRS(prj.wgs)
+# WA only
+sta <- readOGR("data/shapefiles/states/gz_2010_us_040_00_500k.shp")
+projection(sta) <- CRS(prj.wgs)
 sta <- st_as_sf(sta) %>% 
   filter(NAME=="Washington")
 sta.sp <- as(sta, "Spatial")
 sta.lcc <- spTransform(sta.sp, CRS=CRS(prj.lcc))
 
+# USA outline
+usa <- map_data("usa")
+
 # Define extent of study area
 ext <- extent(min(fire.plots$Longitude)-0.5, max(fire.plots$Longitude)+0.5, min(fire.plots$Latitude)-0.5, max(fire.plots$Latitude)+0.5)
-bbox = as(ext, "SpatialPolygons") #convert coordinates to a bounding box
+bbox <- as(ext, "SpatialPolygons") #convert coordinates to a bounding box
 # Crop state lines to study area
 sta.crop <- crop(sta, bbox)
-sta.lcc = spTransform(sta.crop, CRS=CRS(prj.lcc))
+sta.lcc <- spTransform(sta.crop, CRS=CRS(prj.lcc))
 
 ## Park boundary
 park <- readOGR("data/shapefiles/park/NOCA_Park_boundary.shp")
@@ -100,12 +106,12 @@ trtmts.lcc <- spTransform(trtmts.sp, CRS=CRS(prj.lcc))
 ### Pretty map 
 
 ## Set up gridlines & lat/lon labels	
-frame.grd = gridlines(sta.crop)
+frame.grd <- gridlines(sta.crop)
 frame.grd.lcc <- spTransform(frame.grd, CRS=CRS(prj.lcc))
 gridatt <- gridat(frame.grd, side="EN")
-gridat.lcc = spTransform(gridatt, CRS=CRS(prj.lcc))
+gridat.lcc <- spTransform(gridatt, CRS=CRS(prj.lcc))
 
-## Zoomed out of state
+## Zoomed out inset (state)
 #LCC projection
 pdf(file="figures/map_wa_inset.pdf", width=5, height=5)
 plot(sta.lcc, border="darkgrey")
@@ -116,6 +122,13 @@ plot(trtmts.lcc, col=rgb(1,0,0,0.7), border="red4", add=T) #prescribed burns lay
 legend("topleft", legend="B", bty="n") 
 dev.off()
 
+## Zoomed out inset (country)
+dot.plot <- data.frame(mean.lat=mean(plots$Latitude), mean.long=mean(plots$Longitude))
+
+usmap <- ggplot() + 
+  geom_polygon(data=usa, aes(x=long, y=lat, group=group), fill=NA, color="black") +
+  geom_point(data=dot.plot, aes(x=mean.long, y=mean.lat),pch=8, cex=2.5) +
+  theme_classic()
 
 ## Zoomed in of plots
 #LCC projection
