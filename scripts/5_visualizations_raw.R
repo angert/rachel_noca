@@ -212,6 +212,9 @@ rarefied.change.fire <- rarefied.change.fire %>%
          lead.change.95th = max95.res - max95.leg)#,
 #span.change = (max.res-min.res) - (max.leg - min.leg))
 
+rarefied.change.calcs <- rbind(rarefied.change.nofire, rarefied.change.fire)
+write.csv(rarefied.change.calcs, "data/5_range.change.calcs.csv")
+
 ## reshape for plotting
 
 # no-fire species
