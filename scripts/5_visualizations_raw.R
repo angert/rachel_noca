@@ -292,4 +292,23 @@ ggsave("figures/violin_2panel_perc.pdf", violin.fig.perc, device="pdf", width=8,
 
 
 ## Freeman-style elevation ranges
-rarefied.change.calcs
+
+rarefied.change.calcs <- read_csv("data/5_range.change.calcs.csv")
+
+rarefied.change.calcs <- rarefied.change.calcs %>% 
+  mutate(species.rank.med = dense_rank(med.leg),
+         #species.rank.min = dense_rank(min.raw.leg), #doesn't work because of ties
+         #species.rank.max = dense_rank(max.raw.leg), #doesn't work because of ties
+         both.min.raw = pmax(min.raw.leg, min.raw.res),
+         both.max.raw = pmin(max.raw.leg, max.raw.res),
+         both.min.perc = pmax(min.025.leg, min.025.res),
+         both.max.perc = pmin(max.975.leg, max.975.res))
+
+p <- ggplot(rarefied.change.calcs) + 
+  geom_rect(aes(xmin=species.rank.med-0.33, xmax=species.rank.med+0.33, ymin=min.025.leg, ymax=max.975.leg), fill = "firebrick") + # historic range in red; will show areas of range contractions
+  geom_rect(aes(xmin=species.rank.med-0.33, xmax=species.rank.med+0.33, ymin=min.025.res, ymax=max.975.res), fill = "dodgerblue4") + # modern range in blue; will show areas of range expansion
+  geom_rect(aes(xmin=species.rank.med-0.33, xmax=species.rank.med+0.33, ymin=both.min.perc, ymax=both.max.perc), fill = "#bdbdbd") + # areas common to both in grey
+  scale_x_continuous("Species", breaks=c(1,9,18,27,36)) +
+  scale_y_continuous("Elevation (m)", breaks=c(0,500,1000,1500,2000)) +
+  theme_bw() +
+  theme(text=element_text(size=16), panel.grid.major = element_blank(), panel.grid.minor =   element_blank())
