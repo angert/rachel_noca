@@ -176,6 +176,7 @@ el.meds.res.tall.nofire <- gather(el.meds.res.means.nofire, "species", "med.res"
 rarefied.change.nofire <- left_join(left_join(left_join(left_join(left_join(left_join(left_join(left_join(left_join(el.mins.raw.leg.tall.nofire, el.mins.raw.res.tall.nofire),el.maxs.raw.leg.tall.nofire), el.maxs.raw.res.tall.nofire), el.meds.leg.tall.nofire), el.meds.res.tall.nofire), el.mins.025.leg.tall.nofire), el.mins.025.res.tall.nofire), el.maxs.975.leg.tall.nofire), el.maxs.975.res.tall.nofire)
 
 rarefied.change.nofire <- cbind(rarefied.change.nofire, species.list.nofire)
+rarefied.change.nofire$fire <- "no"
 
 # fire species
 el.mins.raw.leg.tall.fire <- gather(el.mins.raw.leg.means.fire, "species", "min.raw.leg", 1:dim(species.list.fire)[1])
@@ -192,6 +193,7 @@ el.meds.res.tall.fire <- gather(el.meds.res.means.fire, "species", "med.res", 1:
 rarefied.change.fire <- left_join(left_join(left_join(left_join(left_join(left_join(left_join(left_join(left_join(el.mins.raw.leg.tall.fire, el.mins.raw.res.tall.fire),el.maxs.raw.leg.tall.fire), el.maxs.raw.res.tall.fire), el.meds.leg.tall.fire), el.meds.res.tall.fire), el.mins.025.leg.tall.fire), el.mins.025.res.tall.fire), el.maxs.975.leg.tall.fire), el.maxs.975.res.tall.fire)
 
 rarefied.change.fire <- cbind(rarefied.change.fire, species.list.fire)
+rarefied.change.fire$fire <- "yes"
 
 ## calculate range changes
 # no-fires species
@@ -215,7 +217,7 @@ rarefied.change.fire <- rarefied.change.fire %>%
 rarefied.change.calcs <- rbind(rarefied.change.nofire, rarefied.change.fire)
 write.csv(rarefied.change.calcs, "data/5_range.change.calcs.csv")
 
-## reshape for plotting
+## reshape for violin plotting
 
 # no-fire species
 rarefied.change.tall.nofire.raw <- rarefied.change.nofire %>% 
@@ -287,3 +289,7 @@ violin.fig.perc <- plot_grid(violin.plot.nofire.perc, violin.plot.fire.perc, lab
 
 ggsave("figures/violin_2panel_raw.pdf", violin.fig.raw, device="pdf", width=8, height=5)
 ggsave("figures/violin_2panel_perc.pdf", violin.fig.perc, device="pdf", width=8, height=5)
+
+
+## Freeman-style elevation ranges
+rarefied.change.calcs
