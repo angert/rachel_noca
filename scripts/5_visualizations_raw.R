@@ -295,6 +295,7 @@ ggsave("figures/violin_2panel_perc.pdf", violin.fig.perc, device="pdf", width=8,
 
 rarefied.change.calcs <- read_csv("data/5_range.change.calcs.csv")
 
+# option a: all species interdigitated regardless of fire; fire species labeled
 rarefied.change.calcs <- rarefied.change.calcs %>% 
   mutate(species.rank.med = dense_rank(med.leg),
          #species.rank.min = dense_rank(min.raw.leg), #doesn't work because of ties
@@ -304,6 +305,12 @@ rarefied.change.calcs <- rarefied.change.calcs %>%
          both.min.perc = pmax(min.025.leg, min.025.res),
          both.max.perc = pmin(max.975.leg, max.975.res))
 
+fire.pos <- rarefied.change.calcs %>% 
+  filter(fire=="yes") %>% 
+  mutate(y.pos = pmax(max.975.leg, max.975.res) + 50) %>% 
+  select(species.rank.med, y.pos) %>% 
+  droplevels()
+
 p <- ggplot(rarefied.change.calcs) + 
   geom_rect(aes(xmin=species.rank.med-0.33, xmax=species.rank.med+0.33, ymin=min.025.leg, ymax=max.975.leg), fill = "firebrick") + # historic range in red; will show areas of range contractions
   geom_rect(aes(xmin=species.rank.med-0.33, xmax=species.rank.med+0.33, ymin=min.025.res, ymax=max.975.res), fill = "dodgerblue4") + # modern range in blue; will show areas of range expansion
@@ -311,4 +318,57 @@ p <- ggplot(rarefied.change.calcs) +
   scale_x_continuous("Species", breaks=c(1,9,18,27,36)) +
   scale_y_continuous("Elevation (m)", breaks=c(0,500,1000,1500,2000)) +
   theme_bw() +
+  theme(text=element_text(size=16), panel.grid.major = element_blank(), panel.grid.minor =   element_blank()) +
+  annotate(geom="text", x=fire.pos$species.rank.med, y=fire.pos$y.pos, label="F")
+
+ggsave("figures/elevation_ranges_1panel.pdf", p, device="pdf", width=5, height=5)
+
+
+# option b: fire and no-fire species separated
+rarefied.change.calcs.fire <- rarefied.change.calcs %>% 
+  filter(fire=="yes") %>% 
+  mutate(species.rank.med = dense_rank(med.leg),
+         #species.rank.min = dense_rank(min.raw.leg), #doesn't work because of ties
+         #species.rank.max = dense_rank(max.raw.leg), #doesn't work because of ties
+         both.min.raw = pmax(min.raw.leg, min.raw.res),
+         both.max.raw = pmin(max.raw.leg, max.raw.res),
+         both.min.perc = pmax(min.025.leg, min.025.res),
+         both.max.perc = pmin(max.975.leg, max.975.res))
+
+rarefied.change.calcs.nofire <- rarefied.change.calcs %>% 
+  filter(fire=="no") %>% 
+  mutate(species.rank.med = dense_rank(med.leg),
+         #species.rank.min = dense_rank(min.raw.leg), #doesn't work because of ties
+         #species.rank.max = dense_rank(max.raw.leg), #doesn't work because of ties
+         both.min.raw = pmax(min.raw.leg, min.raw.res),
+         both.max.raw = pmin(max.raw.leg, max.raw.res),
+         both.min.perc = pmax(min.025.leg, min.025.res),
+         both.max.perc = pmin(max.975.leg, max.975.res))
+
+p.nofire <- ggplot(rarefied.change.calcs.nofire) + 
+  geom_rect(aes(xmin=species.rank.med-0.33, xmax=species.rank.med+0.33, ymin=min.025.leg, ymax=max.975.leg), fill = "firebrick") + # historic range in red; will show areas of range contractions
+  geom_rect(aes(xmin=species.rank.med-0.33, xmax=species.rank.med+0.33, ymin=min.025.res, ymax=max.975.res), fill = "dodgerblue4") + # modern range in blue; will show areas of range expansion
+  geom_rect(aes(xmin=species.rank.med-0.33, xmax=species.rank.med+0.33, ymin=both.min.perc, ymax=both.max.perc), fill = "#bdbdbd") + # areas common to both in grey
+  scale_x_continuous(breaks=c(1,29)) +
+  ylim(0,2200) +
+  xlab("") +
+  ylab("Elevation (m)") +
+  theme_bw() +
   theme(text=element_text(size=16), panel.grid.major = element_blank(), panel.grid.minor =   element_blank())
+
+p.fire <- ggplot(rarefied.change.calcs.fire) + 
+  geom_rect(aes(xmin=species.rank.med-0.33, xmax=species.rank.med+0.33, ymin=min.025.leg, ymax=max.975.leg), fill = "firebrick") + # historic range in red; will show areas of range contractions
+  geom_rect(aes(xmin=species.rank.med-0.33, xmax=species.rank.med+0.33, ymin=min.025.res, ymax=max.975.res), fill = "dodgerblue4") + # modern range in blue; will show areas of range expansion
+  geom_rect(aes(xmin=species.rank.med-0.33, xmax=species.rank.med+0.33, ymin=both.min.perc, ymax=both.max.perc), fill = "#bdbdbd") + # areas common to both in grey
+  ylim(0,2200) +
+  scale_x_continuous(breaks=c(1,7)) +
+  xlab("") +
+  #ylab("Elevation (m)") +
+  theme_bw() +
+  theme(text=element_text(size=16), panel.grid.major = element_blank(), panel.grid.minor =   element_blank())
+
+range.fig <- plot_grid(p.nofire, p.fire, rel_widths=c(2.8,1), labels=c("A", "B"))
+range.fig <- ggdraw(add_sub(range.fig, "Species", vpadding=grid::unit(0,"lines"), y=6, x=0.75, vjust=4.5, size=16))
+
+ggsave("figures/elevation_ranges_2panel.pdf", range.fig, device="pdf", width=5, height=5)
+
