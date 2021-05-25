@@ -312,8 +312,8 @@ fire.pos <- rarefied.change.calcs %>%
   droplevels()
 
 p <- ggplot(rarefied.change.calcs) + 
-  geom_rect(aes(xmin=species.rank.med-0.33, xmax=species.rank.med+0.33, ymin=min.025.leg, ymax=max.975.leg), fill = "firebrick") + # historic range in red; will show areas of range contractions
-  geom_rect(aes(xmin=species.rank.med-0.33, xmax=species.rank.med+0.33, ymin=min.025.res, ymax=max.975.res), fill = "dodgerblue4") + # modern range in blue; will show areas of range expansion
+  geom_rect(aes(xmin=species.rank.med-0.33, xmax=species.rank.med+0.33, ymin=min.025.leg, ymax=max.975.leg), fill = "#F8766D") + # historic range in red; will show areas of range contractions
+  geom_rect(aes(xmin=species.rank.med-0.33, xmax=species.rank.med+0.33, ymin=min.025.res, ymax=max.975.res), fill = "#00BFC4") + # modern range in blue; will show areas of range expansion
   geom_rect(aes(xmin=species.rank.med-0.33, xmax=species.rank.med+0.33, ymin=both.min.perc, ymax=both.max.perc), fill = "#bdbdbd") + # areas common to both in grey
   scale_x_continuous("Species", breaks=c(1,9,18,27,36)) +
   scale_y_continuous("Elevation (m)", breaks=c(0,500,1000,1500,2000)) +
@@ -346,8 +346,8 @@ rarefied.change.calcs.nofire <- rarefied.change.calcs %>%
          both.max.perc = pmin(max.975.leg, max.975.res))
 
 p.nofire <- ggplot(rarefied.change.calcs.nofire) + 
-  geom_rect(aes(xmin=species.rank.med-0.33, xmax=species.rank.med+0.33, ymin=min.025.leg, ymax=max.975.leg), fill = "firebrick") + # historic range in red; will show areas of range contractions
-  geom_rect(aes(xmin=species.rank.med-0.33, xmax=species.rank.med+0.33, ymin=min.025.res, ymax=max.975.res), fill = "dodgerblue4") + # modern range in blue; will show areas of range expansion
+  geom_rect(aes(xmin=species.rank.med-0.33, xmax=species.rank.med+0.33, ymin=min.025.leg, ymax=max.975.leg), fill = "#F8766D") + # historic range in red; will show areas of range contractions
+  geom_rect(aes(xmin=species.rank.med-0.33, xmax=species.rank.med+0.33, ymin=min.025.res, ymax=max.975.res), fill = "#00BFC4") + # modern range in blue; will show areas of range expansion
   geom_rect(aes(xmin=species.rank.med-0.33, xmax=species.rank.med+0.33, ymin=both.min.perc, ymax=both.max.perc), fill = "#bdbdbd") + # areas common to both in grey
   scale_x_continuous(breaks=c(1,29)) +
   ylim(0,2200) +
@@ -357,8 +357,8 @@ p.nofire <- ggplot(rarefied.change.calcs.nofire) +
   theme(text=element_text(size=16), panel.grid.major = element_blank(), panel.grid.minor =   element_blank())
 
 p.fire <- ggplot(rarefied.change.calcs.fire) + 
-  geom_rect(aes(xmin=species.rank.med-0.33, xmax=species.rank.med+0.33, ymin=min.025.leg, ymax=max.975.leg), fill = "firebrick") + # historic range in red; will show areas of range contractions
-  geom_rect(aes(xmin=species.rank.med-0.33, xmax=species.rank.med+0.33, ymin=min.025.res, ymax=max.975.res), fill = "dodgerblue4") + # modern range in blue; will show areas of range expansion
+  geom_rect(aes(xmin=species.rank.med-0.33, xmax=species.rank.med+0.33, ymin=min.025.leg, ymax=max.975.leg), fill = "#F8766D") + # historic range in red; will show areas of range contractions
+  geom_rect(aes(xmin=species.rank.med-0.33, xmax=species.rank.med+0.33, ymin=min.025.res, ymax=max.975.res), fill = "#00BFC4") + # modern range in blue; will show areas of range expansion
   geom_rect(aes(xmin=species.rank.med-0.33, xmax=species.rank.med+0.33, ymin=both.min.perc, ymax=both.max.perc), fill = "#bdbdbd") + # areas common to both in grey
   ylim(0,2200) +
   scale_x_continuous(breaks=c(1,7)) +
