@@ -1,22 +1,15 @@
 # Created: May 18, 2021
 # Updated: 
 
-# This script is modified from Rachel's 1_tidydata.R script.
+# This script borrows from Rachel's 1_tidydata.R script for NOCA data.
 # Its purpose is to describe the elevation ranges of focal species used in the seed addition experiment (i.e., to characterize each seed addition plot as being within vs outside of the species' range)
 
-# Understory species: anemone occidentalis, eriophyllum lanatum, erigeron perigrinus, lupinus latifolius (probably recorded as arcticus at time of survey), mahonia aquifolium,  rubus ursinus, sambucus racemosa, sorbus sitchensis, ambucus cerulea, tellima grandiflora, tolmiea menziesii, vaccinium parvifollium
-
-# IMPORTANT NOTE: unless otherwise indicated, always use Understory_All.csv for these analyses as it is the ONLY file with up-to-date corrections.
+# Understory species: anemone occidentalis, eriophyllum lanatum, erigeron perigrinus, lupinus latifolius (probably recorded as arcticus at time of survey), mahonia aquifolium,  rubus ursinus, sambucus racemosa, sorbus sitchensis, sambucus cerulea, tellima grandiflora, tolmiea menziesii, vaccinium parvifollium
 
 # Packages needed:
+library(tidyverse)
 
-library(reshape2)
-library(rms)
-library(plyr)
-library(MuMIn)
-
-
-#### STEP 1: Import data ####
+#### STEP 1: Import NOCA data ####
 
 und.cover <- read.csv("data/Understory_All.csv", header=TRUE, na.strings="") # L = Legacy and R = Resurvey
 und.cover$Elevation.m <- as.numeric(as.character(und.cover$Elevation.m)) #gives NA warning - no worries
@@ -28,9 +21,7 @@ names(plot.names) <- c("Plot.2015", "Plot.1980", "Elevation.m")
 fires <- read.csv("data/All_Plots_Wildfire_Join.csv", header=TRUE, na.strings="")
 
 
-
-
-#### STEP 2: Plot-related corrections (removals, edits, and additions) ####
+#### STEP 2: Plot-related corrections @ NOCA (removals, edits, and additions) ####
 
 # List of datasets to be modified: 
 # --> fires
@@ -87,17 +78,17 @@ rownames(plot.names) <- 1:nrow(plot.names)
 rownames(und.cover) <- 1:nrow(und.cover)
 
 
-#### STEP 3: Filter to focal species ####
+#### STEP 3: Filter NOCA to focal species ####
 
-focal.list <- as.data.frame(c("ANOC", "ERLA", "ERPE", "LULA", "MAAQ", "RUUR", "SARA", "SOSI", "AMCE", "TEGR", "TOME", "VAPA"))
+focal.list <- as.data.frame(c("ANOC", "ERLA", "ERPE", "LULA", "MAAQ", "RUUR", "SARA", "SOSI", "SACE", "TEGR", "TOME", "VAPA")) 
 names(focal.list) = "species"
 
 und.cover.focal <- left_join(focal.list, und.cover, by=c("species"="Species.Code"))
 
 
 
-#### STEP 4: Calculate elevation ranges of focal species ####
-focal.ranges <- und.cover.focal %>% 
+#### STEP 4: Calculate NOCA elevation ranges of focal species ####
+focal.ranges.noca <- und.cover.focal %>% 
   group_by(species) %>% 
   summarise(min_el = min(Elevation.m),
          med_el = median(Elevation.m),
@@ -105,4 +96,28 @@ focal.ranges <- und.cover.focal %>%
          n_obs = sum(!is.na(Elevation.m)))
 
 
+### STEP 5: Try MORA data
+
+mora.veg <- read_csv("data/MORA_Cascade Legacy Data_Master2018.xlsx - Veg Data.csv") %>% 
+  separate(col=Species, into=c("SppCode","LatinBionom"), sep="-") %>% 
+  separate(col=PlotID, into=c("SiteName","Plotno"), sep="-") 
+
+mora.veg$Plotno = as.numeric(mora.veg$Plotno)
+
+mora.plots <- read_csv("data/MORA_Cascade Legacy Data_Original1978.xlsx - Site Info.csv")
+
+mora.veg <- left_join(mora.veg, mora.plots)
+
+focal.list.mora <- as.data.frame(c("LUPLAT", "MAHAQU", "RUBURS", "SAMRAC", "SORSIT", "TELGRA", "TOLMEN", "VACPAR")) 
+# removed because missing entirely at MORA: "ANNOCC", "ERILAN", "ERIPER", "SAMCER", 
+names(focal.list.mora) = "Species"
+
+mora.veg.focal <- left_join(focal.list.mora, mora.veg, by=c("Species"="SppCode")) 
+
+focal.ranges.mora <- mora.veg.focal %>% 
+  group_by(Species) %>% 
+  summarise(min_el = min(Elevation, na.rm=T),
+            med_el = median(Elevation, na.rm=T),
+            max_el = max(Elevation, na.rm=T),
+            n_obs = sum(!is.na(Elevation)))
 
