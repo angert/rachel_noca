@@ -1,8 +1,49 @@
 # Created: Feb. 16, 2021
-# Modified: Apr. 23, 2021
+# Modified: May 27, 2021
 # This script visualizes model-averaged predictions for each rarefied dataset
 
 library(tidyverse)
+
+#### elevation vector for multiplying by model coefficients
+# needs to be in poly-transformed units
+dat <- read_csv("data/3c_transformed_polynomials.csv")
+
+# exploring to determine what poly-tranformed values should be
+# relationship between quadratic and linear terms in poly-transformed units is a perfect quadratic
+#ggplot(data=dat, aes(x=Elevation.m.poly, y=Elevation.m2.poly)) +
+#geom_point() +
+#geom_smooth(method="lm", formula= y~poly(x,2))
+
+# quadratic function is given by this model
+poly.mod <- lm(Elevation.m2.poly ~ Elevation.m.poly + I(Elevation.m.poly^2), data=dat)
+
+# linear vector
+# range based on min/max values in dat$Elevation.m.poly
+elev.vec.lin = as.numeric(seq(min(dat$Elevation.m.poly), max(dat$Elevation.m.poly), by=0.0001)) 
+
+# quadratic vector
+elev.vec.quad = poly.mod$coefficients[1] + 
+  elev.vec.lin*poly.mod$coefficients[2] + 
+  elev.vec.lin*elev.vec.lin*poly.mod$coefficients[3]
+#plot(elev.vec.quad ~ elev.vec.lin) + 
+#points(dat$Elevation.m.poly, dat$Elevation.m2.poly, col="red") #ok! we have linear and quadratic elevation vectors that match what the models are using
+
+
+#### elevation list for back-transformed axis labels
+# needs to be in raw units (m)
+#ggplot(data=dat, aes(x=Elevation.m.poly, y=Elevation.m)) +
+#geom_point() +
+#geom_smooth(method="lm")
+
+poly.ticks.default = seq(-0.08, 0.08, by=0.04)
+back.mod.default <- lm(Elevation.m ~ Elevation.m.poly, data=dat)
+raw.ticks.default = back.mod.default$coefficients[1] + poly.ticks.default*back.mod.default$coefficients[2]
+
+back.mod.custom <- lm(Elevation.m.poly ~ Elevation.m, data=dat)
+raw.ticks.custom = c(100, 600, 1100, 1600, 2100)
+poly.ticks.custom = back.mod.custom$coefficients[1] + raw.ticks.custom*back.mod.custom$coefficients[2]
+
+
 
 #### read in and prepare tables of coefficients
 
@@ -10,13 +51,51 @@ library(tidyverse)
 # these models use the poly() formulaton for orthogonal elevation^2 terms
 coeff.ALLDAT <- read.csv("data/3b_new_coefficients.csv", header = TRUE)
 
+## FIRE SPECIES DATA
 # filter to just model average for each rarefied dataset
-coeff.avgs <- coeff.ALLDAT %>% filter(Type=="Avg") # now we have 100 model averages per species (or, <100 for the species for which some rarefied datasets threw warnings?)
+# should have 100 model averages per species (or, <100 for the species for which some rarefied datasets threw warnings?)
+coeffs.fire <- coeff.ALLDAT %>% 
+  filter(Type=="Avg") %>% 
+  filter(Fire.Included=="Yes") %>% 
+  # slim down to only columns of interest, rename for convenience
+  select(Species,
+         Int=Intercept, 
+         Elev=Elevation.m, 
+         Elev2=Elevation.m2, 
+         ResurvBurn = Resurvey.Burned.fi,
+         ResurvUnburn = Resurvey.Unburned.fi,
+         ResurvBurnxElev = Elevation.m.Res.Burn.fi,
+         ResurvBurnxElev2 = Elevation.m2.Res.Burn.fi,
+         ResurvUnburnxElev = Elevation.m2.Res.Unburn.fi,
+         ResurvUnburnXElev2 = Elevation.m2.Res.Unburn.fi) %>% 
+  # replace na coefficients with zeros
+  mutate_if(is.numeric, ~replace(., is.na(.), 0)) %>% 
+  # and turn the table into nested data  
+  group_by(Species) %>% 
+  nest()
 
-# split into species modeled with fire vs without
-coeffs.fire <- coeff.avgs %>% filter(Fire.Included=="Yes")
-coeffs.nofire <- coeff.avgs %>% filter(Fire.Included=="No")
+## NO-FIRE SPECIES DATA
+# filter to just model average for each rarefied dataset
+# should have 100 model averages per species (or, <100 for the species for which some rarefied datasets threw warnings?)
+coeffs.nofire <- coeff.ALLDAT %>% 
+  filter(Type=="Avg") %>% 
+  filter(Fire.Included=="No") %>% 
+  # slim down to only columns of interest, rename for convenience
+  select(Species,
+         Int=Intercept, 
+         Elev=Elevation.m, 
+         Elev2=Elevation.m2, 
+         Year = Data.Type.nofi,
+         YearxElev = Data.Type.Elevation.m.nofi,
+         YearxElev2 = Data.Type.Elevation.m2.nofi) %>% 
+  # replace na coefficients with zeros
+  mutate_if(is.numeric, ~replace(., is.na(.), 0)) %>% 
+  # and turn the table into nested data  
+  group_by(Species) %>% 
+  nest()
 
+
+  
 #### species lists
 
 ## good spp - fire (n=7)
@@ -39,60 +118,18 @@ coeffs.nofire <- coeff.avgs %>% filter(Fire.Included=="No")
 ## bad spp (n=6)
 #"COST", "LUPE", "PHEM", "RHAL", "VAAL", "VADE"
 
-species.list.fire <- coeffs.fire %>% 
-  group_by(Species) %>% 
-  summarise(Species=first(Species))
+#species.list.fire <- coeffs.fire %>% 
+#  group_by(Species) %>% 
+#  summarise(Species=first(Species))
 
-species.list.nofire <- coeffs.nofire %>% 
-  group_by(Species) %>% 
-  summarise(Species=first(Species))
-
-
-#### elevation vector for multiplying by coefficients
-# needs to be in poly-transformed units
-
-# exploring to determine what poly-tranformed values should be
-dat <- read_csv("data/3c_transformed_polynomials.csv")
-
-# relationship between quadratic and linear terms in poly-transformed units is a perfect quadratic
-ggplot(data=dat, aes(x=Elevation.m.poly, y=Elevation.m2.poly)) +
-  geom_point() +
-  geom_smooth(method="lm", formula= y~poly(x,2))
-
-# quadratic function is given by this model
-poly.mod <- lm(Elevation.m2.poly ~ Elevation.m.poly + I(Elevation.m.poly^2), data=dat)
-
-# linear vector
-# range based on min/max values in dat$Elevation.m.poly
-elev.vec.lin = as.numeric(seq(min(dat$Elevation.m.poly), max(dat$Elevation.m.poly), by=0.0001)) 
-
-# quadratic vector
-elev.vec.quad = poly.mod$coefficients[1] + 
-  elev.vec.lin*poly.mod$coefficients[2] + 
-  elev.vec.lin*elev.vec.lin*poly.mod$coefficients[3]
-plot(elev.vec.quad ~ elev.vec.lin) + 
-  points(dat$Elevation.m.poly, dat$Elevation.m2.poly, col="red") #ok! we have linear and quadratic elevation vectors that match what the models are using
+#species.list.nofire <- coeffs.nofire %>% 
+#  group_by(Species) %>% 
+#  summarise(Species=first(Species))
 
 
-#### elevation list for back-transformed axis labels
-# needs to be in raw units (m)
-ggplot(data=dat, aes(x=Elevation.m.poly, y=Elevation.m)) +
-  geom_point() +
-  geom_smooth(method="lm")
 
-poly.ticks.default = seq(-0.08, 0.08, by=0.04)
-back.mod.default <- lm(Elevation.m ~ Elevation.m.poly, data=dat)
-raw.ticks.default = back.mod.default$coefficients[1] + poly.ticks.default*back.mod.default$coefficients[2]
-
-back.mod.custom <- lm(Elevation.m.poly ~ Elevation.m, data=dat)
-raw.ticks.custom = c(100, 600, 1100, 1600, 2100)
-poly.ticks.custom = back.mod.custom$coefficients[1] + raw.ticks.custom*back.mod.custom$coefficients[2]
 
 #### other prep work
-# empty matrices for writing best-fit lines into
-pred.leg.reps = matrix(nrow=length(elev.vec.lin),ncol=100)
-pred.res.unburn.reps = matrix(nrow=length(elev.vec.lin),ncol=100)
-pred.res.burn.reps = matrix(nrow=length(elev.vec.lin),ncol=100)
 
 # function for converting predictions to 0-1 response scale
 response = function(y) {
@@ -102,21 +139,22 @@ response = function(y) {
 # color palette for fire graphs
 col.pal <- c("turquoise4", "red3", "goldenrod1")
 
-#### big loop to calculate predicted values across each rarefaction for each species
+# empty matrices for writing best-fit lines into
+pred.leg.reps = matrix(nrow=length(elev.vec.lin),ncol=100)
+pred.res.unburn.reps = matrix(nrow=length(elev.vec.lin),ncol=100)
+pred.res.burn.reps = matrix(nrow=length(elev.vec.lin),ncol=100)
+
+
+#### big loop to calculate predicted values across each rarefaction for each species --->
+#### attempting to convert to functions across lists of nested data frames
+
+
+
+
 for (i in 1:dim(species.list.fire)[1]) {
   sp = as.list(species.list.fire[i,1]) 
   mods <- coeffs.fire %>% 
-    filter(Species==sp) %>% 
-    select(Int=Intercept, 
-           Elev=Elevation.m, 
-           Elev2=Elevation.m2, 
-           ResurvBurn = Resurvey.Burned.fi,
-           ResurvUnburn = Resurvey.Unburned.fi,
-           ResurvBurnxElev = Elevation.m.Res.Burn.fi,
-           ResurvBurnxElev2 = Elevation.m2.Res.Burn.fi,
-           ResurvUnburnxElev = Elevation.m2.Res.Unburn.fi,
-           ResurvUnburnXElev2 = Elevation.m2.Res.Unburn.fi) %>% 
-    mutate_if(is.numeric, ~replace(., is.na(.), 0))
+    filter(Species==sp) 
   
   for (j in 1:dim(mods)[1]) {
     pred.leg.reps[,j] = mods$Int[j] + mods$Elev[j]*elev.vec.lin + mods$Elev2[j]*elev.vec.quad
