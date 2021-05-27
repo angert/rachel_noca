@@ -4,45 +4,12 @@
 
 library(tidyverse)
 
-#### elevation vector for multiplying by model coefficients
-# needs to be in poly-transformed units
+#### elevation vectors for multiplying by model coefficients
+# in poly-transformed units
 dat <- read_csv("data/3c_transformed_polynomials.csv")
-
-# exploring to determine what poly-tranformed values should be
-# relationship between quadratic and linear terms in poly-transformed units is a perfect quadratic
-#ggplot(data=dat, aes(x=Elevation.m.poly, y=Elevation.m2.poly)) +
-#geom_point() +
-#geom_smooth(method="lm", formula= y~poly(x,2))
-
-# quadratic function is given by this model
-poly.mod <- lm(Elevation.m2.poly ~ Elevation.m.poly + I(Elevation.m.poly^2), data=dat)
-
-# linear vector
-# range based on min/max values in dat$Elevation.m.poly
 elev.vec.lin = as.numeric(seq(min(dat$Elevation.m.poly), max(dat$Elevation.m.poly), by=0.0001)) 
-
-# quadratic vector
-elev.vec.quad = poly.mod$coefficients[1] + 
-  elev.vec.lin*poly.mod$coefficients[2] + 
-  elev.vec.lin*elev.vec.lin*poly.mod$coefficients[3]
-#plot(elev.vec.quad ~ elev.vec.lin) + 
-#points(dat$Elevation.m.poly, dat$Elevation.m2.poly, col="red") #ok! we have linear and quadratic elevation vectors that match what the models are using
-
-
-#### elevation list for back-transformed axis labels
-# needs to be in raw units (m)
-#ggplot(data=dat, aes(x=Elevation.m.poly, y=Elevation.m)) +
-#geom_point() +
-#geom_smooth(method="lm")
-
-poly.ticks.default = seq(-0.08, 0.08, by=0.04)
-back.mod.default <- lm(Elevation.m ~ Elevation.m.poly, data=dat)
-raw.ticks.default = back.mod.default$coefficients[1] + poly.ticks.default*back.mod.default$coefficients[2]
-
-back.mod.custom <- lm(Elevation.m.poly ~ Elevation.m, data=dat)
-raw.ticks.custom = c(100, 600, 1100, 1600, 2100)
-poly.ticks.custom = back.mod.custom$coefficients[1] + raw.ticks.custom*back.mod.custom$coefficients[2]
-
+poly.mod <- lm(Elevation.m2.poly ~ Elevation.m.poly + I(Elevation.m.poly^2), data=dat)
+elev.vec.quad = poly.mod$coefficients[1] + elev.vec.lin*poly.mod$coefficients[2] + elev.vec.lin*elev.vec.lin*poly.mod$coefficients[3]
 
 
 #### read in and prepare tables of coefficients
@@ -95,18 +62,43 @@ coeffs.nofire <- coeff.ALLDAT %>%
   nest()
 
 
-  
+#### Other prep work
 
+# functions for calculating best-fit lines
 
-#### other prep work
+pred.leg.reps <- function(data, elev.vec.lin, elev.vec.quad) {
+  data$Int +
+    map(data$Elev, ~.*elev.vec.lin) +
+    map(data$Elev2, ~.*elev.vec.quad)
+  #data$Int + data$Elev*elev.vec.lin + data$Elev2*elev.vec.quad
+  }
+tmp.int + 
+lin <- map(tmp.el, ~.*elev.vec.lin) 
+quad <- map(tmp.el2, ~.*elev.vec.quad)
+
+test <- map2(lin, quad, sum)
+
+  map(data$Elev2, ~.*elev.vec.quad)
+pred.leg.reps(coeffs.fire$data[[1]], elev.vec.lin, elev.vec.quad)
+
+pred.res.unburn.reps <- function(data, elev.vec.lin, elev.vec.quad) {
+  data$Int + data$Elev*elev.vec.lin + data$Elev2*elev.vec.quad + data$ResurvUnburn +     data$ResurvUnburnxElev*elev.vec.lin + data$ResurvUnburnXElev2*elev.vec.quad 
+} 
+
+pred.res.burn.reps[,j] = mods$Int[j] + mods$Elev[j]*elev.vec.lin + mods$Elev2[j]*elev.vec.quad + mods$ResurvBurn[j] + mods$ResurvBurnxElev[j]*elev.vec.lin 
++ mods$ResurvBurnxElev2[j]*elev.vec.quad
 
 # function for converting predictions to 0-1 response scale
 response = function(y) {
   exp(as.numeric(y))/(1+exp(as.numeric(y)))
   }
   
-# color palette for fire graphs
-col.pal <- c("turquoise4", "red3", "goldenrod1")
+# color palettes for graphs
+col.pal.fire <- c("turquoise4", "red3", "goldenrod1")
+col.pal.nofire <- c("turquoise4", "goldenrod1")
+
+# tick marks for graphs
+ticks.custom <- read_csv("data/tickmarks.csv")
 
 # empty matrices for writing best-fit lines into
 pred.leg.reps = matrix(nrow=length(elev.vec.lin),ncol=100)
@@ -174,7 +166,7 @@ for (i in 1:dim(species.list.fire)[1]) {
     geom_line(size=2, linetype="dotted") +
     theme_classic() +
     scale_color_manual("Time x fire", values=col.pal, labels=c("legacy", "resurvey, burned", "resurvey, unburned")) +
-    scale_x_continuous(breaks=poly.ticks.custom, labels=raw.ticks.custom) +
+    scale_x_continuous(breaks=ticks.custom$poly.ticks.custom, labels=ticks.custom$raw.ticks.custom) +
     xlab("Elevation (m)") +
     ylab("Probability of presence")
   
@@ -200,8 +192,6 @@ for (i in 1:dim(species.list.fire)[1]) {
 pred.leg.reps = matrix(nrow=length(elev.vec.lin),ncol=100)
 pred.res.reps = matrix(nrow=length(elev.vec.lin),ncol=100)
 
-# new color palette
-col.pal <- c("turquoise4", "goldenrod1")
 
 for (i in 1:dim(species.list.nofire)[1]) {
   sp = as.list(species.list.nofire[i,1])
@@ -251,7 +241,7 @@ for (i in 1:dim(species.list.nofire)[1]) {
     geom_line(size=2, linetype="dotted") +
     theme_classic() +
     scale_color_manual("Time", values=col.pal, labels=c("legacy", "resurvey")) +
-    scale_x_continuous(breaks=poly.ticks.custom, labels=raw.ticks.custom) +
+    scale_x_continuous(breaks=ticks.custom$poly.ticks.custom, labels=ticks.custom$raw.ticks.custom) +
     xlab("Elevation (m)") +
     ylab("Probability of presence")
   
