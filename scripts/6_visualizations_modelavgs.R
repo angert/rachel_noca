@@ -96,37 +96,6 @@ coeffs.nofire <- coeff.ALLDAT %>%
 
 
   
-#### species lists
-
-## good spp - fire (n=7)
-#"ACMI", "CEVE", "EPAN", "PAMY"
-#"ARUV" (but based on 98 datasets without warnings)
-#"CARU" (but 21 datasets meet criterion for no fire)
-#"VAME" (but cannot run most complex model)species.list.fire <- coeffs.fire %>% 
-
-## good spp - no fire (n=29)
-#"ACCI", "ACGL", "ATFI", "CHUM", "CLUN", "COCA", "GASH", "GOOB", "GYDR", "LIBO", "MANE", "MEFE", "OPHO", "POMU", "PTAQ", "RUPA", "RUPE", "RUSP", "SOSI", "TITR", "VASI"
-#"AMAL" (but based on 98 datasets without warnings)
-#"CAME" (but based on 74 datasets without warnings)
-#"GAOV" (but based on 99 datasets without warnings)
-#"HIAL" (but based on 99 datasets without warnings)
-#"HODI" (but cannot run most complex model)
-#"RULA" (but based on 99 datasets without warnings)
-#"SPBE" (but 35 datasets meet criterion for fire)
-#"TRBO" (but based on 70 datasets without warnings)
-
-## bad spp (n=6)
-#"COST", "LUPE", "PHEM", "RHAL", "VAAL", "VADE"
-
-#species.list.fire <- coeffs.fire %>% 
-#  group_by(Species) %>% 
-#  summarise(Species=first(Species))
-
-#species.list.nofire <- coeffs.nofire %>% 
-#  group_by(Species) %>% 
-#  summarise(Species=first(Species))
-
-
 
 
 #### other prep work
