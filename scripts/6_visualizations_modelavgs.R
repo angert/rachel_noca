@@ -7,7 +7,7 @@ library(tidyverse)
 #### elevation vectors for multiplying by model coefficients
 # in poly-transformed units
 dat <- read_csv("data/3c_transformed_polynomials.csv")
-elev.vec.lin = as.numeric(seq(min(dat$Elevation.m.poly), max(dat$Elevation.m.poly), by=0.0001)) 
+elev.vec.lin = as.numeric(seq(min(dat$Elevation.m.poly), max(dat$Elevation.m.poly), by=0.01)) 
 poly.mod <- lm(Elevation.m2.poly ~ Elevation.m.poly + I(Elevation.m.poly^2), data=dat)
 elev.vec.quad = poly.mod$coefficients[1] + elev.vec.lin*poly.mod$coefficients[2] + elev.vec.lin*elev.vec.lin*poly.mod$coefficients[3]
 
@@ -72,11 +72,14 @@ pred.leg.reps <- function(data, elev.vec.lin, elev.vec.quad) {
     map(data$Elev2, ~.*elev.vec.quad)
   #data$Int + data$Elev*elev.vec.lin + data$Elev2*elev.vec.quad
   }
-tmp.int + 
-lin <- map(tmp.el, ~.*elev.vec.lin) 
+tmp.int <-coeffs.fire$data[[1]]$Int #100 rarefied intercepts
+tmp.el <-coeffs.fire$data[[1]]$Elev #100 rarefied linear coefficients
+tmp.el2 <-coeffs.fire$data[[1]]$Elev2 #100 rarefied quadratic coefficients
+
+lin <- map(tmp.el, ~.*elev.vec.lin) #effect of each rarefied coefficient multiplied across a range of elevations
 quad <- map(tmp.el2, ~.*elev.vec.quad)
 
-test <- map2(lin, quad, sum)
+test <- pmap(lin, quad, ~.x + ~.y)
 
   map(data$Elev2, ~.*elev.vec.quad)
 pred.leg.reps(coeffs.fire$data[[1]], elev.vec.lin, elev.vec.quad)
