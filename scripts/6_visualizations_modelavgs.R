@@ -4,7 +4,7 @@
 #### This script visualizes model-averaged predictions for each rarefied dataset
 
 library(tidyverse)
-
+library(cowplot)
 
 #### Read in and prepare tables of coefficients
 
@@ -61,9 +61,9 @@ response = function(y) {
 
 # color palettes 
 # for fire species
-col.pal <- c("turquoise4", "red3", "goldenrod1")
+col.pal.fire <- c("turquoise4", "red3", "goldenrod1")
 # for no-fire species
-col.pal <- c("turquoise4", "goldenrod1")
+col.pal.nofire <- c("turquoise4", "goldenrod1")
 
 
 #### FIRE SPECIES: big loop to calculate predicted values across each rarefaction for each species
@@ -129,20 +129,27 @@ for (i in 1:dim(species.list.fire)[1]) {
     mutate(preds = mean.resp)
   
   gg <- ggplot(graph.dat.means, aes(x = elev.vec.lin, y = preds, color = V2)) + 
-    geom_line(size=2) +
-    geom_line(data=graph.dat.tall, aes(group=interaction(V2, rep), color=V2), alpha=0.2) +
-    geom_line(data=graph.dat.tall, aes(group=interaction(V2, rep), color=V2), alpha=0.15) +
-    geom_line(size=2, linetype="dotted") +
+    geom_line(data=graph.dat.tall, aes(group=interaction(V2, rep), color=V2), alpha=0.15, show.legend = FALSE) +
+    geom_line(size=2, linetype="dotted", show.legend = FALSE) +
     theme_classic() +
-    scale_color_manual("Time x fire", values=col.pal, labels=c("legacy", "resurvey, burned", "resurvey, unburned")) +
-    scale_x_continuous(breaks=poly.ticks.custom, labels=raw.ticks.custom) +
-    xlab("Elevation (m)") +
-    ylab("Probability of presence")
+    scale_color_manual("Time x fire", values=col.pal.fire, labels=c("legacy", "resurvey, burned", "resurvey, unburned")) +
+    scale_x_continuous(breaks=poly.ticks, labels=raw.ticks) +
+    xlab("") + #Elevation (m)
+    ylab("") #Probability of presence
   
-  ggsave(paste("figures/model.preds_ortho_",sp,".pdf",sep=""), gg, width=5, height=5)
+  #ggsave(paste("figures/model.preds_ortho_",sp,".pdf",sep=""), gg, width=5, height=5)
   
   assign(paste0("preds_graph_",sp), gg)
 } 
+
+# repeat last plot with legend so that legend can be saved for multi-panel fig
+gg <- ggplot(graph.dat.means, aes(x = elev.vec.lin, y = preds, color = V2)) + 
+  geom_line(data=graph.dat.tall, aes(group=interaction(V2, rep), color=V2), alpha=0.15) +
+  geom_line(size=2, linetype="dotted") +
+  scale_color_manual("Time x fire", values=col.pal.fire, labels=c("legacy", "resurvey, burned", "resurvey, unburned")) +
+  theme_classic()
+
+legend.fire = get_legend(gg)
 
 
 #### NO-FIRE SPECIES: big loop to calculate predicted values across each rarefaction for each species
@@ -193,17 +200,32 @@ for (i in 1:dim(species.list.nofire)[1]) {
     mutate(preds=mean.resp)
   
   gg <- ggplot(graph.dat.means, aes(x = elev.vec.lin, y = preds, color = V2)) + 
-    geom_line(size=2) +
-    geom_line(data=graph.dat.tall, aes(group=interaction(V2, rep), color=V2), alpha=0.2) +
-    geom_line(data=graph.dat.tall, aes(group=interaction(V2, rep), color=V2), alpha=0.15) +
-    geom_line(size=2, linetype="dotted") +
+    geom_line(data=graph.dat.tall, aes(group=interaction(V2, rep), color=V2), alpha=0.15, show.legend = FALSE) +
+    geom_line(size=2, linetype="dotted", show.legend = FALSE) +
     theme_classic() +
-    scale_color_manual("Time", values=col.pal, labels=c("legacy", "resurvey")) +
-    scale_x_continuous(breaks=poly.ticks.custom, labels=raw.ticks.custom) +
-    xlab("Elevation (m)") +
-    ylab("Probability of presence")
+    scale_color_manual(name="TIME", values=col.pal.nofire, labels=c("legacy", "resurvey")) + 
+    scale_x_continuous(breaks=poly.ticks, labels=raw.ticks) +
+    xlab("") + #Elevation (m)
+    ylab("") #Probability of presence
   
-  ggsave(paste("figures/model.preds_ortho_",sp,".pdf",sep=""), gg, width=5, height=5)  
+  #ggsave(paste("figures/model.preds_ortho_",sp,".pdf",sep=""), gg, width=5, height=5)  
   
   assign(paste0("preds_graph_",sp), gg)
 }
+
+
+#### assemble example species into multi-panel figure
+
+multi <- plot_grid(preds_graph_ARUV, preds_graph_EPAN, NULL, 
+                   preds_graph_MANE, preds_graph_CHUM, preds_graph_OPHO,
+                   nrow=2, ncol=3,
+                   labels=c("A","B","", "C","D","E")) +
+  draw_grob(legend.fire, 2/3, 0.5, 1/3, 0.5) + 
+  theme(plot.margin = margin(10, 10, 5, 50))
+
+multi.x <- ggdraw(add_sub(multi, "Elevation (m)", size=14, x=0.5, y=0.05, hjust=0.5, vjust=0)) 
+multi.x
+multi.xy <- ggdraw(add_sub(multi.x, "Probability of presence", size=14, x=0.05, y=2, hjust=0.5, vjust=0.5, angle=90))
+multi.xy
+
+ggsave("figures/model_preds_multipanel.pdf", multi.xy, width=8, height=6)
