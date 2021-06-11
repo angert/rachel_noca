@@ -1,5 +1,6 @@
 library(DiagrammeR)
 library(DiagrammeRsvg)
+library(rsvg)
 
 flowchart <- grViz(diagram = "digraph flowchart {
 # define node aesthetics
@@ -40,8 +41,8 @@ flowchart <- grViz(diagram = "digraph flowchart {
       
       # add labels
       [1]: 'Data processing'
-      [2]: 'Create 100 rarefied datasets'    
-      [3]: 'Identify common species'
+      [2]: 'Identify common species'    
+      [3]: 'Create 100 rarefied datasets'
       [4]: 'Split by fire history'
       [5]: 'Fit candidate models x 100 (with fire)'
       [6]: 'Identify errors and adapt model frameworks'
@@ -52,6 +53,13 @@ flowchart <- grViz(diagram = "digraph flowchart {
       ")
 
 flowchart
+
+# Export graph
+setwd("figures") # For some reason, can't specify this in file name
+export_svg(flowchart) %>%
+  charToRaw() %>%
+  rsvg() %>%
+  png::writePNG("flowchart.png")
 
 # Need to manually export in RStudio - can't figure out how to automate save
 
