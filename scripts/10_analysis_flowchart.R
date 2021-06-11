@@ -5,8 +5,8 @@ library(rsvg)
 flowchart <- grViz(diagram = "digraph flowchart {
 # define node aesthetics
       node [fontname = arial, shape = rectangle, color = Lavender, style = filled]
-      tab6 [label = '@@7']
-      tab8 [label = '@@9']
+      tab7 [label = '@@7']
+      tab9 [label = '@@9']
 
       # additional node (text-only)
       node [fontname = arial, shape = plaintext, color = white]
@@ -15,8 +15,9 @@ flowchart <- grViz(diagram = "digraph flowchart {
       tab3 [label = '@@3']
       tab4 [label = '@@4']
       tab5 [label = '@@5']
-      tab7 [label = '@@7']
-      tab9 [label = '@@9']
+      tab6 [label = '@@6']
+      tab8 [label = '@@8']
+      tab10 [label = '@@10']
 
   
       # set up node layout
@@ -26,12 +27,13 @@ flowchart <- grViz(diagram = "digraph flowchart {
       tab3 -> tab4;
       tab4 -> tab5;
       tab5 -> tab6;
-      tab3 -> tab7;
-      tab7 -> tab8;
-      tab3 -> tab9;
-      tab9 -> tab5;
+      tab6 -> tab7;
+      tab4 -> tab8;
+      tab8 -> tab9;
+      tab4 -> tab10;
+      tab10 -> tab6;
 
-      { rank = same; tab3; tab7, tab8 }
+      { rank = same; tab4; tab8, tab9 }
 
     #  { rank = same; tab4; tab5 }
 
@@ -41,12 +43,13 @@ flowchart <- grViz(diagram = "digraph flowchart {
       [1]: 'Identify common species'    
       [2]: 'Create 100 rarefied datasets'
       [3]: 'Split by fire history'
-      [4]: 'Fit candidate models x 100 (with fire)'
-      [5]: 'Identify errors and adapt model frameworks'
-      [6]: 'Average coefficients for top models'
-      [7]: 'Identify range edges from 95th percentiles'
-      [8]: 'Calculate change in lower and upper edges'
-      [9]: 'Fit candidate models x 100 (without fire)'
+      [4]: 'Quantify range shifts'
+      [5]: 'Fit candidate models x 100 (with fire)'
+      [6]: 'Identify errors and adapt model frameworks'
+      [7]: 'Average coefficients for top models'
+      [8]: 'Identify range edges from 95th percentiles'
+      [9]: 'Calculate change in lower and upper edges'
+      [10]: 'Fit candidate models x 100 (without fire)'
       ")
 
 flowchart
