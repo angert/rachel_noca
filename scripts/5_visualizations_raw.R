@@ -372,3 +372,13 @@ range.fig <- ggdraw(add_sub(range.fig, "Species", vpadding=grid::unit(0,"lines")
 
 ggsave("figures/elevation_ranges_2panel.pdf", range.fig, device="pdf", width=5, height=5)
 
+
+## Statistical tests for differences between fire and no-fire species groups
+rarefied.change.calcs <- read_csv("data/5_range.change.calcs.csv")
+
+rear.t <- t.test(rarefied.change.calcs$rear.change.perc[rarefied.change.calcs$fire=="no"], rarefied.change.calcs$rear.change.perc[rarefied.change.calcs$fire=="yes"])
+
+med.t <- t.test(rarefied.change.calcs$med.change[rarefied.change.calcs$fire=="no"], rarefied.change.calcs$med.change[rarefied.change.calcs$fire=="yes"])
+
+lead.t <- t.test(rarefied.change.calcs$lead.change.perc[rarefied.change.calcs$fire=="no"], rarefied.change.calcs$lead.change.perc[rarefied.change.calcs$fire=="yes"])
+
