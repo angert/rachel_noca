@@ -218,24 +218,76 @@ write.csv(rarefied.change.calcs, "data/5_range.change.calcs.csv")
 # no-fire species
 rarefied.change.tall.nofire.raw <- rarefied.change.nofire %>% 
   select(rear.change.raw, med.change, lead.change.raw) %>% 
-  gather("edge", "change", 1:3) 
+  gather("edge", "change", 1:3) %>% 
+  add_column(fire="no")
 
 rarefied.change.tall.nofire.perc <- rarefied.change.nofire %>% 
   select(rear.change.perc, med.change, lead.change.perc) %>% 
-  gather("edge", "change", 1:3) 
+  gather("edge", "change", 1:3) %>% 
+  add_column(fire="no")
 
 # fire species
 rarefied.change.tall.fire.raw <- rarefied.change.fire %>% 
   select(rear.change.raw, med.change, lead.change.raw) %>% 
-  gather("edge", "change", 1:3) 
+  gather("edge", "change", 1:3) %>% 
+  add_column(fire="yes")
 
 rarefied.change.tall.fire.perc <- rarefied.change.fire %>% 
   select(rear.change.perc, med.change, lead.change.perc) %>% 
-  gather("edge", "change", 1:3) 
+  gather("edge", "change", 1:3) %>% 
+  add_column(fire="yes")
+
+rarefied.change.tall.perc <- bind_rows(rarefied.change.tall.nofire.perc, rarefied.change.tall.fire.perc)
+rarefied.change.tall.raw <- bind_rows(rarefied.change.tall.nofire.raw, rarefied.change.tall.fire.raw)
+
 
 level_order.raw = c("rear.change.raw", "med.change", "lead.change.raw")
 level_order.perc = c("rear.change.perc", "med.change", "lead.change.perc")
 
+# new versions by range position
+col.pal <- c("skyblue", "orange")
+
+violin.plot.raw <- ggplot(rarefied.change.tall.raw, aes(x=factor(edge, level=level_order.raw), y=change, fill=fire)) + 
+  geom_violin() +
+  scale_fill_manual(values=col.pal) +
+  #stat_summary(fun=mean, geom="point", cex=2)  +
+  theme_classic() +
+  geom_hline(yintercept=0, lty="dashed") +
+  xlab("") +
+  scale_x_discrete(labels=c("Lower\nedge", "Range\ncenter", "Upper\nedge")) +
+  ylim(-600,700) +
+  ylab(c("Elevational change (m)\n1983-2015")) +
+  geom_segment(aes(x = 0.8, xend = 1.2, y = 400, yend = 400)) +
+  geom_segment(aes(x = 1.8, xend = 2.2, y = 400, yend = 400)) +
+  geom_segment(aes(x = 2.75, xend = 3.15, y = 400, yend = 400)) +
+  annotate("text", x=1, y=450, label="ns") +
+  annotate("text", x=2, y=450, label="+") +
+  annotate("text", x=2.95, y=440, label="*") 
+violin.plot.raw
+
+ggsave("figures/violin_1panel_raw.pdf", violin.plot.raw, device="pdf", width=8, height=5)
+
+violin.plot.perc <- ggplot(rarefied.change.tall.perc, aes(x=factor(edge, level=level_order.perc), y=change, fill=fire)) +#, color=edge, fill=edge)) + 
+  geom_violin() +
+  scale_fill_manual(values=col.pal) +
+  #stat_summary(fun=mean, geom="point", cex=2)  +
+  theme_classic() +
+  geom_hline(yintercept=0, lty="dashed") +
+  xlab("") +
+  scale_x_discrete(labels=c("Lower\nedge", "Range\ncenter", "Upper\nedge")) +
+  ylim(-600,700) +
+  ylab(c("Elevational change (m)\n1983-2015")) +
+  geom_segment(aes(x = 0.8, xend = 1.2, y = 400, yend = 400)) +
+  geom_segment(aes(x = 1.8, xend = 2.2, y = 400, yend = 400)) +
+  geom_segment(aes(x = 2.75, xend = 3.15, y = 400, yend = 400)) +
+  annotate("text", x=1, y=450, label="ns") +
+  annotate("text", x=2, y=450, label="+") +
+  annotate("text", x=2.95, y=440, label="*") 
+violin.plot.perc
+
+ggsave("figures/violin_1panel_perc.pdf", violin.plot.perc, device="pdf", width=8, height=5)
+  
+# old versions by fire status
 violin.plot.nofire.raw <- ggplot(rarefied.change.tall.nofire.raw, aes(x=factor(edge, level=level_order.raw), y=change)) +#, color=edge, fill=edge)) + 
   geom_violin() +
   stat_summary(fun=mean, geom="point", cex=2)  +
@@ -375,9 +427,15 @@ rarefied.change.calcs <- read_csv("data/5_range.change.calcs.csv")
 rear.t <- t.test(rarefied.change.calcs$rear.change.perc[rarefied.change.calcs$fire=="no"], rarefied.change.calcs$rear.change.perc[rarefied.change.calcs$fire=="yes"])
 rear.t
 
+rear.t.raw <- t.test(rarefied.change.calcs$rear.change.raw[rarefied.change.calcs$fire=="no"], rarefied.change.calcs$rear.change.raw[rarefied.change.calcs$fire=="yes"])
+rear.t.raw
+
 med.t <- t.test(rarefied.change.calcs$med.change[rarefied.change.calcs$fire=="no"], rarefied.change.calcs$med.change[rarefied.change.calcs$fire=="yes"])
 med.t
 
 lead.t <- t.test(rarefied.change.calcs$lead.change.perc[rarefied.change.calcs$fire=="no"], rarefied.change.calcs$lead.change.perc[rarefied.change.calcs$fire=="yes"])
 lead.t
+
+lead.t.raw <- t.test(rarefied.change.calcs$lead.change.raw[rarefied.change.calcs$fire=="no"], rarefied.change.calcs$lead.change.raw[rarefied.change.calcs$fire=="yes"])
+lead.t.raw
 
