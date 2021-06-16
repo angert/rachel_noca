@@ -48,7 +48,7 @@ flowchart <- grViz(diagram = "digraph flowchart {
       [6]: 'Identify errors and adapt model frameworks'
       [7]: 'Average coefficients for top models'
       [8]: 'Identify range edges from 95th percentiles'
-      [9]: 'Calculate change in lower and upper edges'
+      [9]: 'Calculate change at range edges and median'
       [10]: 'Fit candidate models x 100 (without fire)'
       ")
 
