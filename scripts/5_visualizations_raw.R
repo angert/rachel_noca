@@ -14,25 +14,21 @@ load("data/rare.ALL.Rda")
 
 ### Species list
 
-# If all species combined, regardless of model type
-#load("data/Species.List.Rda") #TODO this file was made in an undocumented step
-#species.list <- shifts$Species.Code[!shifts$Species.Code=="MOSS"] #removing "MOSS"
-#species.list <- factor(species.list)
+# start with all species
+load("data/Species.List.Rda") #TODO this file was made in an undocumented step
+species.list <- shifts %>% 
+  filter(Species.Code!="MOSS") %>% 
+  select(Species=Species.Code)
+species.list$Species <- as.character(species.list$Species)
 
-# If separating fire and no-fire species
-coeff.avgs <- read.csv("data/3b_new_coefficients.csv", header = TRUE) %>% filter(Type=="Avg") 
-
-# split into species modeled with fire vs without
-coeffs.fire <- coeff.avgs %>% filter(Fire.Included=="Yes")
-coeffs.nofire <- coeff.avgs %>% filter(Fire.Included=="No")
-
-species.list.fire <- coeffs.fire %>% 
+# separate out fire species
+species.list.fire <- read.csv("data/3b_new_coefficients.csv", header = TRUE) %>% 
+  filter(Type=="Avg")  %>% 
+  filter(Fire.Included=="Yes") %>% 
   group_by(Species) %>% 
   summarise(Species=first(Species))
 
-species.list.nofire <- coeffs.nofire %>% 
-  group_by(Species) %>% 
-  summarise(Species=first(Species))
+species.list.nofire <- anti_join(species.list, species.list.fire)
 
 ### Set up empty matrices to store values
 el.mins.raw.leg.nofire <- matrix(nrow=100,ncol=dim(species.list.nofire)[1])
@@ -315,7 +311,7 @@ p <- ggplot(rarefied.change.calcs) +
   geom_rect(aes(xmin=species.rank.med-0.33, xmax=species.rank.med+0.33, ymin=min.025.leg, ymax=max.975.leg), fill = "#F8766D") + # historic range in red; will show areas of range contractions
   geom_rect(aes(xmin=species.rank.med-0.33, xmax=species.rank.med+0.33, ymin=min.025.res, ymax=max.975.res), fill = "#00BFC4") + # modern range in blue; will show areas of range expansion
   geom_rect(aes(xmin=species.rank.med-0.33, xmax=species.rank.med+0.33, ymin=both.min.perc, ymax=both.max.perc), fill = "#bdbdbd") + # areas common to both in grey
-  scale_x_continuous("Species", breaks=c(1,9,18,27,36)) +
+  scale_x_continuous("Species", breaks=c(1,10,20,30,40)) +
   scale_y_continuous("Elevation (m)", breaks=c(0,500,1000,1500,2000)) +
   theme_bw() +
   theme(text=element_text(size=16), panel.grid.major = element_blank(), panel.grid.minor =   element_blank()) +
@@ -349,7 +345,7 @@ p.nofire <- ggplot(rarefied.change.calcs.nofire) +
   geom_rect(aes(xmin=species.rank.med-0.33, xmax=species.rank.med+0.33, ymin=min.025.leg, ymax=max.975.leg), fill = "#F8766D") + # historic range in red; will show areas of range contractions
   geom_rect(aes(xmin=species.rank.med-0.33, xmax=species.rank.med+0.33, ymin=min.025.res, ymax=max.975.res), fill = "#00BFC4") + # modern range in blue; will show areas of range expansion
   geom_rect(aes(xmin=species.rank.med-0.33, xmax=species.rank.med+0.33, ymin=both.min.perc, ymax=both.max.perc), fill = "#bdbdbd") + # areas common to both in grey
-  scale_x_continuous(breaks=c(1,29)) +
+  scale_x_continuous(breaks=c(1,35)) +
   ylim(0,2200) +
   xlab("") +
   ylab("Elevation (m)") +
@@ -367,7 +363,7 @@ p.fire <- ggplot(rarefied.change.calcs.fire) +
   theme_bw() +
   theme(text=element_text(size=16), panel.grid.major = element_blank(), panel.grid.minor =   element_blank())
 
-range.fig <- plot_grid(p.nofire, p.fire, rel_widths=c(2.8,1), labels=c("A", "B"))
+range.fig <- plot_grid(p.nofire, p.fire, rel_widths=c(3,1), labels=c("A", "B"))
 range.fig <- ggdraw(add_sub(range.fig, "Species", vpadding=grid::unit(0,"lines"), y=6, x=0.75, vjust=4.5, size=16))
 
 ggsave("figures/elevation_ranges_2panel.pdf", range.fig, device="pdf", width=5, height=5)
@@ -377,8 +373,11 @@ ggsave("figures/elevation_ranges_2panel.pdf", range.fig, device="pdf", width=5, 
 rarefied.change.calcs <- read_csv("data/5_range.change.calcs.csv")
 
 rear.t <- t.test(rarefied.change.calcs$rear.change.perc[rarefied.change.calcs$fire=="no"], rarefied.change.calcs$rear.change.perc[rarefied.change.calcs$fire=="yes"])
+rear.t
 
 med.t <- t.test(rarefied.change.calcs$med.change[rarefied.change.calcs$fire=="no"], rarefied.change.calcs$med.change[rarefied.change.calcs$fire=="yes"])
+med.t
 
 lead.t <- t.test(rarefied.change.calcs$lead.change.perc[rarefied.change.calcs$fire=="no"], rarefied.change.calcs$lead.change.perc[rarefied.change.calcs$fire=="yes"])
+lead.t
 
