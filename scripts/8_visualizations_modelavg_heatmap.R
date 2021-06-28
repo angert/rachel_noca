@@ -282,21 +282,22 @@ mat.percnofire.bot <- mat.percnofire.sm[, c(31:58)] # Bottom half
 # Step 3b: Creating NO FIRE vectors for visualization
 
 col.pallette <- rev(brewer.pal(9, "RdBu"))
-col.vector.nofire <- c("      ACCI", "", "      ACGL", "", 
+col.vector.nofire.top <- c("      ACCI", "", "      ACGL", "", 
                 "      AMAL", "", "      ATFI", "", 
                 "      CAME", "", "      CHUM", "", 
                 "      CLUN", "", "      COCA", "",
                 "      GAOV", "", "      GASH", "",
                 "      GOOB", "", "      GYDR", "",
                 "      HIAL", "", "      HODI", "",
-                "      LIBO", "", "      MANE", "",
-                "      MEFE", "", "      OPHO", "",
-                "      POMU", "", "      PTAQ", "",
-                "      RULA", "", "      RUPA", "",
-                "      RUPE", "", "      RUSP", "",
-                "      SOSI", "", "      SPBE", "",
-                "      TITR", "", "      TRBO", "",
-                "      VASI", "")
+                "      LIBO", "")
+col.vector.nofire.bot <- c("      MANE", "",
+                           "      MEFE", "", "      OPHO", "",
+                           "      POMU", "", "      PTAQ", "",
+                           "      RULA", "", "      RUPA", "",
+                           "      RUPE", "", "      RUSP", "",
+                           "      SOSI", "", "      SPBE", "",
+                           "      TITR", "", "      TRBO", "",
+                           "      VASI", "")
 row.vector.nofire <- c("Elevation", 
                 expression("Elevation" ^ 2), 
                 "Year",
@@ -305,14 +306,16 @@ row.vector.nofire <- c("Elevation",
 leg.label.breaks.nofire <- c(-1, -0.5, 0, 0.5, 1)
 leg.label.vector.nofire <- c("100% Negative", "50% Negative", 
                              "0%", "50% Positive", "100% Positive")
-col.breaks.nofire <- seq(2, ncol(mat.percnofire.sm), 2)
+col.breaks.nofire.top <- seq(2, ncol(mat.percnofire.top), 2)
+col.breaks.nofire.bot <- seq(2, ncol(mat.percnofire.bot), 2)
 
 # Step 3c: Visualization of NO FIRE data
 
-pheatmap(mat.percnofire.sm,
+# Top half
+nofire.perc.top <- pheatmap(mat.percnofire.top,
          color = col.pallette,
-         cellwidth = 12,
-         cellheight = 12,
+         cellwidth = 20,
+         cellheight = 20,
          cluster_rows = FALSE,
          cluster_cols = FALSE,
          legend = TRUE,
@@ -321,16 +324,38 @@ pheatmap(mat.percnofire.sm,
          # display_numbers = TRUE,
          number_color = "black",
          na_col = "grey",
-         gaps_col = col.breaks.nofire,
+         gaps_col = col.breaks.nofire.top,
          labels_row = row.vector.nofire,
-         labels_col = col.vector.nofire,
-         fontsize_row = 11,
-         fontsize_col = 9,
+         labels_col = col.vector.nofire.top,
+         fontsize_row = 12,
+         fontsize_col = 12,
          angle_col = 0
 )
 
+# Bottom half
+nofire.perc.bot <- pheatmap(mat.percnofire.bot,
+         color = col.pallette,
+         cellwidth = 20,
+         cellheight = 20,
+         cluster_rows = FALSE,
+         cluster_cols = FALSE,
+         legend = FALSE,
+         legend_breaks = leg.label.breaks.nofire,
+         legend_labels = leg.label.vector.nofire,
+         # display_numbers = TRUE,
+         number_color = "black",
+         na_col = "grey",
+         gaps_col = col.breaks.nofire.bot,
+         labels_row = row.vector.nofire,
+         labels_col = col.vector.nofire.bot,
+         fontsize_row = 12,
+         fontsize_col = 12,
+         angle_col = 0
+)
 
-
+all.heatmaps.perc <- list(nofire.perc.top[[4]], nofire.perc.bot[[4]])
+for.plotting.perc <- do.call(grid.arrange, all.heatmaps.perc)
+for.plotting.perc
 
 
 
