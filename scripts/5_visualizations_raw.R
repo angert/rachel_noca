@@ -101,6 +101,7 @@ for(D in 1:100) {
     species <- as.list(species.list.fire[S,1])
     und.SPEC <- und %>% 
       filter(Species.Code == species) %>% 
+      filter(Fires=="Burned") %>% #temporary toggle 
       droplevels()
     und.presence.SPEC.leg <- und.SPEC %>% 
       filter(Data.Type=="Legacy" & Pres.Abs==1) %>% 
@@ -211,7 +212,7 @@ rarefied.change.fire <- rarefied.change.fire %>%
 #span.change = (max.res-min.res) - (max.leg - min.leg))
 
 rarefied.change.calcs <- rbind(rarefied.change.nofire, rarefied.change.fire)
-write.csv(rarefied.change.calcs, "data/5_range.change.calcs.csv")
+write.csv(rarefied.change.calcs, "data/5_range.change.calcs_burned.csv")
 
 ## reshape for violin plotting
 
@@ -265,7 +266,7 @@ violin.plot.raw <- ggplot(rarefied.change.tall.raw, aes(x=factor(edge, level=lev
   annotate("text", x=2.95, y=440, label="*") 
 violin.plot.raw
 
-ggsave("figures/violin_1panel_raw.pdf", violin.plot.raw, device="pdf", width=8, height=5)
+ggsave("figures/violin_1panel_raw_burned.pdf", violin.plot.raw, device="pdf", width=8, height=5)
 
 violin.plot.perc <- ggplot(rarefied.change.tall.perc, aes(x=factor(edge, level=level_order.perc), y=change, fill=fire)) +#, color=edge, fill=edge)) + 
   geom_violin() +
@@ -285,7 +286,7 @@ violin.plot.perc <- ggplot(rarefied.change.tall.perc, aes(x=factor(edge, level=l
   annotate("text", x=2.95, y=440, label="*") 
 violin.plot.perc
 
-ggsave("figures/violin_1panel_perc.pdf", violin.plot.perc, device="pdf", width=8, height=5)
+ggsave("figures/violin_1panel_perc_burned.pdf", violin.plot.perc, device="pdf", width=8, height=5)
   
 # old versions by fire status
 violin.plot.nofire.raw <- ggplot(rarefied.change.tall.nofire.raw, aes(x=factor(edge, level=level_order.raw), y=change)) +#, color=edge, fill=edge)) + 
@@ -418,7 +419,7 @@ p.fire <- ggplot(rarefied.change.calcs.fire) +
 range.fig <- plot_grid(p.nofire, p.fire, rel_widths=c(3,1), labels=c("A", "B"))
 range.fig <- ggdraw(add_sub(range.fig, "Species", vpadding=grid::unit(0,"lines"), y=6, x=0.75, vjust=4.5, size=16))
 
-ggsave("figures/elevation_ranges_2panel.pdf", range.fig, device="pdf", width=5, height=5)
+ggsave("figures/elevation_ranges_2panel_burned.pdf", range.fig, device="pdf", width=5, height=5)
 
 
 ## Statistical tests for differences between fire and no-fire species groups
