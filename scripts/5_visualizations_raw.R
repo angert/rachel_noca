@@ -101,7 +101,6 @@ for(D in 1:100) {
     species <- as.list(species.list.fire[S,1])
     und.SPEC <- und %>% 
       filter(Species.Code == species) %>% 
-      filter(Fires=="Burned") %>% #temporary toggle 
       droplevels()
     und.presence.SPEC.leg <- und.SPEC %>% 
       filter(Data.Type=="Legacy" & Pres.Abs==1) %>% 
@@ -112,6 +111,7 @@ for(D in 1:100) {
              el.max.975.leg.fire = quantile(Elevation.m, probs=0.975))
 und.presence.SPEC.res <- und.SPEC %>% 
       filter(Data.Type=="Resurvey" & Pres.Abs==1) %>% 
+      filter(Fires=="Unburned") %>% #temporary toggle %>% 
       mutate(el.min.raw.res.fire = min(Elevation.m),
              el.max.raw.res.fire = max(Elevation.m),
              el.med.res.fire = median(Elevation.m),
@@ -212,7 +212,7 @@ rarefied.change.fire <- rarefied.change.fire %>%
 #span.change = (max.res-min.res) - (max.leg - min.leg))
 
 rarefied.change.calcs <- rbind(rarefied.change.nofire, rarefied.change.fire)
-write.csv(rarefied.change.calcs, "data/5_range.change.calcs_burned.csv")
+write.csv(rarefied.change.calcs, "data/5_range.change.calcs_unburned.csv")
 
 ## reshape for violin plotting
 
@@ -257,16 +257,16 @@ violin.plot.raw <- ggplot(rarefied.change.tall.raw, aes(x=factor(edge, level=lev
   xlab("") +
   scale_x_discrete(labels=c("Lower\nedge", "Range\ncenter", "Upper\nedge")) +
   ylim(-600,700) +
-  ylab(c("Elevational change (m)\n1983-2015")) +
-  geom_segment(aes(x = 0.8, xend = 1.2, y = 400, yend = 400)) +
-  geom_segment(aes(x = 1.8, xend = 2.2, y = 400, yend = 400)) +
-  geom_segment(aes(x = 2.75, xend = 3.15, y = 400, yend = 400)) +
-  annotate("text", x=1, y=450, label="ns") +
-  annotate("text", x=2, y=450, label="+") +
-  annotate("text", x=2.95, y=440, label="*") 
+  ylab(c("Elevational change (m)\n1983-2015")) #+
+  #geom_segment(aes(x = 0.8, xend = 1.2, y = 400, yend = 400)) +
+  #geom_segment(aes(x = 1.8, xend = 2.2, y = 400, yend = 400)) +
+  #geom_segment(aes(x = 2.75, xend = 3.15, y = 400, yend = 400)) +
+  #annotate("text", x=1, y=450, label="ns") +
+  #annotate("text", x=2, y=450, label="+") +
+  #annotate("text", x=2.95, y=440, label="*") 
 violin.plot.raw
 
-ggsave("figures/violin_1panel_raw_burned.pdf", violin.plot.raw, device="pdf", width=8, height=5)
+ggsave("figures/violin_1panel_raw_unburned.pdf", violin.plot.raw, device="pdf", width=8, height=5)
 
 violin.plot.perc <- ggplot(rarefied.change.tall.perc, aes(x=factor(edge, level=level_order.perc), y=change, fill=fire)) +#, color=edge, fill=edge)) + 
   geom_violin() +
@@ -277,16 +277,16 @@ violin.plot.perc <- ggplot(rarefied.change.tall.perc, aes(x=factor(edge, level=l
   xlab("") +
   scale_x_discrete(labels=c("Lower\nedge", "Range\ncenter", "Upper\nedge")) +
   ylim(-600,700) +
-  ylab(c("Elevational change (m)\n1983-2015")) +
-  geom_segment(aes(x = 0.8, xend = 1.2, y = 400, yend = 400)) +
-  geom_segment(aes(x = 1.8, xend = 2.2, y = 400, yend = 400)) +
-  geom_segment(aes(x = 2.75, xend = 3.15, y = 400, yend = 400)) +
-  annotate("text", x=1, y=450, label="ns") +
-  annotate("text", x=2, y=450, label="+") +
-  annotate("text", x=2.95, y=440, label="*") 
+  ylab(c("Elevational change (m)\n1983-2015")) #+
+  #geom_segment(aes(x = 0.8, xend = 1.2, y = 400, yend = 400)) +
+  #geom_segment(aes(x = 1.8, xend = 2.2, y = 400, yend = 400)) +
+  #geom_segment(aes(x = 2.75, xend = 3.15, y = 400, yend = 400)) +
+  #annotate("text", x=1, y=450, label="ns") +
+  #annotate("text", x=2, y=450, label="+") +
+  #annotate("text", x=2.95, y=440, label="*") 
 violin.plot.perc
 
-ggsave("figures/violin_1panel_perc_burned.pdf", violin.plot.perc, device="pdf", width=8, height=5)
+ggsave("figures/violin_1panel_perc_unburned.pdf", violin.plot.perc, device="pdf", width=8, height=5)
   
 # old versions by fire status
 violin.plot.nofire.raw <- ggplot(rarefied.change.tall.nofire.raw, aes(x=factor(edge, level=level_order.raw), y=change)) +#, color=edge, fill=edge)) + 
@@ -419,7 +419,7 @@ p.fire <- ggplot(rarefied.change.calcs.fire) +
 range.fig <- plot_grid(p.nofire, p.fire, rel_widths=c(3,1), labels=c("A", "B"))
 range.fig <- ggdraw(add_sub(range.fig, "Species", vpadding=grid::unit(0,"lines"), y=6, x=0.75, vjust=4.5, size=16))
 
-ggsave("figures/elevation_ranges_2panel_burned.pdf", range.fig, device="pdf", width=5, height=5)
+ggsave("figures/elevation_ranges_2panel_unburned.pdf", range.fig, device="pdf", width=5, height=5)
 
 
 ## Statistical tests for differences between fire and no-fire species groups
