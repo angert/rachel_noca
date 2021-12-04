@@ -422,6 +422,53 @@ range.fig <- ggdraw(add_sub(range.fig, "Species", vpadding=grid::unit(0,"lines")
 ggsave("figures/elevation_ranges_2panel_unburned.pdf", range.fig, device="pdf", width=5, height=5)
 
 
+## Probing what happens on burned vs unburned plots for fire-experiencing species
+rarefied.change.calcs.unburned <- read_csv("data/5_range.change.calcs_unburned.csv")
+rarefied.change.calcs.burned <- read_csv("data/5_range.change.calcs_burned.csv")
+rarefied.change.calcs.sensitivity <- left_join(rarefied.change.calcs.unburned, rarefied.change.calcs.burned, by=c("X1", "species", "min.raw.leg", "max.raw.leg", "med.leg", "min.025.leg", "max.975.leg", "Species", "fire")) #%>% 
+  #select(-species) %>% 
+  #rename_with(~ (gsub(".x", ".unburned", .x))) %>% 
+  #rename_with(~ (gsub(".y", ".burned", .x)))
+ 
+rarefied.change.calcs.fire.sens <- rarefied.change.calcs.sensitivity %>% 
+  filter(fire=="yes") %>% 
+  mutate(species.rank.med = dense_rank(med.leg),
+         both.min.raw.burn = pmax(min.raw.leg, min.raw.res.y),
+         both.max.raw.burn = pmin(max.raw.leg, max.raw.res.y),
+         both.min.perc.burn = pmax(min.025.leg, min.025.res.y),
+         both.max.perc.burn = pmin(max.975.leg, max.975.res.y),
+         both.min.raw.unburn = pmax(min.raw.leg, min.raw.res.x),
+         both.max.raw.unburn = pmin(max.raw.leg, max.raw.res.x),
+         both.min.perc.unburn = pmax(min.025.leg, min.025.res.x),
+         both.max.perc.unburn = pmin(max.975.leg, max.975.res.x))
+
+labs = rarefied.change.calcs.fire.sens$Species
+p.fire.unburned <- ggplot(rarefied.change.calcs.fire.sens) + 
+  geom_rect(aes(xmin=species.rank.med-0.33, xmax=species.rank.med+0.33, ymin=min.025.leg, ymax=max.975.leg), fill = "#F8766D") + # historic range in red; will show areas of range contractions
+  geom_rect(aes(xmin=species.rank.med-0.33, xmax=species.rank.med+0.33, ymin=min.025.res.x, ymax=max.975.res.x), fill = "#00BFC4") + # modern range in blue; will show areas of range expansion
+  geom_rect(aes(xmin=species.rank.med-0.33, xmax=species.rank.med+0.33, ymin=both.min.perc.unburn, ymax=both.max.perc.unburn), fill = "#bdbdbd") + # areas common to both in grey
+  ylim(0,2200) +
+  scale_x_continuous(breaks=c(1:7), labels=labs) +
+  xlab("") +
+  ylab("Elevation (m)") +
+  theme_bw() +
+  theme(text=element_text(size=16), panel.grid.major = element_blank(), panel.grid.minor =   element_blank())
+
+p.fire.burned <- ggplot(rarefied.change.calcs.fire.sens) + 
+  geom_rect(aes(xmin=species.rank.med-0.33, xmax=species.rank.med+0.33, ymin=min.025.leg, ymax=max.975.leg), fill = "#F8766D") + # historic range in red; will show areas of range contractions
+  geom_rect(aes(xmin=species.rank.med-0.33, xmax=species.rank.med+0.33, ymin=min.025.res.y, ymax=max.975.res.y), fill = "#00BFC4") + # modern range in blue; will show areas of range expansion
+  geom_rect(aes(xmin=species.rank.med-0.33, xmax=species.rank.med+0.33, ymin=both.min.perc.burn, ymax=both.max.perc.burn), fill = "#bdbdbd") + # areas common to both in grey
+  ylim(0,2200) +
+  scale_x_continuous(breaks=c(1:7), labels=labs) +
+  xlab("") +
+  #ylab("Elevation (m)") +
+  theme_bw() +
+  theme(text=element_text(size=16), panel.grid.major = element_blank(), panel.grid.minor =   element_blank())
+
+range.fig.sens <- plot_grid(p.fire.unburned, p.fire.burned, labels=c("Unburned", "Burned"))
+ggsave("figures/elevation_ranges_firespecies_sensitivity.pdf", range.fig, device="pdf", width=11, height=5)
+
+
 ## Statistical tests for differences between fire and no-fire species groups
 rarefied.change.calcs <- read_csv("data/5_range.change.calcs.csv")
 
