@@ -19,6 +19,7 @@ library(sf)
 library(maps)
 library(mapdata)
 library(mapproj)
+library(ggstar)
 
 ## Projections
 prj.wgs <- "+proj=longlat + type=crs"
@@ -129,6 +130,26 @@ usmap <- ggplot() +
   geom_polygon(data=usa, aes(x=long, y=lat, group=group), fill=NA, color="black") +
   geom_point(data=dot.plot, aes(x=mean.long, y=mean.lat),pch=8, cex=2.5) +
   theme_classic()
+
+## Zoomed out inset (world)
+dot.plot <- data.frame(mean.lat=mean(plots$Latitude), mean.long=mean(plots$Longitude))
+
+map_world <- borders("world", colour="darkgrey", fill="white")#, bg="blue" fill=#f6e8c3"
+
+ggplot(dot.plot, aes(x = mean.long, y = mean.lat)) +
+  map_world +
+  geom_star(size=5, pch=21, fill="black") +
+  #scale_colour_manual(values=siteColors) +
+  coord_map(projection="ortho", orientation=c(48,-121,0)) +
+  #scale_shape_manual(values = c(4, 24, 25)) +
+  labs(x = "Longitude") +
+  labs(y = "Latitude") +
+  ggtitle("B") +
+  theme(axis.ticks.y = element_blank(), 
+        axis.text.y = element_blank())
+  #legend("topleft", legend="B", bty="n") 
+  #theme(panel.background=element_rect(fill="#c7eae5"))
+#ggsave("plots/MapChapinSites.png", width=8, height=5)
 
 ## Zoomed in of plots
 #LCC projection
