@@ -7,19 +7,10 @@
 
 # IMPORTANT NOTE: unless otherwise indicated, always use Understory_All.csv for these analyses as it is the ONLY file with up-to-date corrections.
 
-
-
-
-
-
-########## UNMODIFIED BELOW THIS POINT  ###############
 # Packages needed:
 
-library(tidyr)
-library(RColorBrewer)
-library(pheatmap)
-library(grid)
-library(gridExtra)
+library(ggplot2)
+library(tidyverse)
 
 ####### PART 1: AVERAGE AVERAGED COEFFICIENTS #########
 
@@ -39,19 +30,30 @@ coeff.nofire <- coeff.ALLDAT[coeff.ALLDAT$Fire.Included == "No" & coeff.ALLDAT$T
 
 coeff.fire[is.na(coeff.fire)] <- 0 # Hard code absent coeffs as 0 before averaging
 coeff.avg.fire <- aggregate(coeff.fire[c("Elevation.m", 
-                                             "Elevation.m2", 
-                                             "Resurvey.Burned.fi", 
-                                             "Resurvey.Unburned.fi", 
-                                             "Elevation.m.Res.Burn.fi", 
-                                             "Elevation.m.Res.Unburn.fi",
-                                             "Elevation.m2.Res.Burn.fi",
-                                             "Elevation.m2.Res.Unburn.fi")], 
+                                         "Elevation.m2", 
+                                         "Resurvey.Burned.fi", 
+                                         "Resurvey.Unburned.fi", 
+                                         "Elevation.m.Res.Burn.fi", 
+                                         "Elevation.m.Res.Unburn.fi",
+                                         "Elevation.m2.Res.Burn.fi",
+                                         "Elevation.m2.Res.Unburn.fi")], 
                             by = c(coeff.fire["Species"]), mean)
 
+
+# Unclear if necessary to convert to matrix
 mat.fire <- as.matrix(t(subset(coeff.avg.fire, select = -Species)))
 colnames(mat.fire) <- coeff.avg.fire$Species
 mat.fire[c("Elevation.m2.Res.Burn.fi", "Elevation.m2.Res.Unburn.fi"), 
-                grepl("VAME", colnames(mat.fire))] <- NA
+         grepl("VAME", colnames(mat.fire))] <- NA
+
+
+
+
+
+
+########## UNMODIFIED BELOW THIS POINT  ###############
+
+
 
 # Step 2b: Creating FIRE vectors for visualization
 
