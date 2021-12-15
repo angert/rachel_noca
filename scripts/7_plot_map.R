@@ -68,7 +68,7 @@ usa <- map_data("usa")
 ext <- extent(min(fire.plots$Longitude)-0.5, max(fire.plots$Longitude)+0.5, min(fire.plots$Latitude)-0.5, max(fire.plots$Latitude)+0.5)
 bbox <- as(ext, "SpatialPolygons") #convert coordinates to a bounding box
 # Crop state lines to study area
-sta.crop <- crop(sta, bbox)
+sta.crop <- crop(sta.sp, bbox)
 sta.lcc <- spTransform(sta.crop, CRS=CRS(prj.lcc))
 
 ## Park boundary
@@ -134,7 +134,7 @@ usmap <- ggplot() +
 ## Zoomed out inset (world)
 dot.plot <- data.frame(mean.lat=mean(plots$Latitude), mean.long=mean(plots$Longitude))
 
-map_world <- borders("world", colour="darkgrey", fill="white")#, bg="blue" fill=#f6e8c3"
+map_world <- borders("world", colour="darkgrey", fill="white")
 
 ggplot(dot.plot, aes(x = mean.long, y = mean.lat)) +
   map_world +
@@ -146,10 +146,10 @@ ggplot(dot.plot, aes(x = mean.long, y = mean.lat)) +
   labs(y = "Latitude") +
   ggtitle("B") +
   theme(axis.ticks.y = element_blank(), 
-        axis.text.y = element_blank())
+        axis.text.y = element_blank()) 
   #legend("topleft", legend="B", bty="n") 
   #theme(panel.background=element_rect(fill="#c7eae5"))
-#ggsave("plots/MapChapinSites.png", width=8, height=5)
+ggsave("figures/map_world_inset.png", width=8, height=5)
 
 ## Zoomed in of plots
 #LCC projection
@@ -158,12 +158,12 @@ plot(park.lcc, border="darkgrey") # park boundary
 plot(fires.lcc, col=rgb(1,0,0,0.7), border="red4", add=T) 
 plot(burns.lcc, col=rgb(1,0,0,0.7), border="red4", add=T) #prescribed burns layer 
 plot(trtmts.lcc, col=rgb(1,0,0,0.7), border="red4", add=T) #prescribed burns layer
-plot(unburned.plots.lcc, pch=4, col="black", add=T) #add plots that didn't burn between surveys
-plot(burned.plots.lcc, pch=1, col="black", add=T) #add plots that burned between surveys
+plot(unburned.plots.lcc, pch=1, col="black", add=T) #add plots that didn't burn between surveys
+plot(burned.plots.lcc, pch=4, col="black", cex=2, add=T) #add plots that burned between surveys
 #plot(sta.lcc, add=T) #add state lines
 plot(frame.grd.lcc, add=TRUE, lty="dashed", col="grey", lwd=1) #add gridlines
-text(coordinates(gridat.lcc), labels=parse(text=as.character(gridat.lcc$labels)), pos=gridat.lcc$pos, offset=0.5, col="black", cex=0.7) #add lat-long labels to gridlines
-legend("topleft", legend=c("A", "unburned","burned","fire"), pch=c(1,4,1,22), col=c("white","black","black","red4"), pt.bg=c("white","white","white",rgb(1,0,0,0.7)), bg="white", box.col="white") #add title
+#text(coordinates(gridat.lcc), labels=parse(text=as.character(gridat.lcc$labels)), pos=gridat.lcc$pos, offset=0.5, col="black", cex=0.7) #add lat-long labels to gridlines
+#legend("topleft", legend=c("A", "unburned","burned","fire"), pch=c(4,1,4,22), col=c("white","black","black","red4"), pt.bg=c("white","white","white",rgb(1,0,0,0.7)), bg="white", box.col="white") #add title
 dev.off()
  
 
