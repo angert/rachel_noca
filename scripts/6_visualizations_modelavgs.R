@@ -1,10 +1,10 @@
 # Created: Feb. 16, 2021
-# Modified: May 29, 2021
+# Modified: Feb. 1, 2022
 
 #### This script visualizes model-averaged predictions for each rarefied dataset
 
 library(tidyverse)
-library(cowplot)
+library(patchwork)
 
 #### Read in and prepare tables of coefficients
 
@@ -216,10 +216,19 @@ for (i in 1:dim(species.list.nofire)[1]) {
 
 #### assemble example species into multi-panel figure
 
-multi <- plot_grid(preds_graph_ARUV, preds_graph_EPAN, NULL, 
-                   preds_graph_MANE, preds_graph_CHUM, preds_graph_OPHO,
-                   nrow=2, ncol=3,
-                   labels=c("A","B","", "C","D","E")) +
+multi <- (plot_spacer() | preds_graph_ARUV | preds_graph_VAME | preds_graph_PAMY) / (preds_graph_CHUM | preds_graph_OPHO | preds_graph_SPBE | preds_graph_MANE) + 
+  plot_layout(guides="collect")
+
+multi <- plot_grid(NULL, 
+                   preds_graph_ARUV, 
+                   preds_graph_VAME, 
+                   preds_graph_PAMY,
+                   preds_graph_CHUM,
+                   preds_graph_OPHO,
+                   preds_graph_SPBE, 
+                   preds_graph_MANE,  
+                   nrow=2, ncol=4,
+                   labels=c("A","B","C","D","E","F","G","H")) +
   draw_grob(legend.fire, 2/3, 0.5, 1/3, 0.5) + 
   theme(plot.margin = margin(10, 10, 5, 50))
 
