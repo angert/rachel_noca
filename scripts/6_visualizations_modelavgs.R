@@ -217,7 +217,10 @@ for (i in 1:dim(species.list.nofire)[1]) {
 #### assemble example species into multi-panel figure
 
 multi <- (plot_spacer() | preds_graph_ARUV | preds_graph_VAME | preds_graph_PAMY) / (preds_graph_CHUM | preds_graph_OPHO | preds_graph_SPBE | preds_graph_MANE) + 
-  plot_layout(guides="collect")
+  plot_layout(guides="collect") & 
+  theme(legend.position="left")
+
+multi.inset <- multi + inset_element(legend.fire, left=0.2, top=3, right=0, bottom=0, align_to = 'full')
 
 multi <- plot_grid(NULL, 
                    preds_graph_ARUV, 
