@@ -5,6 +5,7 @@
 
 library(tidyverse)
 library(patchwork)
+library(cowplot)
 
 #### Read in and prepare tables of coefficients
 
@@ -130,7 +131,7 @@ for (i in 1:dim(species.list.fire)[1]) {
   
   gg <- ggplot(graph.dat.means, aes(x = elev.vec.lin, y = preds, color = V2)) + 
     geom_line(data=graph.dat.tall, aes(group=interaction(V2, rep), color=V2), alpha=0.15, show.legend = FALSE) +
-    geom_line(size=2, linetype="dotted", show.legend = FALSE) +
+    geom_line(size=2, linetype="dotted", show.legend=FALSE) +
     theme_classic() +
     scale_color_manual("Time x fire", values=col.pal.fire, labels=c("legacy", "resurvey, burned", "resurvey, unburned")) +
     scale_x_continuous(breaks=poly.ticks, labels=raw.ticks) +
@@ -147,7 +148,8 @@ gg <- ggplot(graph.dat.means, aes(x = elev.vec.lin, y = preds, color = V2)) +
   geom_line(data=graph.dat.tall, aes(group=interaction(V2, rep), color=V2), alpha=0.15) +
   geom_line(size=2, linetype="dotted") +
   scale_color_manual("Time x fire", values=col.pal.fire, labels=c("legacy", "resurvey, burned", "resurvey, unburned")) +
-  theme_classic()
+  theme_classic() + 
+  theme(legend.text=element_text(size=2))
 
 legend.fire = get_legend(gg)
 
@@ -201,7 +203,7 @@ for (i in 1:dim(species.list.nofire)[1]) {
   
   gg <- ggplot(graph.dat.means, aes(x = elev.vec.lin, y = preds, color = V2)) + 
     geom_line(data=graph.dat.tall, aes(group=interaction(V2, rep), color=V2), alpha=0.15, show.legend = FALSE) +
-    geom_line(size=2, linetype="dotted", show.legend = FALSE) +
+    geom_line(size=2, linetype="dotted", show.legend=FALSE) +
     theme_classic() +
     scale_color_manual(name="TIME", values=col.pal.nofire, labels=c("legacy", "resurvey")) + 
     scale_x_continuous(breaks=poly.ticks, labels=raw.ticks) +
@@ -216,28 +218,38 @@ for (i in 1:dim(species.list.nofire)[1]) {
 
 #### assemble example species into multi-panel figure
 
-multi <- (plot_spacer() | preds_graph_ARUV | preds_graph_VAME | preds_graph_PAMY) / (preds_graph_CHUM | preds_graph_OPHO | preds_graph_SPBE | preds_graph_MANE) + 
-  plot_layout(guides="collect") & 
-  theme(legend.position="left")
+# trying patchwork but not working. if using, repeat above with show.legend=FALSE removed from graphs
 
-multi.inset <- multi + inset_element(legend.fire, left=0.2, top=3, right=0, bottom=0, align_to = 'full')
+#top <- (plot_spacer() | preds_graph_ARUV | preds_graph_VAME | preds_graph_PAMY) + plot_layout(guides="collect") & 
+  #theme(legend.position="left")
 
-multi <- plot_grid(NULL, 
-                   preds_graph_ARUV, 
-                   preds_graph_VAME, 
-                   preds_graph_PAMY,
-                   preds_graph_CHUM,
-                   preds_graph_OPHO,
-                   preds_graph_SPBE, 
-                   preds_graph_MANE,  
+#bottom <- (preds_graph_CHUM | preds_graph_OPHO | preds_graph_SPBE | preds_graph_MANE) + 
+  #plot_layout(guides="collect") & 
+  #theme(legend.position="none")
+
+#full <- top/bottom
+
+#multi <- (plot_spacer() | preds_graph_ARUV | preds_graph_VAME | preds_graph_PAMY) / (preds_graph_CHUM | preds_graph_OPHO | preds_graph_SPBE | preds_graph_MANE) + 
+  #plot_layout(guides="collect") & 
+  #theme(legend.position="left")
+
+#multi.inset <- multi + inset_element(legend.fire, left=0.2, top=3, right=0, bottom=0, align_to = 'full')
+
+# back to using cowplot
+multi <- plot_grid(preds_graph_MANE, #no shift no fire 
+                   preds_graph_SPBE, #expansion no fire
+                   preds_graph_OPHO, #up shift no fire
+                   preds_graph_CHUM, #down shift no fire
+                   preds_graph_PAMY, #no shift fire
+                   preds_graph_VAME, #expansion fire
+                   preds_graph_ARUV, #up shift fire 
+                   legend.fire, 
                    nrow=2, ncol=4,
-                   labels=c("A","B","C","D","E","F","G","H")) +
-  draw_grob(legend.fire, 2/3, 0.5, 1/3, 0.5) + 
-  theme(plot.margin = margin(10, 10, 5, 50))
+                   labels=c("A","B","C","D","E","F","G","")) +
+  theme(plot.margin = margin(10, 10, 10, 50)) + #top, right, bottom, left 
+  ggdraw(add_sub(multi, "Elevation (m)", size=14, x=0.5, y=0.05, hjust=0.5, vjust=0))  +
+  ggdraw(add_sub(multi.x, "Probability of presence", size=14, x=0.01, y=2, hjust=0.5, vjust=0.95, angle=90))
 
-multi.x <- ggdraw(add_sub(multi, "Elevation (m)", size=14, x=0.5, y=0.05, hjust=0.5, vjust=0)) 
-multi.x
-multi.xy <- ggdraw(add_sub(multi.x, "Probability of presence", size=14, x=0.05, y=2, hjust=0.5, vjust=0.5, angle=90))
-multi.xy
+
 
 ggsave("figures/model_preds_multipanel.pdf", multi.xy, width=8, height=6)
