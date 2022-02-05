@@ -4,7 +4,7 @@
 #### This script visualizes model-averaged predictions for each rarefied dataset
 
 library(tidyverse)
-library(patchwork)
+#library(patchwork)
 library(cowplot)
 
 #### Read in and prepare tables of coefficients
@@ -149,7 +149,9 @@ gg <- ggplot(graph.dat.means, aes(x = elev.vec.lin, y = preds, color = V2)) +
   geom_line(size=2, linetype="dotted") +
   scale_color_manual("Time x fire", values=col.pal.fire, labels=c("legacy", "resurvey, burned", "resurvey, unburned")) +
   theme_classic() + 
-  theme(legend.text=element_text(size=2))
+  theme(legend.key.size=unit(1.5, 'cm')) +
+  theme(legend.title=element_text(size=18)) +
+  theme(legend.text=element_text(size=14))
 
 legend.fire = get_legend(gg)
 
@@ -236,20 +238,39 @@ for (i in 1:dim(species.list.nofire)[1]) {
 #multi.inset <- multi + inset_element(legend.fire, left=0.2, top=3, right=0, bottom=0, align_to = 'full')
 
 # back to using cowplot
-multi <- plot_grid(preds_graph_MANE, #no shift no fire 
-                   preds_graph_SPBE, #expansion no fire
-                   preds_graph_OPHO, #up shift no fire
-                   preds_graph_CHUM, #down shift no fire
-                   preds_graph_PAMY, #no shift fire
-                   preds_graph_VAME, #expansion fire
-                   preds_graph_ARUV, #up shift fire 
+
+# first annotate % onto individual panels
+MANE.perc <- ggdraw(preds_graph_MANE) + draw_label("41%", size=14, x=.85, y=.9, hjust=1)
+SPBE.perc <- ggdraw(preds_graph_SPBE) + draw_label("3%", size=14, x=.85, y=.9, hjust=1)
+OPHO.perc <- ggdraw(preds_graph_OPHO) + draw_label("14%", size=14, x=.85, y=.9, hjust=1)
+CHUM.perc <- ggdraw(preds_graph_CHUM) + draw_label("24%", size=14, x=.85, y=.9, hjust=1)
+PAMY.perc <- ggdraw(preds_graph_PAMY) + draw_label("43%", size=14, x=.85, y=.9, hjust=1)
+VAME.perc <- ggdraw(preds_graph_VAME) + draw_label("29%", size=14, x=.85, y=.9, hjust=1)
+ARUV.perc <- ggdraw(preds_graph_ARUV) + draw_label("29%", size=14, x=.85, y=.9, hjust=1)
+
+multi <- plot_grid(MANE.perc, #no shift no fire 
+                   SPBE.perc, #expansion no fire
+                   OPHO.perc, #up shift no fire
+                   CHUM.perc, #down shift no fire
+                   PAMY.perc, #no shift fire
+                   VAME.perc, #expansion fire
+                   ARUV.perc, #up shift fire 
                    legend.fire, 
                    nrow=2, ncol=4,
                    labels=c("A","B","C","D","E","F","G","")) +
-  theme(plot.margin = margin(10, 10, 10, 50)) + #top, right, bottom, left 
-  ggdraw(add_sub(multi, "Elevation (m)", size=14, x=0.5, y=0.05, hjust=0.5, vjust=0))  +
-  ggdraw(add_sub(multi.x, "Probability of presence", size=14, x=0.01, y=2, hjust=0.5, vjust=0.95, angle=90))
+  theme(plot.margin = margin(50, 10, 10, 50)) #top, right, bottom, left 
+
+multi.labs <- ggdraw(multi) + 
+  draw_label("No shift", size=14, x=0.11, y=0.95, hjust=0) +
+  draw_label("Overall expansion", size=14, x=0.345, y=0.95, hjust=0) +
+  draw_label("Upward shift", size=14, x=0.57, y=0.95, hjust=0) +
+  draw_label("Downward shift", size=14, x=0.8, y=0.95, hjust=0)
+
+multi.x <- ggdraw(add_sub(multi.labs, "Elevation (m)", size=18, x=0.5, y=0.05, hjust=0.5, vjust=0)) 
+
+multi.xy <- ggdraw(add_sub(multi.x, "Probability of presence", size=18, x=0.02, y=2.1, angle=90))
 
 
 
-ggsave("figures/model_preds_multipanel.pdf", multi.xy, width=8, height=6)
+
+ggsave("figures/model_preds_multipanel.pdf", multi.xy, width=12, height=8)
