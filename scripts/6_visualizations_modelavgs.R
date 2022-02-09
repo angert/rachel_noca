@@ -4,7 +4,6 @@
 #### This script visualizes model-averaged predictions for each rarefied dataset
 
 library(tidyverse)
-#library(patchwork)
 library(cowplot)
 
 #### Read in and prepare tables of coefficients
@@ -219,25 +218,6 @@ for (i in 1:dim(species.list.nofire)[1]) {
 
 
 #### assemble example species into multi-panel figure
-
-# trying patchwork but not working. if using, repeat above with show.legend=FALSE removed from graphs
-
-#top <- (plot_spacer() | preds_graph_ARUV | preds_graph_VAME | preds_graph_PAMY) + plot_layout(guides="collect") & 
-  #theme(legend.position="left")
-
-#bottom <- (preds_graph_CHUM | preds_graph_OPHO | preds_graph_SPBE | preds_graph_MANE) + 
-  #plot_layout(guides="collect") & 
-  #theme(legend.position="none")
-
-#full <- top/bottom
-
-#multi <- (plot_spacer() | preds_graph_ARUV | preds_graph_VAME | preds_graph_PAMY) / (preds_graph_CHUM | preds_graph_OPHO | preds_graph_SPBE | preds_graph_MANE) + 
-  #plot_layout(guides="collect") & 
-  #theme(legend.position="left")
-
-#multi.inset <- multi + inset_element(legend.fire, left=0.2, top=3, right=0, bottom=0, align_to = 'full')
-
-# back to using cowplot
 
 # first annotate % onto individual panels
 MANE.perc <- ggdraw(preds_graph_MANE) + draw_label("12/25\n(41%)", size=12, x=.85, y=.9, hjust=1)
