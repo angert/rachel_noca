@@ -240,13 +240,13 @@ for (i in 1:dim(species.list.nofire)[1]) {
 # back to using cowplot
 
 # first annotate % onto individual panels
-MANE.perc <- ggdraw(preds_graph_MANE) + draw_label("41%", size=14, x=.85, y=.9, hjust=1)
-SPBE.perc <- ggdraw(preds_graph_SPBE) + draw_label("3%", size=14, x=.85, y=.9, hjust=1)
-OPHO.perc <- ggdraw(preds_graph_OPHO) + draw_label("14%", size=14, x=.85, y=.9, hjust=1)
-CHUM.perc <- ggdraw(preds_graph_CHUM) + draw_label("24%", size=14, x=.85, y=.9, hjust=1)
-PAMY.perc <- ggdraw(preds_graph_PAMY) + draw_label("43%", size=14, x=.85, y=.9, hjust=1)
-VAME.perc <- ggdraw(preds_graph_VAME) + draw_label("29%", size=14, x=.85, y=.9, hjust=1)
-ARUV.perc <- ggdraw(preds_graph_ARUV) + draw_label("29%", size=14, x=.85, y=.9, hjust=1)
+MANE.perc <- ggdraw(preds_graph_MANE) + draw_label("12/25\n(41%)", size=12, x=.85, y=.9, hjust=1)
+SPBE.perc <- ggdraw(preds_graph_SPBE) + draw_label("1/25\n(3%)", size=12, x=.85, y=.9, hjust=1)
+OPHO.perc <- ggdraw(preds_graph_OPHO) + draw_label("4/25\n(14%)", size=12, x=.85, y=.9, hjust=1)
+CHUM.perc <- ggdraw(preds_graph_CHUM) + draw_label("7/25\n(24%)", size=12, x=.85, y=.9, hjust=1)
+PAMY.perc <- ggdraw(preds_graph_PAMY) + draw_label("3/7\n(43%)", size=12, x=.85, y=.9, hjust=1)
+VAME.perc <- ggdraw(preds_graph_VAME) + draw_label("2/7\n(29%)", size=12, x=.25, y=.9, hjust=0)
+ARUV.perc <- ggdraw(preds_graph_ARUV) + draw_label("2/7\n(29%)", size=12, x=.85, y=.9, hjust=1)
 
 multi <- plot_grid(MANE.perc, #no shift no fire 
                    SPBE.perc, #expansion no fire
