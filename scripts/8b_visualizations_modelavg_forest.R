@@ -14,8 +14,6 @@ library(ggplot2)
 library(tidyverse)
 library(forestplot)
 
-####### PART 1: LOAD AND SUMMARIZE AVERAGED COEFFICIENTS FROM EACH RAREFACTION #########
-
 ## Step 1: Load coefficient data
 
 coeff.ALLDAT <- read.csv("data/3b_new_coefficients.csv", header = TRUE)
@@ -40,7 +38,6 @@ uppers.fire <- coeff.fire %>%
   summarise(across(.cols = Elevation.m:Elevation.m2.Res.Unburn.fi, ~ unname(quantile(.x, 0.975)))) %>% #, .names="upper_{.col}" 
   mutate(param="upper")
 
-#all.fire <- left_join(left_join(means.fire, lowers.fire), uppers.fire)
 all.fire <- rbind(means.fire, lowers.fire, uppers.fire) %>% 
   pivot_longer(!c(Species, param), names_to="Parameter", values_to="Estimate") %>% 
   pivot_wider(names_from=param, values_from="Estimate")
@@ -52,31 +49,6 @@ test.plot <- ggplot(dat=all.fire, aes(y=Parameter, x=mean, xmin=lower, xmax=uppe
   theme_classic()
 
 
-ACMI <- all.fire %>% filter(Species=="ACMI")
 
-ACMI.mean <- ACMI %>% select(starts_with("mean")) %>% gather() %>% as.data.frame()
-ACMI.lower <- ACMI %>% select(starts_with("lower")) %>% gather() %>% as.data.frame()
-ACMI.upper <- ACMI %>% select(starts_with("upper")) %>% gather() %>% as.data.frame()
-
-base.data <- tibble(mean=ACMI.mean$value,
-                    lower=ACMI.lower$value,
-                    upper=ACMI.upper$value,
-                    study=c("Elevation", 
-                            "Elevation2", 
-                            "Burned",
-                            "Unburned",
-                            "Elevation*Burned",
-                            "Elevation*Unburned",
-                            "Elevation2*Burned", 
-                            "Elevation2*Unburned"))
-
-header <- tibble(study=c("Predictor"), 
-                 summary=FALSE)
-
-output_df <- bind_rows(header, base.data)
-
-output_df %>% forestplot(labeltext=study,
-                         is.summary=FALSE,
-                         xlog=FALSE)
 
 
