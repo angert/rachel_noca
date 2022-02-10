@@ -29,15 +29,28 @@ coeff.nofire <- coeff.ALLDAT[coeff.ALLDAT$Fire.Included == "No" & coeff.ALLDAT$T
 ## Step 2: Summarize mean, lower and upper CI of each coefficient across the rarefactions
 means.fire <- coeff.fire %>% 
   group_by(Species) %>% 
-  summarise(across(.cols = Elevation.m:Elevation.m2.Res.Unburn.fi, ~ unname(quantile(.x, 0.5)), .names = "mean_{.col}"))
+  summarise(across(.cols = Elevation.m:Elevation.m2.Res.Unburn.fi, ~ unname(quantile(.x, 0.5)))) %>% #, .names = "mean_{.col}" 
+  mutate(param="mean")
 lowers.fire <- coeff.fire %>% 
   group_by(Species) %>% 
-  summarise(across(.cols = Elevation.m:Elevation.m2.Res.Unburn.fi, ~ unname(quantile(.x, 0.025)), .names="lower_{.col}"))
+  summarise(across(.cols = Elevation.m:Elevation.m2.Res.Unburn.fi, ~ unname(quantile(.x, 0.025)))) %>% #, .names="lower_{.col}" 
+  mutate(param="lower")
 uppers.fire <- coeff.fire %>% 
   group_by(Species) %>% 
-  summarise(across(.cols = Elevation.m:Elevation.m2.Res.Unburn.fi, ~ unname(quantile(.x, 0.975)), .names="upper_{.col}"))
+  summarise(across(.cols = Elevation.m:Elevation.m2.Res.Unburn.fi, ~ unname(quantile(.x, 0.975)))) %>% #, .names="upper_{.col}" 
+  mutate(param="upper")
 
-all.fire <- left_join(left_join(means.fire, lowers.fire), uppers.fire)
+#all.fire <- left_join(left_join(means.fire, lowers.fire), uppers.fire)
+all.fire <- rbind(means.fire, lowers.fire, uppers.fire) %>% 
+  pivot_longer(!c(Species, param), names_to="Parameter", values_to="Estimate") %>% 
+  pivot_wider(names_from=param, values_from="Estimate")
+
+test.plot <- ggplot(dat=all.fire, aes(y=Parameter, x=mean, xmin=lower, xmax=upper)) +
+  geom_point() + 
+  geom_errorbarh() + 
+  facet_grid(~Species) +
+  theme_classic()
+
 
 ACMI <- all.fire %>% filter(Species=="ACMI")
 
@@ -65,3 +78,5 @@ output_df <- bind_rows(header, base.data)
 output_df %>% forestplot(labeltext=study,
                          is.summary=FALSE,
                          xlog=FALSE)
+
+
