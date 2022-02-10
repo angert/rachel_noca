@@ -41,13 +41,13 @@ all.fire <- left_join(left_join(means.fire, lowers.fire), uppers.fire)
 
 ACMI <- all.fire %>% filter(Species=="ACMI")
 
-ACMI.mean <- ACMI %>% select(starts_with("mean")) %>% as.data.frame()
-ACMI.lower <- ACMI %>% select(starts_with("lower")) 
-ACMI.upper <- ACMI %>% select(starts_with("upper")) 
+ACMI.mean <- ACMI %>% select(starts_with("mean")) %>% gather() %>% as.data.frame()
+ACMI.lower <- ACMI %>% select(starts_with("lower")) %>% gather() %>% as.data.frame()
+ACMI.upper <- ACMI %>% select(starts_with("upper")) %>% gather() %>% as.data.frame()
 
-base.data <- tibble(mean=ACMI.mean,
-                    lower=ACMI.lower,
-                    upper=ACMI.upper,
+base.data <- tibble(mean=ACMI.mean$value,
+                    lower=ACMI.lower$value,
+                    upper=ACMI.upper$value,
                     study=c("Elevation", 
                             "Elevation2", 
                             "Burned",
