@@ -30,12 +30,14 @@ annual$ID1[which(abs(annual$Elevation.m-elev.vec[2])==min(abs(annual$Elevation.m
 annual$ID1[which(abs(annual$Elevation.m-elev.vec[3])==min(abs(annual$Elevation.m-elev.vec[3]), na.rm=T))] #Sour4003
 annual$ID1[which(abs(annual$Elevation.m-elev.vec[4])==min(abs(annual$Elevation.m-elev.vec[4]), na.rm=T))] #Cari280
 annual$ID1[which(abs(annual$Elevation.m-elev.vec[5])==min(abs(annual$Elevation.m-elev.vec[5]), na.rm=T))] #Ste2033
+# except Ste is warm for its elevation; replace with another high site like Easy456 or Cas5101
 
-plots=c("Bac208","Ross3020","Sour4003","Cari280","Ste2033")
+plots=c("Bac208","Ross3020","Sour4003","Cari280","Easy456")
 seasonal.sub <- seasonal %>% filter(ID1 %in% plots)
 annual.sub <- annual %>% filter(ID1 %in% plots)
 
-### filter climate data to select plots that capture the max range of differences in temperature among plots
+
+### ALTERNATIVE: filter climate data to select plots that capture the max range of differences in temperature among plots
 dat2015 <- annual %>% filter(Year==2015)
 temp.vec <- seq(min(dat2015$MAT, na.rm=T), max(dat2015$MAT, na.rm=T), length.out=5)
 # which plots match?
