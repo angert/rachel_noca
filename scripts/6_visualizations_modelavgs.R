@@ -146,10 +146,10 @@ for (i in 1:dim(species.list.fire)[1]) {
 gg <- ggplot(graph.dat.means, aes(x = elev.vec.lin, y = preds, color = V2)) + 
   geom_line(data=graph.dat.tall, aes(group=interaction(V2, rep), color=V2), alpha=0.15) +
   geom_line(size=2, linetype="dotted") +
-  scale_color_manual("Time x fire", values=col.pal.fire, labels=c("legacy", "resurvey, burned", "resurvey, unburned")) +
+  scale_color_manual("", values=col.pal.fire, labels=c("1983", "2015, burned", "2015, unburned")) +
+  theme(legend.title=element_blank()) +
   theme_classic() + 
   theme(legend.key.size=unit(1.5, 'cm')) +
-  theme(legend.title=element_text(size=18)) +
   theme(legend.text=element_text(size=14))
 
 legend.fire = get_legend(gg)
@@ -228,23 +228,23 @@ PAMY.perc <- ggdraw(preds_graph_PAMY) + draw_label("3/7\n(43%)", size=12, x=.85,
 VAME.perc <- ggdraw(preds_graph_VAME) + draw_label("2/7\n(29%)", size=12, x=.25, y=.9, hjust=0)
 ARUV.perc <- ggdraw(preds_graph_ARUV) + draw_label("2/7\n(29%)", size=12, x=.85, y=.9, hjust=1)
 
-multi <- plot_grid(MANE.perc, #no shift no fire 
-                   SPBE.perc, #expansion no fire
-                   OPHO.perc, #up shift no fire
-                   CHUM.perc, #down shift no fire
-                   PAMY.perc, #no shift fire
-                   VAME.perc, #expansion fire
+multi <- plot_grid(legend.fire,
                    ARUV.perc, #up shift fire 
-                   legend.fire, 
+                   VAME.perc, #expansion fire
+                   PAMY.perc, #no shift fire
+                   CHUM.perc, #down shift no fire
+                   OPHO.perc, #up shift no fire
+                   SPBE.perc, #expansion no fire
+                   MANE.perc, #no shift no fire
                    nrow=2, ncol=4,
-                   labels=c("A","B","C","D","E","F","G","")) +
+                   labels=c("","A","B","C","D","E","F","G")) +
   theme(plot.margin = margin(50, 10, 10, 50)) #top, right, bottom, left 
 
 multi.labs <- ggdraw(multi) + 
-  draw_label("No shift", size=14, x=0.11, y=0.95, hjust=0) +
-  draw_label("Overall expansion", size=14, x=0.345, y=0.95, hjust=0) +
-  draw_label("Upward shift", size=14, x=0.57, y=0.95, hjust=0) +
-  draw_label("Downward shift", size=14, x=0.8, y=0.95, hjust=0)
+  draw_label("Downward shift", size=14, x=0.11, y=0.95, hjust=0) +
+  draw_label("Upward shift", size=14, x=0.345, y=0.95, hjust=0) +
+  draw_label("Overall expansion", size=14, x=0.57, y=0.95, hjust=0) +
+  draw_label("No shift", size=14, x=0.8, y=0.95, hjust=0)
 
 multi.x <- ggdraw(add_sub(multi.labs, "Elevation (m)", size=18, x=0.5, y=0.05, hjust=0.5, vjust=0)) 
 
