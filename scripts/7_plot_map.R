@@ -134,7 +134,7 @@ usmap <- ggplot() +
 ## Zoomed out inset (world)
 dot.plot <- data.frame(mean.lat=mean(plots$Latitude), mean.long=mean(plots$Longitude))
 
-map_world <- borders("world", colour="darkgrey", fill="white")
+map_world <- borders("world", colour="black", fill="grey")
 
 ggplot(dot.plot, aes(x = mean.long, y = mean.lat)) +
   map_world +
@@ -146,7 +146,8 @@ ggplot(dot.plot, aes(x = mean.long, y = mean.lat)) +
   labs(y = "Latitude") +
   ggtitle("B") +
   theme(axis.ticks.y = element_blank(), 
-        axis.text.y = element_blank()) 
+        axis.text.y = element_blank()) +
+  theme_classic()
   #legend("topleft", legend="B", bty="n") 
   #theme(panel.background=element_rect(fill="#c7eae5"))
 ggsave("figures/map_world_inset.png", width=8, height=5)
