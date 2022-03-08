@@ -46,3 +46,34 @@ violin.plot.burns.spp <- ggplot(dat, aes(x = Fires, y = Elevation.m)) +
   theme(legend.position="none", text = element_text(size = 16)) +
   stat_summary(fun=mean, geom="point", cex=2)
 
+####### PART 3: By MAP #########
+
+### read in climate files from ClimateWNA
+annual <- read_csv("data/All_Plots_RNW_1970-2015YT.csv")
+
+### merge elevation and turn it to numeric
+plot.names <- load("~/data/plot.names.Rda") #why isn't this loading??
+# loading it manually by double-clicking from finder window
+
+annual <- left_join(annual, plot.names, by=c("ID1" = "Plot.2015"))
+annual$Elevation.m <- as.numeric(annual$Elevation.m)
+
+### merge onto fire status
+clim_fire <- left_join(annual, burn.data, by=c("ID1" = "Plot")) %>% 
+  filter(Year==2015) %>% 
+  filter(!is.na(Fires))
+
+violin.plot.MAP <- ggplot(clim_fire, aes(x = Fires, y = MAP)) +
+  geom_violin() +
+  theme_classic() +
+  xlab("") +
+  ylab("Mean annual precipitation (mm)") +
+  theme(legend.position="none", text = element_text(size = 16)) +
+  stat_summary(fun=mean, geom="point", cex=2)
+
+MAP.elev <- ggplot(clim_fire, aes(x=Elevation.m.x, y=MAP)) +
+  geom_point() +
+  xlab("Elevation (m)") +
+  ylab("Mean annual precipitation (mm)") +
+  theme_classic()
+
