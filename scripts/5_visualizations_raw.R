@@ -394,7 +394,7 @@ ggsave("figures/elevation_ranges_1panel.pdf", p, device="pdf", width=5, height=5
 # USE option b: fire and no-fire species separated
 rarefied.change.calcs.fire <- rarefied.change.calcs %>% 
   filter(fire=="yes") %>% 
-  mutate(species.rank.med = dense_rank(med.leg),
+  mutate(species.rank.med = dense_rank(med.leg)+35, #silly workaround to get unique 4-letter species codes on fire species
          #species.rank.min = dense_rank(min.raw.leg), #doesn't work because of ties
          #species.rank.max = dense_rank(max.raw.leg), #doesn't work because of ties
          both.min.raw = pmax(min.raw.leg, min.raw.res),
@@ -414,21 +414,22 @@ rarefied.change.calcs.nofire <- rarefied.change.calcs %>%
 
 rarefied.change.calcs.facet <- rbind(rarefied.change.calcs.nofire, rarefied.change.calcs.fire)
 
+species.labels <- rarefied.change.calcs.facet$Species[order(rarefied.change.calcs.facet$fire, rarefied.change.calcs.facet$species.rank.med)]
+
 p.facet <- ggplot(rarefied.change.calcs.facet) + 
   geom_rect(aes(xmin=species.rank.med-0.33, xmax=species.rank.med+0.33, ymin=min.025.leg, ymax=max.975.leg), fill = "#F8766D") + # historic range in red; will show areas of range contractions
   geom_rect(aes(xmin=species.rank.med-0.33, xmax=species.rank.med+0.33, ymin=min.025.res, ymax=max.975.res), fill = "#00BFC4") + # modern range in blue; will show areas of range expansions
   geom_rect(aes(xmin=species.rank.med-0.33, xmax=species.rank.med+0.33, ymin=both.min.perc, ymax=both.max.perc), fill = "#bdbdbd") + # areas common to both in grey
-  scale_x_discrete(labels="a") +
-  facet_grid(. ~ fire, scales="free", space="free") +
+  facet_grid(. ~ fire, scale="free", space="free") +
+  scale_x_continuous(breaks=c(1:42), labels=species.labels) +
   ylim(0,2200) +
   xlab("Species") +
   ylab("Elevation (m)") +
   theme_bw() +
-  theme(text=element_text(size=16), panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+  theme(text=element_text(size=16), panel.grid.major = element_blank(), panel.grid.minor = element_blank(), axis.text.x = element_text(angle=90, vjust=0.5))
+p.facet
 
 ggsave("figures/elevation_ranges_2panel.pdf", p.facet, device="pdf", width=11, height=8)
-
-
 
 
 ### Probing what happens on burned vs unburned plots for fire-experiencing species
