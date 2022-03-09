@@ -146,7 +146,7 @@ for (i in 1:dim(species.list.fire)[1]) {
 gg <- ggplot(graph.dat.means, aes(x = elev.vec.lin, y = preds, color = V2)) + 
   geom_line(data=graph.dat.tall, aes(group=interaction(V2, rep), color=V2), alpha=0.15) +
   geom_line(size=2, linetype="dotted") +
-  scale_color_manual("", values=col.pal.fire, labels=c("1983", "2015, burned", "2015, unburned")) +
+  scale_color_manual(values=col.pal.fire, labels=c("1983", "2015, burned", "2015, unburned"), guide = guide_legend(title=NULL)) +
   theme(legend.title=element_blank()) +
   theme_classic() + 
   theme(legend.key.size=unit(1.5, 'cm')) +
