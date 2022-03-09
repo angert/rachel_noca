@@ -215,7 +215,25 @@ rarefied.change.fire <- rarefied.change.fire %>%
 rarefied.change.calcs <- rbind(rarefied.change.nofire, rarefied.change.fire)
 write.csv(rarefied.change.calcs, "data/5_range.change.calcs.csv")
 
-## reshape for violin plotting
+### Statistical tests for differences between fire and no-fire species groups
+rarefied.change.calcs <- read_csv("data/5_range.change.calcs.csv")
+
+rear.t <- t.test(rarefied.change.calcs$rear.change.perc[rarefied.change.calcs$fire=="no"], rarefied.change.calcs$rear.change.perc[rarefied.change.calcs$fire=="yes"])
+rear.t
+
+rear.t.raw <- t.test(rarefied.change.calcs$rear.change.raw[rarefied.change.calcs$fire=="no"], rarefied.change.calcs$rear.change.raw[rarefied.change.calcs$fire=="yes"])
+rear.t.raw
+
+med.t <- t.test(rarefied.change.calcs$med.change[rarefied.change.calcs$fire=="no"], rarefied.change.calcs$med.change[rarefied.change.calcs$fire=="yes"])
+med.t
+
+lead.t <- t.test(rarefied.change.calcs$lead.change.perc[rarefied.change.calcs$fire=="no"], rarefied.change.calcs$lead.change.perc[rarefied.change.calcs$fire=="yes"])
+lead.t
+
+lead.t.raw <- t.test(rarefied.change.calcs$lead.change.raw[rarefied.change.calcs$fire=="no"], rarefied.change.calcs$lead.change.raw[rarefied.change.calcs$fire=="yes"])
+lead.t.raw
+
+### Reshape for violin plotting
 
 # no-fire species
 rarefied.change.tall.nofire.raw <- rarefied.change.nofire %>% 
@@ -242,17 +260,14 @@ rarefied.change.tall.fire.perc <- rarefied.change.fire %>%
 rarefied.change.tall.perc <- bind_rows(rarefied.change.tall.nofire.perc, rarefied.change.tall.fire.perc)
 rarefied.change.tall.raw <- bind_rows(rarefied.change.tall.nofire.raw, rarefied.change.tall.fire.raw)
 
-
 level_order.raw = c("rear.change.raw", "med.change", "lead.change.raw")
 level_order.perc = c("rear.change.perc", "med.change", "lead.change.perc")
 
-# new versions by range position
-col.pal <- c("skyblue", "orange")
+# Violins by range position
 
 violin.plot.raw <- ggplot(rarefied.change.tall.raw, aes(x=factor(edge, level=level_order.raw), y=change, fill=fire)) + 
   geom_violin() +
-  #scale_fill_manual(values=col.pal) +
-  scale_fill_viridis(discrete=TRUE) +
+  scale_fill_viridis(discrete=TRUE, alpha=0.7) +
   #stat_summary(fun=mean, geom="point", cex=2)  +
   theme_classic() +
   geom_hline(yintercept=0, lty="dashed") +
@@ -263,7 +278,7 @@ violin.plot.raw <- ggplot(rarefied.change.tall.raw, aes(x=factor(edge, level=lev
   geom_segment(aes(x = 0.8, xend = 1.2, y = 400, yend = 400)) +
   geom_segment(aes(x = 1.8, xend = 2.2, y = 400, yend = 400)) +
   geom_segment(aes(x = 2.75, xend = 3.15, y = 400, yend = 400)) +
-  annotate("text", x=1, y=450, label="ns") +
+  annotate("text", x=1, y=450, label="ns") + #from t-tests above
   annotate("text", x=2, y=450, label="+") +
   annotate("text", x=2.95, y=440, label="*") 
 violin.plot.raw
@@ -272,7 +287,6 @@ ggsave("figures/violin_1panel_raw.pdf", violin.plot.raw, device="pdf", width=8, 
 
 violin.plot.perc <- ggplot(rarefied.change.tall.perc, aes(x=factor(edge, level=level_order.perc), y=change, fill=fire)) +#, color=edge, fill=edge)) + 
   geom_violin() +
-  #scale_fill_manual(values=col.pal) +
   scale_fill_viridis(discrete=TRUE, alpha=0.7) +
   #stat_summary(fun=mean, geom="point", cex=2)  +
   theme_classic() +
@@ -285,14 +299,14 @@ violin.plot.perc <- ggplot(rarefied.change.tall.perc, aes(x=factor(edge, level=l
   geom_segment(aes(x = 0.8, xend = 1.2, y = 400, yend = 400)) +
   geom_segment(aes(x = 1.8, xend = 2.2, y = 400, yend = 400)) +
   geom_segment(aes(x = 2.75, xend = 3.15, y = 400, yend = 400)) +
-  annotate("text", x=1, y=450, label="ns") +
+  annotate("text", x=1, y=450, label="ns") + #from t-tests above
   annotate("text", x=2, y=450, label="+") +
   annotate("text", x=2.95, y=440, label="*") 
 violin.plot.perc
 
 ggsave("figures/violin_1panel_perc.pdf", violin.plot.perc, device="pdf", width=8, height=5)
   
-# old versions by fire status
+## old versions by fire status
 violin.plot.nofire.raw <- ggplot(rarefied.change.tall.nofire.raw, aes(x=factor(edge, level=level_order.raw), y=change)) +#, color=edge, fill=edge)) + 
   geom_violin() +
   stat_summary(fun=mean, geom="point", cex=2)  +
@@ -348,7 +362,7 @@ ggsave("figures/violin_2panel_perc.pdf", violin.fig.perc, device="pdf", width=8,
 
 rarefied.change.calcs <- read_csv("data/5_range.change.calcs.csv")
 
-# option a: all species interdigitated regardless of fire; fire species labeled
+# old option a: all species interdigitated regardless of fire; fire species labeled
 rarefied.change.calcs <- rarefied.change.calcs %>% 
   mutate(species.rank.med = dense_rank(med.leg),
          #species.rank.min = dense_rank(min.raw.leg), #doesn't work because of ties
@@ -377,7 +391,7 @@ p <- ggplot(rarefied.change.calcs) +
 ggsave("figures/elevation_ranges_1panel.pdf", p, device="pdf", width=5, height=5)
 
 
-# option b: fire and no-fire species separated
+# USE option b: fire and no-fire species separated
 rarefied.change.calcs.fire <- rarefied.change.calcs %>% 
   filter(fire=="yes") %>% 
   mutate(species.rank.med = dense_rank(med.leg),
@@ -398,35 +412,26 @@ rarefied.change.calcs.nofire <- rarefied.change.calcs %>%
          both.min.perc = pmax(min.025.leg, min.025.res),
          both.max.perc = pmin(max.975.leg, max.975.res))
 
-p.nofire <- ggplot(rarefied.change.calcs.nofire) + 
+rarefied.change.calcs.facet <- rbind(rarefied.change.calcs.nofire, rarefied.change.calcs.fire)
+
+p.facet <- ggplot(rarefied.change.calcs.facet) + 
   geom_rect(aes(xmin=species.rank.med-0.33, xmax=species.rank.med+0.33, ymin=min.025.leg, ymax=max.975.leg), fill = "#F8766D") + # historic range in red; will show areas of range contractions
-  geom_rect(aes(xmin=species.rank.med-0.33, xmax=species.rank.med+0.33, ymin=min.025.res, ymax=max.975.res), fill = "#00BFC4") + # modern range in blue; will show areas of range expansion
+  geom_rect(aes(xmin=species.rank.med-0.33, xmax=species.rank.med+0.33, ymin=min.025.res, ymax=max.975.res), fill = "#00BFC4") + # modern range in blue; will show areas of range expansions
   geom_rect(aes(xmin=species.rank.med-0.33, xmax=species.rank.med+0.33, ymin=both.min.perc, ymax=both.max.perc), fill = "#bdbdbd") + # areas common to both in grey
-  scale_x_continuous(breaks=c(1,35)) +
+  scale_x_discrete(labels="a") +
+  facet_grid(. ~ fire, scales="free", space="free") +
   ylim(0,2200) +
-  xlab("") +
+  xlab("Species") +
   ylab("Elevation (m)") +
   theme_bw() +
-  theme(text=element_text(size=16), panel.grid.major = element_blank(), panel.grid.minor =   element_blank())
+  theme(text=element_text(size=16), panel.grid.major = element_blank(), panel.grid.minor = element_blank())
 
-p.fire <- ggplot(rarefied.change.calcs.fire) + 
-  geom_rect(aes(xmin=species.rank.med-0.33, xmax=species.rank.med+0.33, ymin=min.025.leg, ymax=max.975.leg), fill = "#F8766D") + # historic range in red; will show areas of range contractions
-  geom_rect(aes(xmin=species.rank.med-0.33, xmax=species.rank.med+0.33, ymin=min.025.res, ymax=max.975.res), fill = "#00BFC4") + # modern range in blue; will show areas of range expansion
-  geom_rect(aes(xmin=species.rank.med-0.33, xmax=species.rank.med+0.33, ymin=both.min.perc, ymax=both.max.perc), fill = "#bdbdbd") + # areas common to both in grey
-  ylim(0,2200) +
-  scale_x_continuous(breaks=c(1,7)) +
-  xlab("") +
-  #ylab("Elevation (m)") +
-  theme_bw() +
-  theme(text=element_text(size=16), panel.grid.major = element_blank(), panel.grid.minor =   element_blank())
-
-range.fig <- plot_grid(p.nofire, p.fire, rel_widths=c(3,1), labels=c("A", "B"))
-range.fig <- ggdraw(add_sub(range.fig, "Species", vpadding=grid::unit(0,"lines"), y=6, x=0.75, vjust=4.5, size=16))
-
-ggsave("figures/elevation_ranges_2panel_unburned.pdf", range.fig, device="pdf", width=5, height=5)
+ggsave("figures/elevation_ranges_2panel.pdf", p.facet, device="pdf", width=11, height=8)
 
 
-## Probing what happens on burned vs unburned plots for fire-experiencing species
+
+
+### Probing what happens on burned vs unburned plots for fire-experiencing species
 rarefied.change.calcs.unburned <- read_csv("data/5_range.change.calcs_unburned.csv")
 rarefied.change.calcs.burned <- read_csv("data/5_range.change.calcs_burned.csv")
 rarefied.change.calcs.sensitivity <- left_join(rarefied.change.calcs.unburned, rarefied.change.calcs.burned, by=c("X1", "species", "min.raw.leg", "max.raw.leg", "med.leg", "min.025.leg", "max.975.leg", "Species", "fire")) #%>% 
@@ -473,21 +478,5 @@ range.fig.sens <- plot_grid(p.fire.unburned, p.fire.burned, labels=c("Unburned",
 ggsave("figures/elevation_ranges_firespecies_sensitivity.pdf", range.fig, device="pdf", width=11, height=5)
 
 
-## Statistical tests for differences between fire and no-fire species groups
-rarefied.change.calcs <- read_csv("data/5_range.change.calcs.csv")
 
-rear.t <- t.test(rarefied.change.calcs$rear.change.perc[rarefied.change.calcs$fire=="no"], rarefied.change.calcs$rear.change.perc[rarefied.change.calcs$fire=="yes"])
-rear.t
-
-rear.t.raw <- t.test(rarefied.change.calcs$rear.change.raw[rarefied.change.calcs$fire=="no"], rarefied.change.calcs$rear.change.raw[rarefied.change.calcs$fire=="yes"])
-rear.t.raw
-
-med.t <- t.test(rarefied.change.calcs$med.change[rarefied.change.calcs$fire=="no"], rarefied.change.calcs$med.change[rarefied.change.calcs$fire=="yes"])
-med.t
-
-lead.t <- t.test(rarefied.change.calcs$lead.change.perc[rarefied.change.calcs$fire=="no"], rarefied.change.calcs$lead.change.perc[rarefied.change.calcs$fire=="yes"])
-lead.t
-
-lead.t.raw <- t.test(rarefied.change.calcs$lead.change.raw[rarefied.change.calcs$fire=="no"], rarefied.change.calcs$lead.change.raw[rarefied.change.calcs$fire=="yes"])
-lead.t.raw
 
