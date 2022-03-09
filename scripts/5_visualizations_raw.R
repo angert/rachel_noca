@@ -7,6 +7,7 @@
 library(tidyverse)
 library(Hmisc) #for mean_sdl function to put mean+/-SD on violin plots
 library(cowplot) #for multipanel figures
+library(viridis) #for color-blind-friendly palettes
 
 ### Load data
 # rarefied data (as list of dataframes named rare.ALL):
@@ -111,7 +112,7 @@ for(D in 1:100) {
              el.max.975.leg.fire = quantile(Elevation.m, probs=0.975))
 und.presence.SPEC.res <- und.SPEC %>% 
       filter(Data.Type=="Resurvey" & Pres.Abs==1) %>% 
-      filter(Fires=="Unburned") %>% #temporary toggle %>% 
+      #filter(Fires=="Unburned") %>% #temporary toggle %>% 
       mutate(el.min.raw.res.fire = min(Elevation.m),
              el.max.raw.res.fire = max(Elevation.m),
              el.med.res.fire = median(Elevation.m),
@@ -212,7 +213,7 @@ rarefied.change.fire <- rarefied.change.fire %>%
 #span.change = (max.res-min.res) - (max.leg - min.leg))
 
 rarefied.change.calcs <- rbind(rarefied.change.nofire, rarefied.change.fire)
-write.csv(rarefied.change.calcs, "data/5_range.change.calcs_unburned.csv")
+write.csv(rarefied.change.calcs, "data/5_range.change.calcs.csv")
 
 ## reshape for violin plotting
 
@@ -250,43 +251,46 @@ col.pal <- c("skyblue", "orange")
 
 violin.plot.raw <- ggplot(rarefied.change.tall.raw, aes(x=factor(edge, level=level_order.raw), y=change, fill=fire)) + 
   geom_violin() +
-  scale_fill_manual(values=col.pal) +
+  #scale_fill_manual(values=col.pal) +
+  scale_fill_viridis(discrete=TRUE) +
   #stat_summary(fun=mean, geom="point", cex=2)  +
   theme_classic() +
   geom_hline(yintercept=0, lty="dashed") +
   xlab("") +
   scale_x_discrete(labels=c("Lower\nedge", "Range\ncenter", "Upper\nedge")) +
   ylim(-600,700) +
-  ylab(c("Elevational change (m)\n1983-2015")) #+
-  #geom_segment(aes(x = 0.8, xend = 1.2, y = 400, yend = 400)) +
-  #geom_segment(aes(x = 1.8, xend = 2.2, y = 400, yend = 400)) +
-  #geom_segment(aes(x = 2.75, xend = 3.15, y = 400, yend = 400)) +
-  #annotate("text", x=1, y=450, label="ns") +
-  #annotate("text", x=2, y=450, label="+") +
-  #annotate("text", x=2.95, y=440, label="*") 
+  ylab(c("Elevational change (m)\n1983-2015")) +
+  geom_segment(aes(x = 0.8, xend = 1.2, y = 400, yend = 400)) +
+  geom_segment(aes(x = 1.8, xend = 2.2, y = 400, yend = 400)) +
+  geom_segment(aes(x = 2.75, xend = 3.15, y = 400, yend = 400)) +
+  annotate("text", x=1, y=450, label="ns") +
+  annotate("text", x=2, y=450, label="+") +
+  annotate("text", x=2.95, y=440, label="*") 
 violin.plot.raw
 
-ggsave("figures/violin_1panel_raw_unburned.pdf", violin.plot.raw, device="pdf", width=8, height=5)
+ggsave("figures/violin_1panel_raw.pdf", violin.plot.raw, device="pdf", width=8, height=5)
 
 violin.plot.perc <- ggplot(rarefied.change.tall.perc, aes(x=factor(edge, level=level_order.perc), y=change, fill=fire)) +#, color=edge, fill=edge)) + 
   geom_violin() +
-  scale_fill_manual(values=col.pal) +
+  #scale_fill_manual(values=col.pal) +
+  scale_fill_viridis(discrete=TRUE, alpha=0.7) +
   #stat_summary(fun=mean, geom="point", cex=2)  +
   theme_classic() +
   geom_hline(yintercept=0, lty="dashed") +
   xlab("") +
   scale_x_discrete(labels=c("Lower\nedge", "Range\ncenter", "Upper\nedge")) +
+  theme(axis.text.x=element_text(size=12)) +
   ylim(-600,700) +
-  ylab(c("Elevational change (m)\n1983-2015")) #+
-  #geom_segment(aes(x = 0.8, xend = 1.2, y = 400, yend = 400)) +
-  #geom_segment(aes(x = 1.8, xend = 2.2, y = 400, yend = 400)) +
-  #geom_segment(aes(x = 2.75, xend = 3.15, y = 400, yend = 400)) +
-  #annotate("text", x=1, y=450, label="ns") +
-  #annotate("text", x=2, y=450, label="+") +
-  #annotate("text", x=2.95, y=440, label="*") 
+  ylab(c("Elevational change (m)\n1983-2015")) +
+  geom_segment(aes(x = 0.8, xend = 1.2, y = 400, yend = 400)) +
+  geom_segment(aes(x = 1.8, xend = 2.2, y = 400, yend = 400)) +
+  geom_segment(aes(x = 2.75, xend = 3.15, y = 400, yend = 400)) +
+  annotate("text", x=1, y=450, label="ns") +
+  annotate("text", x=2, y=450, label="+") +
+  annotate("text", x=2.95, y=440, label="*") 
 violin.plot.perc
 
-ggsave("figures/violin_1panel_perc_unburned.pdf", violin.plot.perc, device="pdf", width=8, height=5)
+ggsave("figures/violin_1panel_perc.pdf", violin.plot.perc, device="pdf", width=8, height=5)
   
 # old versions by fire status
 violin.plot.nofire.raw <- ggplot(rarefied.change.tall.nofire.raw, aes(x=factor(edge, level=level_order.raw), y=change)) +#, color=edge, fill=edge)) + 
