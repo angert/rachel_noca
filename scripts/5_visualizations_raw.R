@@ -416,11 +416,14 @@ rarefied.change.calcs.facet <- rbind(rarefied.change.calcs.nofire, rarefied.chan
 
 species.labels <- rarefied.change.calcs.facet$Species[order(rarefied.change.calcs.facet$fire, rarefied.change.calcs.facet$species.rank.med)]
 
+fire.labs <- c("fire=no", "fire=yes")
+names(fire.labs) <- c("no", "yes")
+
 p.facet <- ggplot(rarefied.change.calcs.facet) + 
   geom_rect(aes(xmin=species.rank.med-0.33, xmax=species.rank.med+0.33, ymin=min.025.leg, ymax=max.975.leg), fill = "#F8766D") + # historic range in red; will show areas of range contractions
   geom_rect(aes(xmin=species.rank.med-0.33, xmax=species.rank.med+0.33, ymin=min.025.res, ymax=max.975.res), fill = "#00BFC4") + # modern range in blue; will show areas of range expansions
   geom_rect(aes(xmin=species.rank.med-0.33, xmax=species.rank.med+0.33, ymin=both.min.perc, ymax=both.max.perc), fill = "#bdbdbd") + # areas common to both in grey
-  facet_grid(. ~ fire, scale="free", space="free") +
+  facet_grid(. ~ fire, scale="free", space="free", labeller=labeller(fire=fire.labs)) +
   scale_x_continuous(breaks=c(1:42), labels=species.labels) +
   ylim(0,2200) +
   xlab("Species") +
