@@ -416,7 +416,7 @@ rarefied.change.calcs.facet <- rbind(rarefied.change.calcs.nofire, rarefied.chan
 
 species.labels <- rarefied.change.calcs.facet$Species[order(rarefied.change.calcs.facet$fire, rarefied.change.calcs.facet$species.rank.med)]
 
-fire.labs <- c("fire=no", "fire=yes")
+fire.labs <- c("non-fire-experiencing species", "fire-experiencing")
 names(fire.labs) <- c("no", "yes")
 
 p.facet <- ggplot(rarefied.change.calcs.facet) + 
@@ -429,7 +429,7 @@ p.facet <- ggplot(rarefied.change.calcs.facet) +
   xlab("Species") +
   ylab("Elevation (m)") +
   theme_bw() +
-  theme(text=element_text(size=16), panel.grid.major = element_blank(), panel.grid.minor = element_blank(), axis.text.x = element_text(angle=90, vjust=0.5))
+  theme(text=element_text(size=16), panel.grid.major = element_blank(), panel.grid.minor = element_blank(), axis.text.x = element_text(angle=90, hjust=0, vjust=0.5))
 p.facet
 
 ggsave("figures/elevation_ranges_2panel.pdf", p.facet, device="pdf", width=11, height=8)
