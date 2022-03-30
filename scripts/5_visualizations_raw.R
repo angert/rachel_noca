@@ -1,7 +1,7 @@
 # Created: Feb. 16, 2021
-# Modified: May 03, 2021
+# Modified: Mar. 10, 2022
 
-#### This script is Amy's quick attempt at visualizing raw patterns in rarefied data; see script 6 for visualizing model output
+#### This script visualizes raw patterns in rarefied data; see script 6 for visualizing model outputs
 
 ### Load libraries
 library(tidyverse)
@@ -210,7 +210,7 @@ rarefied.change.fire <- rarefied.change.fire %>%
          med.change = med.res - med.leg,
          lead.change.raw = max.raw.res - max.raw.leg,
          lead.change.perc = max.975.res - max.975.leg)#,
-#span.change = (max.res-min.res) - (max.leg - min.leg))
+         #span.change = (max.res-min.res) - (max.leg - min.leg))
 
 rarefied.change.calcs <- rbind(rarefied.change.nofire, rarefied.change.fire)
 write.csv(rarefied.change.calcs, "data/5_range.change.calcs.csv")
