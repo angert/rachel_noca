@@ -6,19 +6,13 @@ seasonal <- read_csv("data/All_Plots_RNW_1970-2015ST.csv")
 annual <- read_csv("data/All_Plots_RNW_1970-2015YT.csv")
 
 ### merge elevation and turn it to numeric
-plot.names <- load("~/data/plot.names.Rda") #why isn't this loading??
-# loading it manually by double-clicking from finder window
+plot.names <- load("data/plot.names.Rda") 
 
 seasonal <- left_join(seasonal, plot.names, by=c("ID1" = "Plot.2015"))
 annual <- left_join(annual, plot.names, by=c("ID1" = "Plot.2015"))
 
 seasonal$Elevation.m <- as.numeric(seasonal$Elevation.m)
 annual$Elevation.m <- as.numeric(annual$Elevation.m)
-
-### filter climate data to random subset of plots
-plots <- sample(seasonal$ID1, size=10, replace=FALSE)
-seasonal.sub <- seasonal %>% filter(ID1 %in% plots)
-annual.sub <- annual %>% filter(ID1 %in% plots)
 
 ### filter climate data to select plots that capture the breadth of elevations in the data
 # 5 equal intervals for elevation
@@ -36,20 +30,28 @@ plots=c("Bac208","Ross3020","Sour4003","Cari280","Easy456")
 seasonal.sub <- seasonal %>% filter(ID1 %in% plots)
 annual.sub <- annual %>% filter(ID1 %in% plots)
 
-
 ### ALTERNATIVE: filter climate data to select plots that capture the max range of differences in temperature among plots
-dat2015 <- annual %>% filter(Year==2015)
-temp.vec <- seq(min(dat2015$MAT, na.rm=T), max(dat2015$MAT, na.rm=T), length.out=5)
+#dat2015 <- annual %>% filter(Year==2015)
+#temp.vec <- seq(min(dat2015$MAT, na.rm=T), max(dat2015$MAT, na.rm=T), length.out=5)
 # which plots match?
-dat2015$ID1[which(abs(dat2015$MAT-temp.vec[1])==min(abs(dat2015$MAT-temp.vec[1]), na.rm=T))] #Cas5109, Ste2019, Ste2023, Ste2021
-dat2015$ID1[which(abs(dat2015$MAT-temp.vec[2])==min(abs(dat2015$MAT-temp.vec[2]), na.rm=T))] #What6021, What6043, What6005, Ste2031, Ste2032, RaRi5021
-dat2015$ID1[which(abs(dat2015$MAT-temp.vec[3])==min(abs(dat2015$MAT-temp.vec[3]), na.rm=T))]#"HB5158" "STE2024" "Copp6022" "Copp6028" "Copp6024" "Copp6030" "Copp6026" "Ste2078"  "Ste2062"  "Thun7120" "Thun7119" "Thun7118" "Ross3022" "Ross3024" "Ross3018" "Ste2008"  "Ruby1057" "Ruby1059" "Pan1018"  "Pan1021"  "Sour4023" "Sour4033" "Sour4021" "Cari449" "Hozo140"
-dat2015$ID1[which(abs(dat2015$MAT-temp.vec[4])==min(abs(dat2015$MAT-temp.vec[4]), na.rm=T))] #"ROSS4001" "STE2042" "Pyra1019" "Ross3008" "Ross3031" "Ross3010" "Thor217"
-dat2015$ID1[which(abs(dat2015$MAT-temp.vec[5])==min(abs(dat2015$MAT-temp.vec[5]), na.rm=T))] #Bac208
+#dat2015$ID1[which(abs(dat2015$MAT-temp.vec[1])==min(abs(dat2015$MAT-temp.vec[1]), na.rm=T))] #Cas5109, Ste2019, Ste2023, Ste2021
+#dat2015$ID1[which(abs(dat2015$MAT-temp.vec[2])==min(abs(dat2015$MAT-temp.vec[2]), na.rm=T))] #What6021, What6043, What6005, Ste2031, Ste2032, RaRi5021
+#dat2015$ID1[which(abs(dat2015$MAT-temp.vec[3])==min(abs(dat2015$MAT-temp.vec[3]), na.rm=T))]#"HB5158" "STE2024" "Copp6022" "Copp6028" "Copp6024" "Copp6030" "Copp6026" "Ste2078"  "Ste2062"  "Thun7120" "Thun7119" "Thun7118" "Ross3022" "Ross3024" "Ross3018" "Ste2008"  "Ruby1057" "Ruby1059" "Pan1018"  "Pan1021"  "Sour4023" "Sour4033" "Sour4021" "Cari449" "Hozo140"
+#dat2015$ID1[which(abs(dat2015$MAT-temp.vec[4])==min(abs(dat2015$MAT-temp.vec[4]), na.rm=T))] #"ROSS4001" "STE2042" "Pyra1019" "Ross3008" "Ross3031" "Ross3010" "Thor217"
+#dat2015$ID1[which(abs(dat2015$MAT-temp.vec[5])==min(abs(dat2015$MAT-temp.vec[5]), na.rm=T))] #Bac208
 
-plots=c("Cas5109","What6021","HB5158","ROSS4001","Bac208")
-seasonal.sub <- seasonal %>% filter(ID1 %in% plots)
-annual.sub <- annual %>% filter(ID1 %in% plots)
+#plots=c("Cas5109","What6021","HB5158","ROSS4001","Bac208")
+#seasonal.sub <- seasonal %>% filter(ID1 %in% plots)
+#annual.sub <- annual %>% filter(ID1 %in% plots)
+
+### ALTERNATIVE: filter climate data to random subset of plots
+#plots <- sample(seasonal$ID1, size=10, replace=FALSE)
+#seasonal.sub <- seasonal %>% 
+#  filter(ID1 %in% plots) %>% 
+#  select(Year, ID1, Tmax_sm, Tmax_wt, PPT_sm)
+#annual.sub <- annual %>% 
+#  filter(ID1 %in% plots) %>% 
+#  select(Year, ID1, MAT, MAP, PAS)
 
 
 ### pull out survey-year data alone
@@ -114,8 +116,80 @@ Pwin <- ggplot(annual.sub, aes(x=Year, y=PAS, by=ID1)) +
 all <- (MAT | Tsum | Twin) / (MAP | Psum | Pwin) + 
   plot_layout(guides="collect") 
 ggsave("figures/climate.pdf", all, width=11, height=8)
-#+
-#  plot_annotation(tag_levels = 'A')
 
 
 
+### calculate changes over time
+
+MAT.slopes <- annual.sub %>% 
+  group_by(ID1) %>%
+  do(model = lm(MAT ~ Year, data = .)) %>%
+  mutate(MAT.slope=coef(model)["Year"],
+         MAT.p=summary(model)$coefficients[2,4]) %>% 
+  select(-model)
+#0.021C per year --> ~0.7C for 32 years (1983-2015)
+
+MAP.slopes <- annual.sub %>% 
+  group_by(ID1) %>%
+  do(model = lm(MAP ~ Year, data = .)) %>%
+  mutate(MAP.slope=coef(model)["Year"], 
+         MAP.p=summary(model)$coefficients[2,4]) %>% 
+  select(-model) 
+
+Tsum.slopes <- seasonal.sub %>% 
+  group_by(ID1) %>%
+  do(model = lm(Tmax_sm ~ Year, data = .)) %>%
+  mutate(Tsum.slope=coef(model)["Year"],
+         Tsum.p=summary(model)$coefficients[2,4]) %>% 
+  select(-model)
+
+Twin.slopes <- seasonal.sub %>% 
+  group_by(ID1) %>%
+  do(model = lm(Tmax_wt ~ Year, data = .)) %>%
+  mutate(Twin.slope=coef(model)["Year"],
+         Twin.p=summary(model)$coefficients[2,4]) %>% 
+  select(-model)
+#0.025C per year --> ~0.8C for 32 years (1983-2015)
+
+Psum.slopes <- seasonal.sub %>% 
+  group_by(ID1) %>%
+  do(model = lm(PPT_sm ~ Year, data = .)) %>%
+  mutate(Psum.slope=coef(model)["Year"],
+         Psum.p=summary(model)$coefficients[2,4]) %>% 
+  select(-model)
+
+Pwin.slopes <- annual.sub %>% 
+  group_by(ID1) %>%
+  do(model = lm(PAS ~ Year, data = .)) %>%
+  mutate(PAS.slope=coef(model)["Year"],
+         PAS.p=summary(model)$coefficients[2,4]) %>% 
+  select(-model)
+#-5 per year --> -160 for 32 years (1983-2015)
+
+Ann.diffs <- annual.sub %>% 
+  group_by(ID1) %>%
+  filter(Year==1983 | Year==2015) %>% 
+  pivot_wider(names_from=Year, values_from=c(MAT, MAP, PAS)) %>% 
+  mutate(MAT.diff = MAT_2015-MAT_1983,
+         MAP.diff.raw = MAP_2015-MAP_1983,
+         MAP.diff.perc = (MAP_2015-MAP_1983)/MAP_1983*100,
+         PAS.diff.raw = PAS_2015-PAS_1983,
+         PAS.diff.perc = (PAS_2015-PAS_1983)/PAS_1983*100) %>% 
+  select(ID1, MAT.diff, MAP.diff.raw, MAP.diff.perc, PAS.diff.raw, PAS.diff.perc)
+
+Seas.diffs <- seasonal.sub %>% 
+  group_by(ID1) %>%
+  filter(Year==1983 | Year==2015) %>% 
+  pivot_wider(names_from=Year, values_from=c(Tmax_sm, Tmax_wt, PPT_sm)) %>% 
+  mutate(Tsum.diff = Tmax_sm_2015-Tmax_sm_1983,
+         Twin.diff = Tmax_wt_2015-Tmax_wt_1983,
+         Psum.diff = PPT_sm_2015-PPT_sm_1983,
+         Psum.diff.perc = (PPT_sm_2015-PPT_sm_1983)/PPT_sm_1983*100) %>% 
+  select(ID1, Tsum.diff, Twin.diff, Psum.diff, Psum.diff.perc)
+
+Diffs <- left_join(Ann.diffs, Seas.diffs)
+
+Slopes <- left_join(left_join(left_join(left_join(left_join(MAT.slopes, Tsum.slopes), Twin.slopes), MAP.slopes), Psum.slopes), Pwin.slopes)
+
+write_csv(Diffs, "data/climate_diffs.csv")
+write_csv(Slopes, "data/climate_slopes.csv")
