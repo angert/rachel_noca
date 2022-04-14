@@ -216,6 +216,19 @@ for (i in 1:dim(species.list.nofire)[1]) {
   assign(paste0("preds_graph_",sp), gg)
 }
 
+# repeat last plot with legend so that legend can be saved for supplemental multi-panel fig
+gg <- ggplot(graph.dat.means, aes(x = elev.vec.lin, y = preds, color = V2)) + 
+  geom_line(data=graph.dat.tall, aes(group=interaction(V2, rep), color=V2), alpha=0.15) +
+  geom_line(size=2, linetype="dotted") +
+  scale_color_manual(values=col.pal.nofire, labels=c("1983", "2015"), guide = guide_legend(title=NULL)) +
+  theme(legend.title=element_blank()) +
+  theme_classic() + 
+  theme(legend.key.size=unit(1.5, 'cm')) +
+  theme(legend.text=element_text(size=14))
+
+library(cowplot)
+legend.nofire = get_legend(gg)
+
 
 #### assemble example species into multi-panel figure
 
@@ -229,17 +242,17 @@ VAME.perc <- ggdraw(preds_graph_VAME) + draw_label("2/7\n(29%)", size=12, x=.25,
 ARUV.perc <- ggdraw(preds_graph_ARUV) + draw_label("2/7\n(29%)", size=12, x=.85, y=.9, hjust=1)
 
 # add images of focal taxa
-library(imager)
-library(patchwork)
-aruv <- load.image("figures/Arctostaphylos uva ursi no bg.png") %>% plot
+#library(imager)
+#library(patchwork)
+#aruv <- load.image("figures/Arctostaphylos uva ursi no bg.png") %>% plot
 
-rasterImage(aruv, 1.5, 1.5, 1.9, 1.8)
-ARUV_img <- ARUV.perc + inset_element(p=aruv,
-                                 left=.5,
-                                 bottom=.5,
-                                 right=.5,
-                                 top=.5)
-ARUV_img
+#rasterImage(aruv, 1.5, 1.5, 1.9, 1.8)
+#ARUV_img <- ARUV.perc + inset_element(p=aruv,
+                                # left=.5,
+                                # bottom=.5,
+                                # right=.5,
+                                # top=.5)
+#ARUV_img
 
 # group subplots
 library(cowplot)
@@ -265,7 +278,74 @@ multi.x <- ggdraw(add_sub(multi.labs, "Elevation (m)", size=18, x=0.5, y=0.05, h
 
 multi.xy <- ggdraw(add_sub(multi.x, "Probability of presence", size=18, x=0.02, y=2.1, angle=90))
 
-
-
-
 ggsave("figures/model_preds_multipanel.pdf", multi.xy, width=12, height=8)
+
+
+### all other species for supplement
+
+multi.supp.fire <- plot_grid(legend.fire,
+                             preds_graph_ACMI,
+                             preds_graph_CARU,
+                             NULL,
+                             preds_graph_CEVE,
+                             preds_graph_EPAN,
+                             nrow=2, ncol=3,
+                             labels=c("","ACMI","CARU","", "CEVE","EPAN"),
+                             label_x=0.5,
+                             label_y=1) +
+  theme(plot.margin = margin(50, 10, 10, 50))
+
+multi.supp.fire.x <- ggdraw(add_sub(multi.supp.fire, "Elevation (m)", size=18, x=0.7, y=0.4, hjust=0.5, vjust=0)) 
+
+multi.supp.fire.xy <- ggdraw(add_sub(multi.supp.fire.x, "Probability of presence", size=18, x=0.37, y=2.1, angle=90))
+
+ggsave("figures/model_preds_suppfire.pdf", multi.supp.fire.xy, width=10, height=8)
+
+
+multi.supp.nofire <- plot_grid(legend.nofire,
+                               preds_graph_ACCI,
+                               preds_graph_ACGL,
+                               preds_graph_AMAL,
+                               preds_graph_ATFI,
+                               preds_graph_CAME,
+                               NULL,
+                               preds_graph_CLUN,
+                               preds_graph_COCA,
+                               preds_graph_GAOV,
+                               preds_graph_GASH,
+                               preds_graph_GOOB,
+                               NULL,
+                               preds_graph_GYDR,
+                               preds_graph_HIAL,
+                               preds_graph_HODI,
+                               preds_graph_LIBO,
+                               preds_graph_MEFE,
+                               NULL,
+                               preds_graph_POMU,
+                               preds_graph_PTAQ,
+                               preds_graph_RULA,
+                               preds_graph_RUPA,
+                               preds_graph_RUPE,
+                               NULL,
+                               preds_graph_RUSP,
+                               preds_graph_SOSI,
+                               preds_graph_TITR,
+                               preds_graph_TRBO,
+                               preds_graph_VASI,
+                             nrow=5, ncol=6,
+                             labels=c("","ACMI","ACGL","AMAL", "ATFI","CAME",
+                                      "", "CLUN", "COCA", "GAOV", "GASH", "GOOB",
+                                      "", "GYDR", "HIAL", "HODI", "LIBO", "MEFE",
+                                      "", "POMU", "PTAQ", "RULA", "RUPA", "RUPE",
+                                      "", "RUSP", "SOSI", "TITR", "TRBO", "VASI"),
+                             label_x=0.5,
+                             label_y=1) +
+  theme(plot.margin = margin(50, 10, 10, 50))
+
+multi.supp.nofire.x <- ggdraw(add_sub(multi.supp.nofire, "Elevation (m)", size=18, x=0.6, y=0.4, hjust=0.5, vjust=0)) 
+
+multi.supp.nofire.xy <- ggdraw(add_sub(multi.supp.nofire.x, "Probability of presence", size=18, x=0.2, y=2.5, angle=90))
+
+ggsave("figures/model_preds_suppnofire.pdf", multi.supp.nofire.xy, width=12, height=10)
+
+
