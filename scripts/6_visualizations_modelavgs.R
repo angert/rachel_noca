@@ -229,14 +229,9 @@ VAME.perc <- ggdraw(preds_graph_VAME) + draw_label("2/7\n(29%)", size=12, x=.25,
 ARUV.perc <- ggdraw(preds_graph_ARUV) + draw_label("2/7\n(29%)", size=12, x=.85, y=.9, hjust=1)
 
 # add images of focal taxa
-library(jpeg)
-library(tiff)
-library(png)
 library(imager)
 library(patchwork)
-aruv <- readJPEG("figures/Arctostaphylos uva ursi no bg.jpg", native=TRUE) 
-aruv <- readTIFF("figures/Arctostaphylos uva ursi no bg.tiff", native=TRUE) 
-aruv <- readPNG("figures/Arctostaphylos uva ursi no bg.png", native=TRUE) 
+aruv <- load.image("figures/Arctostaphylos uva ursi no bg.png") %>% plot
 
 rasterImage(aruv, 1.5, 1.5, 1.9, 1.8)
 ARUV_img <- ARUV.perc + inset_element(p=aruv,
@@ -246,7 +241,7 @@ ARUV_img <- ARUV.perc + inset_element(p=aruv,
                                  top=.5)
 ARUV_img
 
-# group into multi-panel figure
+# group subplots
 library(cowplot)
 multi <- plot_grid(legend.fire,
                    ARUV.perc, #up shift fire 
