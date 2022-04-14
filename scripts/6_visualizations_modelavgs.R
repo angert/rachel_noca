@@ -4,7 +4,6 @@
 #### This script visualizes model-averaged predictions for each rarefied dataset
 
 library(tidyverse)
-library(cowplot)
 
 #### Read in and prepare tables of coefficients
 
@@ -152,6 +151,7 @@ gg <- ggplot(graph.dat.means, aes(x = elev.vec.lin, y = preds, color = V2)) +
   theme(legend.key.size=unit(1.5, 'cm')) +
   theme(legend.text=element_text(size=14))
 
+library(cowplot)
 legend.fire = get_legend(gg)
 
 
@@ -228,6 +228,26 @@ PAMY.perc <- ggdraw(preds_graph_PAMY) + draw_label("3/7\n(43%)", size=12, x=.85,
 VAME.perc <- ggdraw(preds_graph_VAME) + draw_label("2/7\n(29%)", size=12, x=.25, y=.9, hjust=0)
 ARUV.perc <- ggdraw(preds_graph_ARUV) + draw_label("2/7\n(29%)", size=12, x=.85, y=.9, hjust=1)
 
+# add images of focal taxa
+library(jpeg)
+library(tiff)
+library(png)
+library(imager)
+library(patchwork)
+aruv <- readJPEG("figures/Arctostaphylos uva ursi no bg.jpg", native=TRUE) 
+aruv <- readTIFF("figures/Arctostaphylos uva ursi no bg.tiff", native=TRUE) 
+aruv <- readPNG("figures/Arctostaphylos uva ursi no bg.png", native=TRUE) 
+
+rasterImage(aruv, 1.5, 1.5, 1.9, 1.8)
+ARUV_img <- ARUV.perc + inset_element(p=aruv,
+                                 left=.5,
+                                 bottom=.5,
+                                 right=.5,
+                                 top=.5)
+ARUV_img
+
+# group into multi-panel figure
+library(cowplot)
 multi <- plot_grid(legend.fire,
                    ARUV.perc, #up shift fire 
                    VAME.perc, #expansion fire
