@@ -1,6 +1,6 @@
 
 # Created: Dec. 15, 2021 from script 8
-# Updated: Feb. 10, 2022
+# Updated: May 11, 2022
 
 # IMPORTANT NOTE: unless otherwise indicated, always use Understory_All.csv for these analyses as it is the ONLY file with up-to-date corrections.
 
@@ -13,6 +13,9 @@ coeff.ALLDAT <- read.csv("data/3b_new_coefficients.csv", header = TRUE) %>%
   select(-Dataset, -L.Occ, -R.Occ, -deltaAIC, -Weight, -Rsquared)
 coeff.ALLDAT[coeff.ALLDAT$Species == "EPAN", 1] <- paste("CHAN") # Correcting taxonomy issue
 coeff.ALLDAT[is.na(coeff.ALLDAT)] <- 0 # Hard code absent coeffs as 0 before averaging
+coeff.ALLDAT$Elevation.m2.Res.Burn.fi[coeff.ALLDAT$Species == "VAME"] <- NA
+coeff.ALLDAT$Elevation.m2.Res.Unburn.fi[coeff.ALLDAT$Species == "VAME"] <- NA
+coeff.ALLDAT$Data.Type.Elevation.m2.nofi[coeff.ALLDAT$Species == "HODI"] <- NA #remove terms that weren't fit
 
 coeff.fire <- #split by fire vs no-fire
   coeff.ALLDAT[coeff.ALLDAT$Fire.Included == "Yes" & coeff.ALLDAT$Type == "Avg", c(1, 5:6, 10:15)] 
@@ -22,15 +25,15 @@ coeff.nofire <- coeff.ALLDAT[coeff.ALLDAT$Fire.Included == "No" & coeff.ALLDAT$T
 ## Step 2: Summarize mean, lower and upper CI of each coefficient across the rarefactions (FIRE SPECIES)
 means.fire <- coeff.fire %>% 
   group_by(Species) %>% 
-  summarise(across(.cols = Elevation.m:Elevation.m2.Res.Unburn.fi, ~ unname(quantile(.x, 0.5)))) %>% #, .names = "mean_{.col}" 
+  summarise(across(.cols = Elevation.m:Elevation.m2.Res.Unburn.fi, ~ unname(quantile(.x, 0.5, na.rm=TRUE)))) %>% #, .names = "mean_{.col}" 
   mutate(param="mean")
 lowers.fire <- coeff.fire %>% 
   group_by(Species) %>% 
-  summarise(across(.cols = Elevation.m:Elevation.m2.Res.Unburn.fi, ~ unname(quantile(.x, 0.025)))) %>% #, .names="lower_{.col}" 
+  summarise(across(.cols = Elevation.m:Elevation.m2.Res.Unburn.fi, ~ unname(quantile(.x, 0.025, na.rm=TRUE)))) %>% #, .names="lower_{.col}" 
   mutate(param="lower")
 uppers.fire <- coeff.fire %>% 
   group_by(Species) %>% 
-  summarise(across(.cols = Elevation.m:Elevation.m2.Res.Unburn.fi, ~ unname(quantile(.x, 0.975)))) %>% #, .names="upper_{.col}" 
+  summarise(across(.cols = Elevation.m:Elevation.m2.Res.Unburn.fi, ~ unname(quantile(.x, 0.975, na.rm=TRUE)))) %>% #, .names="upper_{.col}" 
   mutate(param="upper")
 
 ## Step 3: reshape for graphing
@@ -79,15 +82,15 @@ ggsave("figures/forestplot_coeffs_fire.pdf", forestplot.fire, width=12, height=8
 
 means.nofire <- coeff.nofire %>% 
   group_by(Species) %>% 
-  summarise(across(.cols = Elevation.m:Data.Type.Elevation.m2.nofi, ~ unname(quantile(.x, 0.5)))) %>%  
+  summarise(across(.cols = Elevation.m:Data.Type.Elevation.m2.nofi, ~ unname(quantile(.x, 0.5, na.rm=TRUE)))) %>%  
   mutate(param="mean")
 lowers.nofire <- coeff.nofire %>% 
   group_by(Species) %>% 
-  summarise(across(.cols = Elevation.m:Data.Type.Elevation.m2.nofi, ~ unname(quantile(.x, 0.025)))) %>%  
+  summarise(across(.cols = Elevation.m:Data.Type.Elevation.m2.nofi, ~ unname(quantile(.x, 0.025, na.rm=TRUE)))) %>%  
   mutate(param="lower")
 uppers.nofire <- coeff.nofire %>% 
   group_by(Species) %>% 
-  summarise(across(.cols = Elevation.m:Data.Type.Elevation.m2.nofi, ~ unname(quantile(.x, 0.975)))) %>%  
+  summarise(across(.cols = Elevation.m:Data.Type.Elevation.m2.nofi, ~ unname(quantile(.x, 0.975, na.rm=TRUE)))) %>%  
   mutate(param="upper")
 
 all.nofire <- rbind(means.nofire, lowers.nofire, uppers.nofire) %>% 
@@ -105,9 +108,9 @@ all.nofire$Parameter <- factor(all.nofire$Parameter, levels = rev(order.list.nof
 # tick labels for y axis
 vars.nofire <- c("Elevation", 
           expression("Elevation" ^ 2), 
-          "Time",
-          "Elevation * Time",
-          expression("Elevation" ^ 2 * " * Time"))
+          "Year",
+          "Elevation * Year",
+          expression("Elevation" ^ 2 * " * Year"))
 
 # faceted plot
 forestplot.nofire <- ggplot(dat=all.nofire, aes(y=Parameter, x=mean, xmin=lower, xmax=upper)) +
