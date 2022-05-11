@@ -290,7 +290,7 @@ multi.supp.fire <- plot_grid(legend.fire,
                              preds_graph_CEVE,
                              preds_graph_EPAN,
                              nrow=2, ncol=3,
-                             labels=c("","ACMI","CARU","", "CEVE","EPAN"),
+                             labels=c("","ACMI","CARU","", "CEVE","CHAN"),
                              label_x=0.5,
                              label_y=1) +
   theme(plot.margin = margin(50, 10, 10, 50))
