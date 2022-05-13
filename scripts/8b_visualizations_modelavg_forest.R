@@ -108,8 +108,8 @@ all.nofire$Parameter <- factor(all.nofire$Parameter, levels = rev(order.list.nof
 # tick labels for y axis
 vars.nofire <- c("Elevation", 
           expression("Elevation" ^ 2), 
-          "Year",
-          "Elevation * Year",
+          "Time",
+          "Elevation * Time",
           expression("Elevation" ^ 2 * " * Time"))
 
 # faceted plot
