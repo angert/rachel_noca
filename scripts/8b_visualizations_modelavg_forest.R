@@ -110,7 +110,7 @@ vars.nofire <- c("Elevation",
           expression("Elevation" ^ 2), 
           "Year",
           "Elevation * Year",
-          expression("Elevation" ^ 2 * " * Year"))
+          expression("Elevation" ^ 2 * " * Time"))
 
 # faceted plot
 forestplot.nofire <- ggplot(dat=all.nofire, aes(y=Parameter, x=mean, xmin=lower, xmax=upper)) +
