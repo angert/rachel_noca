@@ -325,6 +325,7 @@ ggsave("figures/violin_1panel_raw.pdf", violin.plot.raw, device="pdf", width=8, 
 
 violin.plot.perc <- ggplot(rarefied.change.tall.perc, aes(x=factor(edge, level=level_order.perc), y=change, fill=fire)) +#, color=edge, fill=edge)) + 
   geom_violin() +
+  geom_point(aes(color=fire), position=position_jitter(seed=1, width=0.2)) +
   scale_fill_viridis(discrete=TRUE, alpha=0.7) +
   #stat_summary(fun=mean, geom="point", cex=2)  +
   theme_classic() +
@@ -343,6 +344,7 @@ violin.plot.perc <- ggplot(rarefied.change.tall.perc, aes(x=factor(edge, level=l
 violin.plot.perc
 
 ggsave("figures/violin_1panel_perc.pdf", violin.plot.perc, device="pdf", width=8, height=5)
+
   
 ## old versions by fire status
 violin.plot.nofire.raw <- ggplot(rarefied.change.tall.nofire.raw, aes(x=factor(edge, level=level_order.raw), y=change)) +#, color=edge, fill=edge)) + 
