@@ -128,8 +128,8 @@ for (i in 1:dim(species.list.fire)[1]) {
     mutate(preds = mean.resp)
   
   gg <- ggplot(graph.dat.means, aes(x = elev.vec.lin, y = preds, color = V2)) + 
-    geom_line(data=graph.dat.tall, aes(group=interaction(V2, rep), color=V2), alpha=0.15, show.legend = FALSE) +
-    geom_line(size=2, linetype="dotted", show.legend=FALSE) +
+    geom_line(data=graph.dat.tall, aes(group=interaction(V2, rep), color=V2), alpha=0.08, show.legend = FALSE) +
+    geom_line(size=3.5, linetype="dotted", show.legend=FALSE) +
     theme_classic() +
     scale_color_manual("Time x fire", values=col.pal.fire, labels=c("legacy", "resurvey, burned", "resurvey, unburned")) +
     scale_x_continuous(breaks=poly.ticks, labels=raw.ticks) +
@@ -143,8 +143,8 @@ for (i in 1:dim(species.list.fire)[1]) {
 
 # repeat last plot with legend so that legend can be saved for multi-panel fig
 gg <- ggplot(graph.dat.means, aes(x = elev.vec.lin, y = preds, color = V2)) + 
-  geom_line(data=graph.dat.tall, aes(group=interaction(V2, rep), color=V2), alpha=0.15) +
-  geom_line(size=2, linetype="dotted") +
+  geom_line(data=graph.dat.tall, aes(group=interaction(V2, rep), color=V2), alpha=0.08) +
+  geom_line(size=3.5, linetype="dotted") +
   scale_color_manual(values=col.pal.fire, labels=c("1983", "2015, burned", "2015, unburned"), guide = guide_legend(title=NULL)) +
   theme(legend.title=element_blank()) +
   theme_classic() + 
@@ -203,8 +203,8 @@ for (i in 1:dim(species.list.nofire)[1]) {
     mutate(preds=mean.resp)
   
   gg <- ggplot(graph.dat.means, aes(x = elev.vec.lin, y = preds, color = V2)) + 
-    geom_line(data=graph.dat.tall, aes(group=interaction(V2, rep), color=V2), alpha=0.15, show.legend = FALSE) +
-    geom_line(size=2, linetype="dotted", show.legend=FALSE) +
+    geom_line(data=graph.dat.tall, aes(group=interaction(V2, rep), color=V2), alpha=0.08, show.legend = FALSE) +
+    geom_line(size=3.5, linetype="dotted", show.legend=FALSE) +
     theme_classic() +
     scale_color_manual(name="TIME", values=col.pal.nofire, labels=c("legacy", "resurvey")) + 
     scale_x_continuous(breaks=poly.ticks, labels=raw.ticks) +
@@ -218,8 +218,8 @@ for (i in 1:dim(species.list.nofire)[1]) {
 
 # repeat last plot with legend so that legend can be saved for supplemental multi-panel fig
 gg <- ggplot(graph.dat.means, aes(x = elev.vec.lin, y = preds, color = V2)) + 
-  geom_line(data=graph.dat.tall, aes(group=interaction(V2, rep), color=V2), alpha=0.15) +
-  geom_line(size=2, linetype="dotted") +
+  geom_line(data=graph.dat.tall, aes(group=interaction(V2, rep), color=V2), alpha=0.08) +
+  geom_line(size=3.5, linetype="dotted") +
   scale_color_manual(values=col.pal.nofire, labels=c("1983", "2015"), guide = guide_legend(title=NULL)) +
   theme(legend.title=element_blank()) +
   theme_classic() + 
@@ -233,13 +233,13 @@ legend.nofire = get_legend(gg)
 #### assemble example species into multi-panel figure
 
 # first annotate % onto individual panels
-MANE.perc <- ggdraw(preds_graph_MANE) + draw_label("12/25\n(41%)", size=12, x=.85, y=.9, hjust=1)
-SPBE.perc <- ggdraw(preds_graph_SPBE) + draw_label("1/25\n(3%)", size=12, x=.85, y=.9, hjust=1)
-OPHO.perc <- ggdraw(preds_graph_OPHO) + draw_label("4/25\n(14%)", size=12, x=.85, y=.9, hjust=1)
-CHUM.perc <- ggdraw(preds_graph_CHUM) + draw_label("7/25\n(24%)", size=12, x=.85, y=.9, hjust=1)
-PAMY.perc <- ggdraw(preds_graph_PAMY) + draw_label("3/7\n(43%)", size=12, x=.85, y=.9, hjust=1)
-VAME.perc <- ggdraw(preds_graph_VAME) + draw_label("2/7\n(29%)", size=12, x=.25, y=.9, hjust=0)
-ARUV.perc <- ggdraw(preds_graph_ARUV) + draw_label("2/7\n(29%)", size=12, x=.85, y=.9, hjust=1)
+MANE.perc <- ggdraw(preds_graph_MANE) #+ draw_label("12/25\n(41%)", size=12, x=.85, y=.9, hjust=1)
+SPBE.perc <- ggdraw(preds_graph_SPBE) #+ draw_label("1/25\n(3%)", size=12, x=.85, y=.9, hjust=1)
+OPHO.perc <- ggdraw(preds_graph_OPHO) #+ draw_label("4/25\n(14%)", size=12, x=.85, y=.9, hjust=1)
+CHUM.perc <- ggdraw(preds_graph_CHUM) #+ draw_label("7/25\n(24%)", size=12, x=.85, y=.9, hjust=1)
+PAMY.perc <- ggdraw(preds_graph_PAMY) #+ draw_label("3/7\n(43%)", size=12, x=.85, y=.9, hjust=1)
+VAME.perc <- ggdraw(preds_graph_VAME) #+ draw_label("2/7\n(29%)", size=12, x=.25, y=.9, hjust=0)
+ARUV.perc <- ggdraw(preds_graph_ARUV) #+ draw_label("2/7\n(29%)", size=12, x=.85, y=.9, hjust=1)
 
 # add images of focal taxa
 #library(imager)
