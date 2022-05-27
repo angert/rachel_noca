@@ -234,6 +234,7 @@ legend.nofire = get_legend(gg)
 
 # first annotate % onto individual panels
 MANE.perc <- ggdraw(preds_graph_MANE) #+ draw_label("12/25\n(41%)", size=12, x=.85, y=.9, hjust=1)
+CLUN.perc <- ggdraw(preds_graph_CLUN) #+ draw_label("12/25\n(41%)", size=12, x=.85, y=.9, hjust=1)
 SPBE.perc <- ggdraw(preds_graph_SPBE) #+ draw_label("1/25\n(3%)", size=12, x=.85, y=.9, hjust=1)
 OPHO.perc <- ggdraw(preds_graph_OPHO) #+ draw_label("4/25\n(14%)", size=12, x=.85, y=.9, hjust=1)
 CHUM.perc <- ggdraw(preds_graph_CHUM) #+ draw_label("7/25\n(24%)", size=12, x=.85, y=.9, hjust=1)
@@ -263,7 +264,8 @@ multi <- plot_grid(legend.fire,
                    CHUM.perc, #down shift no fire
                    OPHO.perc, #up shift no fire
                    SPBE.perc, #expansion no fire
-                   MANE.perc, #no shift no fire
+                   #MANE.perc, #no shift no fire
+                   CLUN.perc,
                    nrow=2, ncol=4,
                    labels=c("","A","B","C","D","E","F","G")) +
   theme(plot.margin = margin(50, 10, 10, 50)) #top, right, bottom, left 
@@ -309,16 +311,17 @@ multi.supp.nofire <- plot_grid(legend.nofire,
                                preds_graph_ATFI,
                                preds_graph_CAME,
                                NULL,
-                               preds_graph_CLUN,
+                               #preds_graph_CLUN,
                                preds_graph_COCA,
                                preds_graph_GAOV,
                                preds_graph_GASH,
                                preds_graph_GOOB,
-                               NULL,
                                preds_graph_GYDR,
+                               NULL,
                                preds_graph_HIAL,
                                preds_graph_HODI,
                                preds_graph_LIBO,
+                               preds_graph_MANE,
                                preds_graph_MEFE,
                                NULL,
                                preds_graph_POMU,
@@ -334,10 +337,10 @@ multi.supp.nofire <- plot_grid(legend.nofire,
                                preds_graph_VASI,
                              nrow=5, ncol=6,
                              labels=c("","ACMI","ACGL","AMAL", "ATFI","CAME",
-                                      "", "CLUN", "COCA", "GAOV", "GASH", "GOOB",
-                                      "", "GYDR", "HIAL", "HODI", "LIBO", "MEFE",
+                                      "", "COCA", "GAOV", "GASH", "GOOB","GYDR", 
+                                      "", "HIAL", "HODI", "LIBO", "MANE", "MEFE",
                                       "", "POMU", "PTAQ", "RULA", "RUPA", "RUPE",
-                                      "", "RUSP", "SOSI", "TITR", "TRBO", "VASI"),
+                                      "", "RUSP", "SOSI", "TITR", "TRBO", "VASI"), #CLUN
                              label_x=0.5,
                              label_y=1) +
   theme(plot.margin = margin(50, 10, 10, 50))
