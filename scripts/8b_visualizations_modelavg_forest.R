@@ -65,15 +65,23 @@ vars.fire <- c("Elevation",
           expression("Elevation" ^ 2 * " * Burned"), 
           expression("Elevation" ^ 2 * " * Unburned"))
 
+all.fire <- all.fire %>% 
+  mutate(lowernonzero = ifelse(mean>0 & lower>0, "y", "n")) %>% 
+  mutate(uppernonzero = ifelse(mean<0 & upper<0, "y", "n")) %>% 
+  mutate(nonzero = ifelse(mean>0, lowernonzero, uppernonzero))
+
 # faceted plot
-forestplot.fire <- ggplot(dat=all.fire, aes(y=Parameter, x=mean, xmin=lower, xmax=upper)) +
+forestplot.fire <- ggplot(dat=all.fire, aes(y=Parameter, x=mean, xmin=lower, xmax=upper, color=nonzero)) +
   facet_wrap(~Species) +
   geom_point(cex=3) + 
+  scale_color_manual(values=c("grey", "black")) +
   geom_errorbarh(height=0.3) + 
   geom_vline(xintercept=0, linetype="dotted") +
   scale_y_discrete(labels=rev(vars.fire)) +
   xlab("Estimate") +
-  theme_classic() 
+  theme_classic() +
+  theme(strip.background = element_rect(fill = "lightgrey", colour = "black", size = 1)) + 
+  theme(legend.position = "none")
 
 ggsave("figures/forestplot_coeffs_fire.pdf", forestplot.fire, width=12, height=8)
 
@@ -105,6 +113,11 @@ order.list.nofire <- c("Elevation.m",
 
 all.nofire$Parameter <- factor(all.nofire$Parameter, levels = rev(order.list.nofire))
 
+all.nofire <- all.nofire %>% 
+  mutate(lowernonzero = ifelse(mean>0 & lower>0, "y", "n")) %>% 
+  mutate(uppernonzero = ifelse(mean<0 & upper<0, "y", "n")) %>% 
+  mutate(nonzero = ifelse(mean>0, lowernonzero, uppernonzero))
+
 # tick labels for y axis
 vars.nofire <- c("Elevation", 
           expression("Elevation" ^ 2), 
@@ -113,14 +126,17 @@ vars.nofire <- c("Elevation",
           expression("Elevation" ^ 2 * " * Time"))
 
 # faceted plot
-forestplot.nofire <- ggplot(dat=all.nofire, aes(y=Parameter, x=mean, xmin=lower, xmax=upper)) +
+forestplot.nofire <- ggplot(dat=all.nofire, aes(y=Parameter, x=mean, xmin=lower, xmax=upper, color=nonzero)) +
   facet_wrap(~Species) +
   geom_point(cex=2) + 
+  scale_color_manual(values=c("grey", "black")) +
   geom_errorbarh(height=0.3) + 
   geom_vline(xintercept=0, linetype="dotted") +
   scale_y_discrete(labels=rev(vars.nofire)) +
   xlab("Estimate") +
-  theme_classic() 
+  theme_classic() +
+  theme(strip.background = element_rect(fill = "lightgrey", colour = "black", size = 1)) +
+  theme(legend.position = "none")
 
 ggsave("figures/forestplot_coeffs_nofire.pdf", forestplot.nofire, width=12, height=8)
 
