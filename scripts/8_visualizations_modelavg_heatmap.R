@@ -5,7 +5,7 @@
 # --> PART 1: The model-averaged coefficients
 # --> PART 2: Percent +/- out of total datasets
 
-# IMPORTANT FOR THIS SCRIPT: Heatmaps were manually saved
+# IMPORTANT FOR THIS SCRIPT: Heatmaps were manually saved. Export --> specify height based on preview --> choose save directory
 
 # IMPORTANT (GENERAL) NOTE: unless otherwise indicated, always use Understory_All.csv for these analyses as it is the ONLY file with up-to-date corrections.
 
