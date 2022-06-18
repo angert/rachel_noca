@@ -1,11 +1,13 @@
 # Created: Apr. 15, 2020
-# Updated: May 10, 2021
+# Updated: June 18, 2022
 
 # This script will be used to create 4 heatmaps:
 # --> PART 1: The model-averaged coefficients
 # --> PART 2: Percent +/- out of total datasets
 
-# IMPORTANT NOTE: unless otherwise indicated, always use Understory_All.csv for these analyses as it is the ONLY file with up-to-date corrections.
+# IMPORTANT FOR THIS SCRIPT: Heatmaps were manually saved
+
+# IMPORTANT (GENERAL) NOTE: unless otherwise indicated, always use Understory_All.csv for these analyses as it is the ONLY file with up-to-date corrections.
 
 # Packages needed:
 
@@ -90,6 +92,7 @@ pheatmap(mat.fire,
          angle_col = 0,
          breaks = my.breaks
 )
+
 
 ## Step 3: Look at NO FIRE data
 
