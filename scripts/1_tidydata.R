@@ -40,6 +40,8 @@ fires <- read.csv("data/All_Plots_Wildfire_Join.csv", header=TRUE, na.strings=""
 # --> Supp2026, Supp5127, and ROSS4001REF: Supplemental plots taken for future reference. Ignore corresponding 1980 plot name; this was the closest plot.
 # --> Thor223 (4044), Bak494 (8017): History of logging.
 
+# In other words, we visited 378 plots. 3 of these were supplementary and 3 could not be evaluated due to data recording oversights. 2 of these were excluded due to logging history. Thus, total N = 370.
+
 nrow(fires) #Should be 373 before
 nrow(plot.names) #Should be 378 before
 nrow(und.cover) #Should be 6803 before
