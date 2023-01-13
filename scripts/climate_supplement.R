@@ -1,5 +1,6 @@
 library(tidyverse)
 library(patchwork)
+library(lmerTest)
 
 ### read in climate files from ClimateWNA
 seasonal <- read_csv("data/All_Plots_RNW_1970-2015ST.csv")
@@ -55,8 +56,8 @@ annual.sub <- annual %>% filter(ID1 %in% plots)
 
 
 ### pull out survey-year data alone
-seasonal.survey <- seasonal.sub %>% filter(Year==1983|Year==2015)
-annual.survey <- annual.sub %>% filter(Year==1983|Year==2015)
+seasonal.sub.survey <- seasonal.sub %>% filter(Year==1983|Year==2015)
+annual.sub.survey <- annual.sub %>% filter(Year==1983|Year==2015)
 
 MAT <- ggplot(annual.sub, aes(x=Year, y=MAT, by=ID1)) +
   geom_line(aes(x=Year, y=MAT, color=Elevation.m)) +
@@ -129,6 +130,10 @@ MAT.slopes <- annual.sub %>%
   select(-model)
 #0.021C per year --> ~0.7C for 32 years (1983-2015)
 
+MAT.slopes.all <- lmer(MAT ~ Year + (1|ID1), data = annual) 
+summary(MAT.slopes.all)
+# +0.022 C per year, P<0.0001
+
 MAP.slopes <- annual.sub %>% 
   group_by(ID1) %>%
   do(model = lm(MAP ~ Year, data = .)) %>%
@@ -136,12 +141,20 @@ MAP.slopes <- annual.sub %>%
          MAP.p=summary(model)$coefficients[2,4]) %>% 
   select(-model) 
 
+MAP.slopes.all <- lmer(MAP ~ Year + (1|ID1), data = annual) 
+summary(MAP.slopes.all)
+# -0.2013 mm per year, P=0.249
+
 Tsum.slopes <- seasonal.sub %>% 
   group_by(ID1) %>%
   do(model = lm(Tmax_sm ~ Year, data = .)) %>%
   mutate(Tsum.slope=coef(model)["Year"],
          Tsum.p=summary(model)$coefficients[2,4]) %>% 
   select(-model)
+
+Tsum.slopes.all <- lmer(Tmax_sm ~ Year + (1|ID1), data = seasonal) 
+summary(Tsum.slopes.all)
+# -0.01687C per year, P<0.0001
 
 Twin.slopes <- seasonal.sub %>% 
   group_by(ID1) %>%
@@ -151,12 +164,20 @@ Twin.slopes <- seasonal.sub %>%
   select(-model)
 #0.025C per year --> ~0.8C for 32 years (1983-2015)
 
+Twin.slopes.all <- lmer(Tmax_wt ~ Year + (1|ID1), data = seasonal) 
+summary(Twin.slopes.all)
+# -0.02562C per year, P<0.0001
+
 Psum.slopes <- seasonal.sub %>% 
   group_by(ID1) %>%
   do(model = lm(PPT_sm ~ Year, data = .)) %>%
   mutate(Psum.slope=coef(model)["Year"],
          Psum.p=summary(model)$coefficients[2,4]) %>% 
   select(-model)
+
+Psum.slopes.all <- lmer(PPT_sm ~ Year + (1|ID1), data = seasonal) 
+summary(Psum.slopes.all)
+# -0.625mm per year, P<0.0001
 
 Pwin.slopes <- annual.sub %>% 
   group_by(ID1) %>%
@@ -166,26 +187,70 @@ Pwin.slopes <- annual.sub %>%
   select(-model)
 #-5 per year --> -160 for 32 years (1983-2015)
 
+Pwin.slopes.all <- lmer(PAS ~ Year + (1|ID1), data = annual) 
+summary(Pwin.slopes.all)
+# -4.9549mm per year, P<0.0001
+
+
 Ann.diffs <- annual.sub %>% 
   group_by(ID1) %>%
-  filter(Year==1983 | Year==2015) %>% 
-  pivot_wider(names_from=Year, values_from=c(MAT, MAP, PAS)) %>% 
-  mutate(MAT.diff = MAT_2015-MAT_1983,
-         MAP.diff.raw = MAP_2015-MAP_1983,
-         MAP.diff.perc = (MAP_2015-MAP_1983)/MAP_1983*100,
-         PAS.diff.raw = PAS_2015-PAS_1983,
-         PAS.diff.perc = (PAS_2015-PAS_1983)/PAS_1983*100) %>% 
-  select(ID1, MAT.diff, MAP.diff.raw, MAP.diff.perc, PAS.diff.raw, PAS.diff.perc)
+  #filter(Year==1983 | Year==2015) %>% 
+  #pivot_wider(names_from=Year, values_from=c(MAT, MAP, PAS)) %>% 
+  mutate(MAT.diff = MAT[Year==2015]-MAT[Year==1983],
+         MAP.diff.raw = MAP[Year==2015]-MAP[Year==1983],
+         MAP.diff.perc = MAP.diff.raw/MAP[Year==1983]*100,
+         PAS.diff.raw = PAS[Year==2015]-PAS[Year==1983],
+         PAS.diff.perc = PAS.diff.raw/PAS[Year==1983]*100) %>% 
+  select(ID1, MAT.diff, MAP.diff.raw, MAP.diff.perc, PAS.diff.raw, PAS.diff.perc) %>% 
+  unique()
 
 Seas.diffs <- seasonal.sub %>% 
   group_by(ID1) %>%
-  filter(Year==1983 | Year==2015) %>% 
-  pivot_wider(names_from=Year, values_from=c(Tmax_sm, Tmax_wt, PPT_sm)) %>% 
-  mutate(Tsum.diff = Tmax_sm_2015-Tmax_sm_1983,
-         Twin.diff = Tmax_wt_2015-Tmax_wt_1983,
-         Psum.diff = PPT_sm_2015-PPT_sm_1983,
-         Psum.diff.perc = (PPT_sm_2015-PPT_sm_1983)/PPT_sm_1983*100) %>% 
-  select(ID1, Tsum.diff, Twin.diff, Psum.diff, Psum.diff.perc)
+  #filter(Year==1983 | Year==2015) %>% 
+  #pivot_wider(names_from=Year, values_from=c(Tmax_sm, Tmax_wt, PPT_sm)) %>% 
+  mutate(Tsum.diff = Tmax_sm[Year==2015]-Tmax_sm[Year==1983],
+         Twin.diff = Tmax_wt[Year==2015]-Tmax_wt[Year==1983],
+         Psum.diff = PPT_sm[Year==2015]-PPT_sm[Year==1983],
+         Psum.diff.perc = Psum.diff/PPT_sm[Year==1983]*100) %>% 
+  select(ID1, Tsum.diff, Twin.diff, Psum.diff, Psum.diff.perc) %>% 
+  unique()
+
+
+annual.survey <- annual %>% filter(Year==1983 | Year==2015)
+seasonal.survey <- seasonal %>% filter(Year==1983 | Year==2015)
+
+MAT.diffs.all <- lmer(MAT ~ as.factor(Year) + (1|ID1), data = annual.survey) 
+summary(MAT.diffs.all)
+# +2.032 C, P<0.0001
+
+Tsum.diffs.all <- lmer(Tmax_sm ~ as.factor(Year) + (1|ID1), data = seasonal.survey) 
+summary(Tsum.diffs.all)
+# +4.87373 C, P<0.0001
+
+Twin.diffs.all <- lmer(Tmax_wt ~ as.factor(Year) + (1|ID1), data = seasonal.survey) 
+summary(Twin.diffs.all)
+# +1.99115 C, P<0.0001
+
+MAP.diffs.all <- lmer(MAP ~ as.factor(Year) + (1|ID1), data = annual.survey) 
+summary(MAP.diffs.all)
+# -136.721 mm, P<0.0001
+MAP.diffs.all.perc <- lmer(MAP/MAP[Year==1983]*100 ~ as.factor(Year) + (1|ID1), data = annual.survey) 
+summary(MAP.diffs.all.perc)
+# -6.7%, P<0.0001
+
+Psum.diffs.all <- lmer(PPT_sm ~ as.factor(Year) + (1|ID1), data = seasonal.survey) 
+summary(Psum.diffs.all)
+# -184.048 mm, P<0.0001
+Psum.diffs.all.perc <- lmer(PPT_sm/PPT_sm[Year==1983]*100 ~ as.factor(Year) + (1|ID1), data = seasonal.survey) 
+summary(Psum.diffs.all.perc)
+# -55%, P<0.0001
+
+PAS.diffs.all <- lmer(PAS ~ as.factor(Year) + (1|ID1), data = annual.survey) 
+summary(PAS.diffs.all)
+# -371.070 mm, P<0.0001
+PAS.diffs.all.perc <- lmer(PAS/PAS[Year==1983]*100 ~ as.factor(Year) + (1|ID1), data = annual.survey) 
+summary(PAS.diffs.all.perc)
+# -48%, P<0.0001
 
 Diffs <- left_join(Ann.diffs, Seas.diffs)
 
