@@ -20,6 +20,7 @@ library(maps)
 library(mapdata)
 library(mapproj)
 library(ggstar)
+library(geodata)
 
 ## Projections
 prj.wgs <- "+proj=longlat + type=crs"
@@ -51,18 +52,6 @@ projection(unburned.plots) <- CRS('+proj=longlat') #define projection
 unburned.plots <- spTransform(unburned.plots, CRS=CRS(prj.wgs))
 unburned.plots.lcc <- spTransform(unburned.plots, CRS=CRS(prj.lcc)) #transform projection 
 
-
-## State polygons 
-# WA only
-sta <- readOGR("data/shapefiles/states/gz_2010_us_040_00_500k.shp")
-projection(sta) <- CRS(prj.wgs)
-sta <- st_as_sf(sta) %>% 
-  filter(NAME=="Washington")
-sta.sp <- as(sta, "Spatial")
-sta.lcc <- spTransform(sta.sp, CRS=CRS(prj.lcc))
-
-# USA outline
-usa <- map_data("usa")
 
 # Define extent of study area
 ext <- extent(min(fire.plots$Longitude)-0.5, max(fire.plots$Longitude)+0.5, min(fire.plots$Latitude)-0.5, max(fire.plots$Latitude)+0.5)
