@@ -157,20 +157,4 @@ plot(burned.plots.lcc, pch=4, col="black", cex=2, add=T) #add plots that burned 
 plot(frame.grd.lcc, add=TRUE, lty="dashed", col="grey", lwd=1) #add gridlines
 dev.off()
 
-
-#unprojected
-#pdf(file="figures/map_lcc.pdf", width=15, height=8)
-plot(park, border="grey") # park boundary
-#plot(sta.crop) #add state lines
-plot(fires["STATE"], col=rgb(1,0,0,0.7), border="red4", add=T) 
-plot(burns["AGENCY"], col=rgb(1,0,0,0.7), border="red4", add=T) #prescribed burns layer 
-plot(trtmts["Shape_Leng"], col=rgb(1,0,0,0.7), border="red4", add=T) #prescribed burns layer
-plot(unburned.plots, pch=4, col="black", add=T) #add plots that didn't burn between surveys
-plot(burned.plots, pch=1, col="black", add=T) #add plots that burned between surveys
-plot(frame.grd, add=TRUE, lty="dashed", col="darkgrey", lwd=1) #add gridlines
-text(coordinates(gridat), labels=parse(text=as.character(gridat.lcc$labels)), pos=gridat.lcc$pos, offset=0.5, col="black", cex=0.7) #add lat-long labels to gridlines
-#legend("bottomleft", legend="Weighted Ensemble", bty="n", cex=1.5) #add title
-#plot(wtd.ensem.lcc, legend.only=TRUE, legend.width=1, legend.shrink=0.75, col=rbPal, axis.args=list(at=seq(0, 1, by=0.1), labels=seq(0, 1, by=0.1), cex.axis=0.8)) #add legend for color ramp
-#dev.off()
-
 ################################################################################
