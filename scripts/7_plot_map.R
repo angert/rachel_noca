@@ -77,7 +77,7 @@ dem.raster <- getData("SRTM", lat = mean(fire.plots$Latitude), lon = mean(fire.p
 dem.raster <- crop(dem.raster, as(my_bbox_buff_25000.sf, 'Spatial'), snap='out')
 
 ## Park boundary
-park <- readOGR("data/shapefiles/park/nbndry_g2.shp")
+park <- readOGR("data/shapefiles/park/NOCA_Park_boundary.shp")
 park <- spTransform(park, CRS=CRS(prj.wgs))
 park.lcc <- spTransform(park, CRS=CRS(prj.lcc))
 
@@ -127,14 +127,6 @@ plot(burns.lcc, col=rgb(1,0,0,0.7), border="red4", add=T) #prescribed burns laye
 plot(trtmts.lcc, col=rgb(1,0,0,0.7), border="red4", add=T) #prescribed burns layer
 legend("topleft", legend="B", bty="n") 
 dev.off()
-
-## Zoomed out inset (country)
-dot.plot <- data.frame(mean.lat=mean(plots$Latitude), mean.long=mean(plots$Longitude))
-
-usmap <- ggplot() + 
-  geom_polygon(data=usa, aes(x=long, y=lat, group=group), fill=NA, color="black") +
-  geom_point(data=dot.plot, aes(x=mean.long, y=mean.lat),pch=8, cex=2.5) +
-  theme_classic()
 
 ## Zoomed out inset (world)
 dot.plot <- data.frame(mean.lat=mean(plots$Latitude), mean.long=mean(plots$Longitude))
