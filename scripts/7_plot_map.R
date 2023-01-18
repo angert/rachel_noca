@@ -72,7 +72,8 @@ sta.crop <- crop(sta.sp, bbox)
 sta.lcc <- spTransform(sta.crop, CRS=CRS(prj.lcc))
 
 ## Park boundary
-park <- readOGR("data/shapefiles/park/NOCA_Park_boundary.shp")
+gdal.SetConfigOption('SHAPE_RESTORE_SHX', 'YES')
+park <- st_read("data/shapefiles/park/NOCA_Park_boundary.shp")
 park <- spTransform(park, CRS=CRS(prj.wgs))
 park.lcc <- spTransform(park, CRS=CRS(prj.lcc))
 
