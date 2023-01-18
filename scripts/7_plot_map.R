@@ -117,16 +117,6 @@ frame.grd.lcc <- spTransform(frame.grd, CRS=CRS(prj.lcc))
 gridatt <- gridat(frame.grd, side="EN")
 gridat.lcc <- spTransform(gridatt, CRS=CRS(prj.lcc))
 
-## Zoomed out inset (state)
-#LCC projection
-pdf(file="figures/map_wa_inset.pdf", width=5, height=5)
-plot(sta.lcc, border="darkgrey")
-plot(park.lcc, border="black", add=T) # park boundary
-plot(fires.lcc, col=rgb(1,0,0,0.7), border="red4", add=T) 
-plot(burns.lcc, col=rgb(1,0,0,0.7), border="red4", add=T) #prescribed burns layer 
-plot(trtmts.lcc, col=rgb(1,0,0,0.7), border="red4", add=T) #prescribed burns layer
-legend("topleft", legend="B", bty="n") 
-dev.off()
 
 ## Zoomed out inset (world)
 dot.plot <- data.frame(mean.lat=mean(plots$Latitude), mean.long=mean(plots$Longitude))
