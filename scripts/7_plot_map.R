@@ -52,18 +52,15 @@ projection(unburned.plots) <- CRS('+proj=longlat') #define projection
 unburned.plots <- spTransform(unburned.plots, CRS=CRS(prj.wgs))
 unburned.plots.lcc <- spTransform(unburned.plots, CRS=CRS(prj.lcc)) #transform projection 
 
-
 # Define extent of study area
-ext <- extent(min(fire.plots$Longitude)-0.5, max(fire.plots$Longitude)+0.5, min(fire.plots$Latitude)-0.5, max(fire.plots$Latitude)+0.5)
+ext <- extent(min(fire.plots$Longitude)-0.1, max(fire.plots$Longitude)+0.1, min(fire.plots$Latitude)-0.1, max(fire.plots$Latitude)+0.1)
 bbox <- as(ext, "SpatialPolygons") #convert coordinates to a bounding box
-# Crop state lines to study area
-sta.crop <- crop(sta.sp, bbox)
-sta.lcc <- spTransform(sta.crop, CRS=CRS(prj.lcc))
 
 ## Elevation shading
-dem.raster <- getData("SRTM", lat = mean(fire.plots$Latitude), lon = mean(fire.plots$Longitude), download = TRUE)
-
-dem.raster <- crop(dem.raster, as(my_bbox_buff_25000.sf, 'Spatial'), snap='out')
+#elev.raster <- elevation_3s(lon=mean(fire.plots$Longitude), lat=mean(fire.plots$Latitude), path="data/shapefiles/") #download blocked because of expired authentication certificate, so downloaded manually
+elev.raster <- raster("data/shapefiles/elevation/srtm_12_03.tif")
+elev.raster.crop <- crop(elev.raster, bbox)
+elev.raster.lcc <- projectRaster(elev.raster.crop, crs=prj.lcc)
 
 ## Park boundary
 park <- readOGR("data/shapefiles/park/NOCA_Park_boundary.shp")
@@ -106,6 +103,9 @@ frame.grd.lcc <- spTransform(frame.grd, CRS=CRS(prj.lcc))
 gridatt <- gridat(frame.grd, side="EN")
 gridat.lcc <- spTransform(gridatt, CRS=CRS(prj.lcc))
 
+## Set up grayscale color ramp for elevation layer
+cuts=seq(0, 3000, by=500) #set breaks
+pal <- colorRampPalette(c("white","black"))
 
 ## Zoomed out inset (world)
 dot.plot <- data.frame(mean.lat=mean(plots$Latitude), mean.long=mean(plots$Longitude))
@@ -131,18 +131,32 @@ ggsave("figures/map_world_inset.png", width=8, height=5)
 ## Zoomed in of plots
 #LCC projection
 pdf(file="figures/map_fire_plots.pdf", width=10, height=8)
-plot(park.lcc, border="darkgrey") # park boundary
+plot(park.lcc, border="black") # park boundary
 plot(fires.lcc, col=rgb(1,0,0,0.7), border="red4", add=T) 
 plot(burns.lcc, col=rgb(1,0,0,0.7), border="red4", add=T) #prescribed burns layer 
 plot(trtmts.lcc, col=rgb(1,0,0,0.7), border="red4", add=T) #prescribed burns layer
 plot(unburned.plots.lcc, pch=1, col="black", add=T) #add plots that didn't burn between surveys
 plot(burned.plots.lcc, pch=4, col="black", cex=2, add=T) #add plots that burned between surveys
-#plot(sta.lcc, add=T) #add state lines
 plot(frame.grd.lcc, add=TRUE, lty="dashed", col="grey", lwd=1) #add gridlines
-#text(coordinates(gridat.lcc), labels=parse(text=as.character(gridat.lcc$labels)), pos=gridat.lcc$pos, offset=0.5, col="black", cex=0.7) #add lat-long labels to gridlines
-#legend("topleft", legend=c("A", "unburned","burned","fire"), pch=c(4,1,4,22), col=c("white","black","black","red4"), pt.bg=c("white","white","white",rgb(1,0,0,0.7)), bg="white", box.col="white") #add title
+dev.off()
+
+pdf(file="figures/map_fire_elev.pdf", width=10, height=8)
+plot(elev.raster.lcc, breaks=cuts, col=pal(length(cuts)-1), alpha=0.5)
+plot(park.lcc, border="black", add=T) # park boundary
+plot(fires.lcc, col=rgb(1,0,0,0.7), border="red4", add=T) 
+plot(burns.lcc, col=rgb(1,0,0,0.7), border="red4", add=T) #prescribed burns layer 
+plot(trtmts.lcc, col=rgb(1,0,0,0.7), border="red4", add=T) #prescribed burns layer
+plot(frame.grd.lcc, add=TRUE, lty="dashed", col="grey", lwd=1) #add gridlines
 dev.off()
  
+pdf(file="figures/map_elev_plots.pdf", width=10, height=8)
+plot(elev.raster.lcc, breaks=cuts, col=pal(length(cuts)-1), alpha=0.5)
+plot(park.lcc, border="black", add=T) # park boundary
+plot(unburned.plots.lcc, pch=1, col="black", add=T) #add plots that didn't burn between surveys
+plot(burned.plots.lcc, pch=4, col="black", cex=2, add=T) #add plots that burned between surveys
+plot(frame.grd.lcc, add=TRUE, lty="dashed", col="grey", lwd=1) #add gridlines
+dev.off()
+
 
 #unprojected
 #pdf(file="figures/map_lcc.pdf", width=15, height=8)
