@@ -58,9 +58,10 @@ bbox <- as(ext, "SpatialPolygons") #convert coordinates to a bounding box
 
 ## Elevation shading
 #elev.raster <- elevation_3s(lon=mean(fire.plots$Longitude), lat=mean(fire.plots$Latitude), path="data/shapefiles/") #download blocked because of expired authentication certificate, so downloaded manually
-elev.raster <- raster("data/shapefiles/elevation/srtm_12_03.tif")
-elev.raster.crop <- crop(elev.raster, bbox)
-elev.raster.lcc <- projectRaster(elev.raster.crop, crs=prj.lcc)
+#elev.raster <- raster("data/shapefiles/elevation/srtm_12_03.tif") #too huge for repo
+#elev.raster.crop <- crop(elev.raster, bbox)
+#elev.raster.lcc <- projectRaster(elev.raster.crop, crs=prj.lcc)
+write.Raster(elev.raster.lcc, "data/shapefiles/elevation/elev.raster.lcc")
 
 ## Park boundary
 park <- readOGR("data/shapefiles/park/NOCA_Park_boundary.shp")
@@ -132,25 +133,27 @@ ggsave("figures/map_world_inset.png", width=8, height=5)
 #LCC projection
 pdf(file="figures/map_fire_plots.pdf", width=10, height=8)
 plot(park.lcc, border="black") # park boundary
-plot(fires.lcc, col=rgb(1,0,0,0.7), border="red4", add=T) 
-plot(burns.lcc, col=rgb(1,0,0,0.7), border="red4", add=T) #prescribed burns layer 
-plot(trtmts.lcc, col=rgb(1,0,0,0.7), border="red4", add=T) #prescribed burns layer
+plot(fires.lcc, col=rgb(1,0,0,0.3), border="red4", add=T) 
+plot(burns.lcc, col=rgb(1,0,0,0.3), border="red4", add=T) #prescribed burns layer 
+plot(trtmts.lcc, col=rgb(1,0,0,0.3), border="red4", add=T) #prescribed burns layer
 plot(unburned.plots.lcc, pch=1, col="black", add=T) #add plots that didn't burn between surveys
 plot(burned.plots.lcc, pch=4, col="black", cex=2, add=T) #add plots that burned between surveys
 plot(frame.grd.lcc, add=TRUE, lty="dashed", col="grey", lwd=1) #add gridlines
 dev.off()
 
 pdf(file="figures/map_fire_elev.pdf", width=10, height=8)
-plot(elev.raster.lcc, breaks=cuts, col=pal(length(cuts)-1), alpha=0.5)
+plot(park.lcc, border="black") # park boundary
+plot(elev.raster.lcc, breaks=cuts, col=pal(length(cuts)-1), alpha=0.5, add=T)
 plot(park.lcc, border="black", add=T) # park boundary
-plot(fires.lcc, col=rgb(1,0,0,0.7), border="red4", add=T) 
-plot(burns.lcc, col=rgb(1,0,0,0.7), border="red4", add=T) #prescribed burns layer 
-plot(trtmts.lcc, col=rgb(1,0,0,0.7), border="red4", add=T) #prescribed burns layer
+plot(fires.lcc, col=rgb(1,0,0,0.3), border="red4", add=T) 
+plot(burns.lcc, col=rgb(1,0,0,0.3), border="red4", add=T) #prescribed burns layer 
+plot(trtmts.lcc, col=rgb(1,0,0,0.3), border="red4", add=T) #prescribed burns layer
 plot(frame.grd.lcc, add=TRUE, lty="dashed", col="grey", lwd=1) #add gridlines
 dev.off()
  
 pdf(file="figures/map_elev_plots.pdf", width=10, height=8)
-plot(elev.raster.lcc, breaks=cuts, col=pal(length(cuts)-1), alpha=0.5)
+plot(park.lcc, border="black") # park boundary
+plot(elev.raster.lcc, breaks=cuts, col=pal(length(cuts)-1), alpha=0.5, add=T)
 plot(park.lcc, border="black", add=T) # park boundary
 plot(unburned.plots.lcc, pch=1, col="black", add=T) #add plots that didn't burn between surveys
 plot(burned.plots.lcc, pch=4, col="black", cex=2, add=T) #add plots that burned between surveys
