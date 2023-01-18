@@ -43,13 +43,13 @@ unburned.plots <- fire.plots %>% filter(FireHistory=="Unburned")
 
 coordinates(burned.plots) <- ~Longitude+Latitude #convert to spatial data
 projection(burned.plots) <- CRS('+proj=longlat') #define projection
-burned.plots <- spTransform(burned.plots, CRS=CRS(prj.wgs)) #transform projection so points layer matches SDM 
-burned.plots.lcc <- spTransform(burned.plots, CRS=CRS(prj.lcc)) #transform projection so points layer matches SDM projections
+burned.plots <- spTransform(burned.plots, CRS=CRS(prj.wgs)) #transform projection 
+burned.plots.lcc <- spTransform(burned.plots, CRS=CRS(prj.lcc)) #transform projection 
 
 coordinates(unburned.plots) <- ~Longitude+Latitude #convert to spatial data
 projection(unburned.plots) <- CRS('+proj=longlat') #define projection
 unburned.plots <- spTransform(unburned.plots, CRS=CRS(prj.wgs))
-unburned.plots.lcc <- spTransform(unburned.plots, CRS=CRS(prj.lcc)) #transform projection so points layer matches SDM projections
+unburned.plots.lcc <- spTransform(unburned.plots, CRS=CRS(prj.lcc)) #transform projection 
 
 
 ## State polygons 
@@ -71,9 +71,13 @@ bbox <- as(ext, "SpatialPolygons") #convert coordinates to a bounding box
 sta.crop <- crop(sta.sp, bbox)
 sta.lcc <- spTransform(sta.crop, CRS=CRS(prj.lcc))
 
+## Elevation shading
+dem.raster <- getData("SRTM", lat = mean(fire.plots$Latitude), lon = mean(fire.plots$Longitude), download = TRUE)
+
+dem.raster <- crop(dem.raster, as(my_bbox_buff_25000.sf, 'Spatial'), snap='out')
+
 ## Park boundary
-gdal.SetConfigOption('SHAPE_RESTORE_SHX', 'YES')
-park <- st_read("data/shapefiles/park/NOCA_Park_boundary.shp")
+park <- readOGR("data/shapefiles/park/nbndry_g2.shp")
 park <- spTransform(park, CRS=CRS(prj.wgs))
 park.lcc <- spTransform(park, CRS=CRS(prj.lcc))
 
